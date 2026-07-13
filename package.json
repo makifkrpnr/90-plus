@@ -1,6 +1,6 @@
 {
   "name": "90-plus-football-game",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "private": true,
   "description": "90+ retro kronometre futbol oyunu — AI, aynı cihaz co-op ve oda kodlu uzaktan arkadaş modu",
   "main": "server.js",
@@ -13,9 +13,9 @@
     "node": "20.x"
   },
   "dependencies": {
-    "socket.io": "^4.8.1"
+    "socket.io": "4.8.1"
   },
   "devDependencies": {
-    "socket.io-client": "^4.8.1"
+    "socket.io-client": "4.8.1"
   }
 }
