@@ -1,4 +1,4 @@
-const CACHE = '90-plus-v3';
+const CACHE = '90-plus-v4';
 const ASSETS = [
   './', './index.html', './styles.css', './manifest.json',
   './js/core.js', './js/players.js', './js/app.js',

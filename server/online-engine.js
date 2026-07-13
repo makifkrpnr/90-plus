@@ -12,7 +12,9 @@ function makeRuntimeTeam(team) {
       ...player,
       yellowCards: 0,
       red: false,
-      injured: false
+      injured: false,
+      goals: 0,
+      sentOffReason: null
     })),
     corners: 0,
     timeouts: 0
@@ -39,7 +41,7 @@ function pickRestartPlayer(match, side, digit = Math.floor(Math.random() * 10)) 
 }
 
 function mapActivePlayerFromDigit(match, digit) {
-  if (match.context.type !== 'main') return currentActor(match);
+  if (match.context.type !== 'playerSelect') return currentActor(match);
   const side = match.context.owner;
   const chosen = Core.chooseByModulo(availableOutfield(match, side), digit);
   if (chosen) match.activePlayerId[side] = chosen.id;
@@ -54,9 +56,16 @@ function eventMinute(match) {
   return Core.matchMinute(elapsed / 1000, match.regulationSeconds, match.phase === 'extra' ? 'extra' : 'regulation');
 }
 
-function addEvent(match, text, important = false) {
-  match.events.push({ minute: eventMinute(match), text, important, timestamp: Date.now() });
-  if (match.events.length > 120) match.events.shift();
+function addEvent(match, text, important = false, meta = {}) {
+  match.events.push({
+    minute: eventMinute(match), text, important, timestamp: Date.now(),
+    type: meta.type || 'event',
+    side: Number.isInteger(meta.side) ? meta.side : null,
+    playerId: meta.playerId || null,
+    title: meta.title || text,
+    detail: meta.detail || ''
+  });
+  if (match.events.length > 160) match.events.shift();
 }
 
 function resetRoll(match, owner, context, now) {
@@ -67,17 +76,20 @@ function resetRoll(match, owner, context, now) {
   match.resolving = false;
   match.running = true;
   match.paused = false;
+  match.awaitingPeriodStart = false;
+  match.awaitingPeriodSide = null;
   match.transition = null;
   match.overlay = null;
   match.lastTickAt = now;
-  if (context.type !== 'main' || !match.activePlayerId[owner]) pickRestartPlayer(match, owner);
+  if (context.type === 'playerSelect') match.activePlayerId[owner] = null;
+  if (['foulResult', 'foulCard', 'shot', 'shootoutShot'].includes(context.type) && !match.activePlayerId[owner]) pickRestartPlayer(match, owner);
 }
 
 function transitionTo(match, owner, context, overlay, now) {
   match.running = false;
   match.resolving = true;
   match.transition = { owner, context };
-  const duration = Math.max(150, Number(overlay?.duration) || 900);
+  const duration = Math.max(1500, Number(overlay?.duration) || 1900);
   match.overlay = overlay ? {
     id: `${now}-${Math.random().toString(36).slice(2, 7)}`,
     title: overlay.title || '',
@@ -102,14 +114,14 @@ function finishMatch(match, winnerSide) {
 function createMatch(teams, settings, now = Date.now()) {
   const totalSeconds = settings.durationMinutes * 60;
   const match = {
-    version: 2,
+    version: 3,
     mode: 'friend',
     teams: teams.map(makeRuntimeTeam),
     settings: { ...settings },
     scores: [0, 0],
     activeSide: 0,
     activePlayerId: [null, null],
-    context: { type: 'main', owner: 0 },
+    context: { type: 'playerSelect', owner: 0 },
     pendingFoul: null,
     phase: 'regulation',
     periodIndex: 0,
@@ -124,13 +136,15 @@ function createMatch(teams, settings, now = Date.now()) {
     running: true,
     paused: false,
     resolving: false,
+    awaitingPeriodStart: false,
+    awaitingPeriodSide: null,
+    periodStartKey: null,
     events: [],
     winnerSide: null,
     shootout: null,
     transition: null,
     overlay: null
   };
-  pickRestartPlayer(match, 0);
   return match;
 }
 
@@ -141,6 +155,13 @@ function markPlayerUnavailable(match, side, playerId, reason) {
   return match.teams[side].lineup[index];
 }
 
+function resolvePlayerSelection(match, digit, now) {
+  const side = match.context.owner;
+  const chosen = mapActivePlayerFromDigit(match, digit) || pickRestartPlayer(match, side, digit);
+  addEvent(match, `${match.teams[side].name}: ${chosen?.name || 'Oyuncu'} topla buluştu`, false, { type: 'player', side, playerId: chosen?.id, title: chosen?.name || 'Oyuncu', detail: 'Topla buluştu' });
+  transitionTo(match, side, { type: 'main' }, { title: chosen?.name || 'OYUNCU', subtitle: 'Şimdi olay sonucunu belirle', tone: 'navy', kicker: `Rakam ${digit} · ${chosen?.slot || ''}`, duration: 1700 }, now);
+}
+
 function resolveMainEvent(match, digit, now) {
   const side = match.context.owner;
   const other = side === 0 ? 1 : 0;
@@ -149,66 +170,55 @@ function resolveMainEvent(match, digit, now) {
 
   if (event.key === 'goal') {
     match.scores[side] += 1;
-    addEvent(match, `${match.teams[side].name}: ${actor?.name || 'Oyuncu'} gol`, true);
-    pickRestartPlayer(match, other);
-    transitionTo(match, other, { type: 'main' }, {
-      title: 'GOL!', subtitle: `${actor?.name || match.teams[side].name} ağları buldu`, tone: 'red', kicker: `Rakam ${digit}`, duration: 1250
-    }, now);
+    if (actor) actor.goals = (Number(actor.goals) || 0) + 1;
+    addEvent(match, `${actor?.name || match.teams[side].name} gol attı`, true, { type: 'goal', side, playerId: actor?.id, title: actor?.name || match.teams[side].name, detail: 'Gol' });
+    transitionTo(match, other, { type: 'playerSelect' }, { title: 'GOL!', subtitle: `${actor?.name || match.teams[side].name} ağları buldu`, tone: 'red', kicker: `Rakam ${digit}`, duration: 2600 }, now);
     return;
   }
-
   if (event.key === 'pass') {
-    transitionTo(match, side, { type: 'main' }, {
-      title: 'PAS', subtitle: `${actor?.name || 'Oyuncu'} topu korudu`, tone: 'green', kicker: `Rakam ${digit}`, duration: 480
-    }, now);
+    addEvent(match, `${actor?.name || 'Oyuncu'} pas yaptı`, false, { type: 'pass', side, playerId: actor?.id, title: actor?.name || 'Oyuncu', detail: 'Pas' });
+    transitionTo(match, side, { type: 'playerSelect' }, { title: 'PAS', subtitle: 'Yeni pasın hedefini seç', tone: 'green', kicker: `${actor?.name || 'Oyuncu'} · Rakam ${digit}`, duration: 1700 }, now);
     return;
   }
-
   if (event.key === 'throwIn') {
-    addEvent(match, `${match.teams[other].name} taç kazandı`);
-    pickRestartPlayer(match, other);
-    transitionTo(match, other, { type: 'main' }, { title: 'TAÇ', subtitle: `Top ${match.teams[other].name} tarafında`, tone: 'navy', kicker: `Rakam ${digit}`, duration: 700 }, now);
+    addEvent(match, `${match.teams[other].name} taç kazandı`, false, { type: 'throwIn', side: other, title: 'Taç', detail: match.teams[other].name });
+    transitionTo(match, other, { type: 'playerSelect' }, { title: 'TAÇ', subtitle: `Top ${match.teams[other].name} tarafında`, tone: 'navy', kicker: `Rakam ${digit}`, duration: 1800 }, now);
     return;
   }
-
   if (event.key === 'turnover') {
-    addEvent(match, `${actor?.name || match.teams[side].name} topu kaybetti`);
-    pickRestartPlayer(match, other);
-    transitionTo(match, other, { type: 'main' }, { title: 'AUT', subtitle: `Sıra ${match.teams[other].name} takımında`, tone: 'navy', kicker: `Rakam ${digit}`, duration: 700 }, now);
+    addEvent(match, `${actor?.name || match.teams[side].name} topu kaybetti`, false, { type: 'turnover', side, playerId: actor?.id, title: actor?.name || match.teams[side].name, detail: 'Top kaybı' });
+    transitionTo(match, other, { type: 'playerSelect' }, { title: 'AUT', subtitle: `Sıra ${match.teams[other].name} takımında`, tone: 'navy', kicker: `Rakam ${digit}`, duration: 1800 }, now);
     return;
   }
-
   if (event.key === 'corner') {
     const outcome = Core.registerCorner(match.teams[side].corners);
     match.teams[side].corners = outcome.corners;
     if (outcome.penalty) {
-      addEvent(match, `${match.teams[side].name}: 3. kornerden penaltı`, true);
-      transitionTo(match, side, { type: 'shot', reason: 'penalty' }, { title: 'PENALTI!', subtitle: 'Üç korner, bir beyaz nokta', tone: 'yellow', kicker: '3. KORNER', duration: 1050 }, now);
+      addEvent(match, `${match.teams[side].name}: 3. kornerden penaltı`, true, { type: 'penalty', side, title: 'Penaltı', detail: '3. korner' });
+      transitionTo(match, side, { type: 'shot', reason: 'penalty' }, { title: 'PENALTI!', subtitle: 'Üç korner, bir beyaz nokta', tone: 'yellow', kicker: '3. KORNER', duration: 2300 }, now);
     } else {
-      addEvent(match, `${match.teams[side].name} korner kazandı (${outcome.corners}/3)`);
-      transitionTo(match, side, { type: 'main' }, { title: 'KORNER', subtitle: `${outcome.corners} / 3`, tone: 'green', kicker: `Rakam ${digit}`, duration: 700 }, now);
+      addEvent(match, `${match.teams[side].name} korner kazandı (${outcome.corners}/3)`, false, { type: 'corner', side, title: 'Korner', detail: `${outcome.corners}/3` });
+      transitionTo(match, side, { type: 'playerSelect' }, { title: 'KORNER', subtitle: `${outcome.corners} / 3 · Yeni oyuncuyu seç`, tone: 'green', kicker: `Rakam ${digit}`, duration: 1800 }, now);
     }
     return;
   }
-
   if (event.key === 'foul') {
     match.pendingFoul = { foulerSide: side, victimSide: other, foulerId: actor?.id || null, result: null };
-    addEvent(match, `${actor?.name || match.teams[side].name} faul yaptı`, true);
+    addEvent(match, `${actor?.name || match.teams[side].name} faul yaptı`, true, { type: 'foul', side, playerId: actor?.id, title: actor?.name || match.teams[side].name, detail: 'Faul' });
     pickRestartPlayer(match, other);
-    transitionTo(match, other, { type: 'foulResult' }, { title: 'FAUL!', subtitle: `${match.teams[other].name} sonuç atışını kullanacak`, tone: 'yellow', kicker: `Rakam ${digit}`, duration: 1000 }, now);
+    transitionTo(match, other, { type: 'foulResult' }, { title: 'FAUL!', subtitle: `${match.teams[other].name} sonuç atışını kullanacak`, tone: 'yellow', kicker: `Rakam ${digit}`, duration: 2200 }, now);
     return;
   }
-
   if (event.key === 'freeKick') {
-    addEvent(match, `${match.teams[side].name} frikik kazandı`, true);
-    transitionTo(match, side, { type: 'shot', reason: 'freeKick' }, { title: 'FRİKİK!', subtitle: 'Tek rakam kurtarış, çift rakam gol', tone: 'yellow', kicker: `Rakam ${digit}`, duration: 950 }, now);
+    addEvent(match, `${match.teams[side].name} frikik kazandı`, true, { type: 'freeKick', side, playerId: actor?.id, title: actor?.name || match.teams[side].name, detail: 'Frikik' });
+    transitionTo(match, side, { type: 'shot', reason: 'freeKick' }, { title: 'FRİKİK!', subtitle: 'Tek rakam kurtarış, çift rakam gol', tone: 'yellow', kicker: `Rakam ${digit}`, duration: 2100 }, now);
   }
 }
 
 function continueAfterFoulCard(match, cardOverlay, now) {
   const foul = match.pendingFoul;
   if (!foul) {
-    transitionTo(match, match.context.owner, { type: 'main' }, cardOverlay, now);
+    transitionTo(match, match.context.owner, { type: 'playerSelect' }, cardOverlay, now);
     return;
   }
   const owner = foul.victimSide;
@@ -216,26 +226,25 @@ function continueAfterFoulCard(match, cardOverlay, now) {
   match.pendingFoul = null;
   if (result === 'freeKick' || result === 'penalty') {
     transitionTo(match, owner, { type: 'shot', reason: result }, cardOverlay || {
-      title: result === 'penalty' ? 'PENALTI' : 'FRİKİK', subtitle: 'Final atışı', tone: 'yellow'
+      title: result === 'penalty' ? 'PENALTI' : 'FRİKİK', subtitle: 'Final atışı', tone: 'yellow', duration: 2100
     }, now);
   } else {
-    pickRestartPlayer(match, owner);
-    transitionTo(match, owner, { type: 'main' }, cardOverlay || { title: 'SERBEST', subtitle: `${match.teams[owner].name} topu kullanıyor`, tone: 'green' }, now);
+    transitionTo(match, owner, { type: 'playerSelect' }, cardOverlay || { title: 'SERBEST', subtitle: `${match.teams[owner].name} yeni oyuncuyu seçiyor`, tone: 'green', duration: 1900 }, now);
   }
 }
 
 function resolveFoulResult(match, digit, now) {
   const foul = match.pendingFoul;
   if (!foul) {
-    transitionTo(match, match.context.owner, { type: 'main' }, null, now);
+    transitionTo(match, match.context.owner, { type: 'playerSelect' }, null, now);
     return;
   }
   foul.result = Core.foulResultForDigit(digit);
   const labels = { freeKick: 'FRİKİK', penalty: 'PENALTI', indirect: 'SERBEST VURUŞ' };
-  addEvent(match, `Faul sonucu: ${labels[foul.result]}`);
+  addEvent(match, `Faul sonucu: ${labels[foul.result]}`, false, { type: foul.result === 'penalty' ? 'penalty' : 'freeKick', side: foul.victimSide, title: labels[foul.result], detail: 'Faul sonucu' });
   if (match.settings.cards) {
     transitionTo(match, foul.victimSide, { type: 'foulCard' }, {
-      title: labels[foul.result], subtitle: 'Şimdi kart atışı', tone: foul.result === 'penalty' ? 'yellow' : 'navy', kicker: `Rakam ${digit}`, duration: 850
+      title: labels[foul.result], subtitle: 'Şimdi kart atışı', tone: foul.result === 'penalty' ? 'yellow' : 'navy', kicker: `Rakam ${digit}`, duration: 1900
     }, now);
   } else {
     continueAfterFoulCard(match, null, now);
@@ -245,7 +254,7 @@ function resolveFoulResult(match, digit, now) {
 function resolveFoulCard(match, digit, now) {
   const foul = match.pendingFoul;
   if (!foul) {
-    transitionTo(match, match.context.owner, { type: 'main' }, null, now);
+    transitionTo(match, match.context.owner, { type: 'playerSelect' }, null, now);
     return;
   }
   const card = Core.cardForDigit(digit);
@@ -254,23 +263,25 @@ function resolveFoulCard(match, digit, now) {
   if (foulerIndex >= 0) {
     const before = match.teams[foul.foulerSide].lineup[foulerIndex];
     const after = Core.applyCard(before, card);
+    if (card === 'yellow' && after.red) after.sentOffReason = 'secondYellow';
+    if (card === 'red') after.sentOffReason = 'directRed';
     match.teams[foul.foulerSide].lineup[foulerIndex] = after;
     cardedPlayer = after;
-    if (card === 'yellow') addEvent(match, `${after.name} sarı kart gördü${after.red ? ' ve ikinci sarıdan atıldı' : ''}`, true);
-    else if (card === 'red') addEvent(match, `${after.name} direkt kırmızı kart gördü`, true);
+    if (card === 'yellow') addEvent(match, `${after.name} ${after.red ? 'ikinci sarıdan kırmızı gördü' : 'sarı kart gördü'}`, true, { type: after.red ? 'secondYellow' : 'yellow', side: foul.foulerSide, playerId: after.id, title: after.name, detail: after.red ? 'İkinci sarıdan kırmızı' : 'Sarı kart' });
+    else if (card === 'red') addEvent(match, `${after.name} direkt kırmızı kart gördü`, true, { type: 'red', side: foul.foulerSide, playerId: after.id, title: after.name, detail: 'Direkt kırmızı kart' });
   }
 
   if (match.settings.injury && Math.random() < 0.10) {
     const injured = randomItem(availableOutfield(match, foul.victimSide));
     if (injured) {
       markPlayerUnavailable(match, foul.victimSide, injured.id, 'injured');
-      addEvent(match, `${injured.name} sakatlandı ve oyundan çıktı`, true);
+      addEvent(match, `${injured.name} sakatlandı ve oyundan çıktı`, true, { type: 'injury', side: foul.victimSide, playerId: injured.id, title: injured.name, detail: 'Sakatlık' });
     }
   }
 
   const cardTitle = card === 'yellow' ? (cardedPlayer?.red ? 'KIRMIZI!' : 'SARI KART') : card === 'red' ? 'KIRMIZI!' : 'KART YOK';
   const tone = card === 'yellow' ? 'yellow' : card === 'red' ? 'red' : 'green';
-  continueAfterFoulCard(match, { title: cardTitle, subtitle: cardedPlayer?.name || 'Hakem devam dedi', tone, kicker: `Rakam ${digit}`, duration: 950 }, now);
+  continueAfterFoulCard(match, { title: cardTitle, subtitle: cardedPlayer?.name || 'Hakem devam dedi', tone, kicker: `Rakam ${digit}`, duration: 2300 }, now);
 }
 
 function resolveShot(match, digit, now) {
@@ -281,13 +292,12 @@ function resolveShot(match, digit, now) {
   const actor = currentActor(match) || pickRestartPlayer(match, side);
   if (result === 'goal') {
     match.scores[side] += 1;
-    addEvent(match, `${match.teams[side].name}: ${reason === 'penalty' ? 'penaltı' : 'frikik'} golü — ${actor?.name || 'Oyuncu'}`, true);
-    pickRestartPlayer(match, other);
-    transitionTo(match, other, { type: 'main' }, { title: 'GOL!', subtitle: `${actor?.name || match.teams[side].name} çift rakamı buldu`, tone: 'red', kicker: `Rakam ${digit} · ÇİFT`, duration: 1250 }, now);
+    if (actor) actor.goals = (Number(actor.goals) || 0) + 1;
+    addEvent(match, `${actor?.name || match.teams[side].name} ${reason === 'penalty' ? 'penaltıdan' : 'frikikten'} gol attı`, true, { type: 'goal', side, playerId: actor?.id, title: actor?.name || match.teams[side].name, detail: reason === 'penalty' ? 'Penaltı golü' : 'Frikik golü' });
+    transitionTo(match, other, { type: 'playerSelect' }, { title: 'GOL!', subtitle: `${actor?.name || match.teams[side].name} çift rakamı buldu`, tone: 'red', kicker: `Rakam ${digit} · ÇİFT`, duration: 2600 }, now);
   } else {
-    addEvent(match, `${reason === 'penalty' ? 'Penaltı' : 'Frikik'} kurtarıldı — ${match.teams[side].name}`);
-    pickRestartPlayer(match, other);
-    transitionTo(match, other, { type: 'main' }, { title: 'KURTARDI!', subtitle: 'Tek rakam kaleciden yana', tone: 'navy', kicker: `Rakam ${digit} · TEK`, duration: 1050 }, now);
+    addEvent(match, `${reason === 'penalty' ? 'Penaltı' : 'Frikik'} kurtarıldı`, true, { type: 'save', side, playerId: actor?.id, title: actor?.name || match.teams[side].name, detail: 'Kaleci kurtardı' });
+    transitionTo(match, other, { type: 'playerSelect' }, { title: 'KURTARDI!', subtitle: 'Tek rakam kaleciden yana', tone: 'navy', kicker: `Rakam ${digit} · TEK`, duration: 2300 }, now);
   }
 }
 
@@ -325,7 +335,8 @@ function resolveShootoutShot(match, digit, now) {
 }
 
 function resolveRoll(match, digit, now) {
-  if (match.context.type === 'main') resolveMainEvent(match, digit, now);
+  if (match.context.type === 'playerSelect') resolvePlayerSelection(match, digit, now);
+  else if (match.context.type === 'main') resolveMainEvent(match, digit, now);
   else if (match.context.type === 'foulResult') resolveFoulResult(match, digit, now);
   else if (match.context.type === 'foulCard') resolveFoulCard(match, digit, now);
   else if (match.context.type === 'shot') resolveShot(match, digit, now);
@@ -336,7 +347,6 @@ function stopRoll(match, side, digit, now = Date.now()) {
   if (!match || match.phase === 'finished' || !match.running || match.paused || match.resolving) return { ok: false, error: 'Atış şu anda kullanılamıyor.' };
   if (match.context.owner !== side) return { ok: false, error: 'Sıra sende değil.' };
   const normalized = Core.normalizeDigit(digit);
-  if (match.context.type === 'main') mapActivePlayerFromDigit(match, normalized);
   match.running = false;
   match.resolving = true;
   resolveRoll(match, normalized, now);
@@ -351,23 +361,25 @@ function handleTurnTimeout(match, now) {
   const other = side === 0 ? 1 : 0;
   const outcome = Core.registerTimeout(match.teams[side].timeouts);
   match.teams[side].timeouts = outcome.count;
-  addEvent(match, `${match.teams[side].name}: 10 saniye ihlali (${outcome.count})`, true);
+  addEvent(match, `${match.teams[side].name}: 10 saniye ihlali (${outcome.count})`, true, { type: 'timeout', side, title: 'Süre ihlali', detail: `${outcome.count}. ihlal` });
 
   if (outcome.consequence === 'turnover') {
-    pickRestartPlayer(match, other);
-    transitionTo(match, other, { type: 'main' }, { title: 'SÜRE DOLDU', subtitle: 'Top rakibe geçti', tone: 'navy', kicker: `${outcome.count}. İHLAL`, duration: 950 }, now);
+    transitionTo(match, other, { type: 'playerSelect' }, { title: 'SÜRE DOLDU', subtitle: 'Top rakibe geçti', tone: 'navy', kicker: `${outcome.count}. İHLAL`, duration: 1900 }, now);
   } else if (outcome.consequence === 'penaltyAgainst') {
     pickRestartPlayer(match, other);
-    transitionTo(match, other, { type: 'shot', reason: 'penalty' }, { title: 'PENALTI!', subtitle: 'Üçüncü vakit ihlali', tone: 'yellow', kicker: '3. İHLAL', duration: 1050 }, now);
+    transitionTo(match, other, { type: 'shot', reason: 'penalty' }, { title: 'PENALTI!', subtitle: 'Üçüncü vakit ihlali', tone: 'yellow', kicker: '3. İHLAL', duration: 2300 }, now);
   } else if (outcome.consequence === 'redCard') {
     const actor = currentActor(match) || randomItem(availableOutfield(match, side));
-    if (actor) markPlayerUnavailable(match, side, actor.id, 'red');
-    addEvent(match, `${actor?.name || match.teams[side].name} vakit ihlalinden kırmızı kart gördü`, true);
-    pickRestartPlayer(match, other);
-    transitionTo(match, other, { type: 'main' }, { title: 'KIRMIZI!', subtitle: 'Dördüncü vakit ihlali', tone: 'red', kicker: '4. İHLAL', duration: 1100 }, now);
+    if (actor) {
+      markPlayerUnavailable(match, side, actor.id, 'red');
+      actor.red = true;
+      actor.sentOffReason = 'timeoutRed';
+    }
+    addEvent(match, `${actor?.name || match.teams[side].name} vakit ihlalinden kırmızı kart gördü`, true, { type: 'red', side, playerId: actor?.id, title: actor?.name || match.teams[side].name, detail: 'Süre ihlali kırmızısı' });
+    transitionTo(match, other, { type: 'playerSelect' }, { title: 'KIRMIZI!', subtitle: 'Dördüncü vakit ihlali', tone: 'red', kicker: '4. İHLAL', duration: 2400 }, now);
   } else {
     match.scores = Core.forfeitScore(match.scores, side);
-    addEvent(match, `${match.teams[side].name} hükmen mağlup`, true);
+    addEvent(match, `${match.teams[side].name} hükmen mağlup`, true, { type: 'red', side, title: 'Hükmen mağlubiyet', detail: '5. süre ihlali' });
     finishMatch(match, other);
   }
 }
@@ -381,43 +393,53 @@ function startShootout(match, now) {
   }, now);
 }
 
-function endCurrentPeriod(match, now) {
-  if (match.resolving || match.phase === 'shootout' || match.phase === 'finished') return;
+function preparePeriodStart(match, side, phase, periodIndex, now) {
+  match.phase = phase;
+  match.periodIndex = periodIndex;
+  match.periodElapsedMs = 0;
+  match.context = { type: 'playerSelect', owner: side };
+  match.activeSide = side;
+  match.activePlayerId[side] = null;
+  match.rollElapsedMs = 0;
+  match.turnElapsedMs = 0;
   match.running = false;
-  match.resolving = true;
+  match.paused = true;
+  match.resolving = false;
+  match.awaitingPeriodStart = true;
+  match.awaitingPeriodSide = side;
+  match.periodStartKey = `${phase}-${periodIndex}-${now}`;
+  match.transition = null;
+  match.overlay = null;
+  match.lastTickAt = now;
+}
+
+function startWaitingPeriod(match, side, now = Date.now()) {
+  if (!match?.awaitingPeriodStart) return { ok: false, error: 'Başlatılmayı bekleyen devre yok.' };
+  if (match.awaitingPeriodSide !== side) return { ok: false, error: 'Bu devreyi diğer oyuncu başlatmalı.' };
+  resetRoll(match, side, { type: 'playerSelect' }, now);
+  match.periodStartKey = null;
+  return { ok: true };
+}
+
+function endCurrentPeriod(match, now) {
+  if (match.resolving || match.phase === 'shootout' || match.phase === 'finished' || match.awaitingPeriodStart) return;
+  match.running = false;
+  match.resolving = false;
   const phase = match.phase;
   const index = match.periodIndex;
 
   if (index === 0) {
-    match.periodIndex = 1;
-    match.periodElapsedMs = 0;
-    transitionTo(match, match.context.owner, { ...match.context }, {
-      title: phase === 'extra' ? 'UZATMA ARASI' : 'DEVRE ARASI',
-      subtitle: `${match.scores[0]} — ${match.scores[1]} · Kronometre kısa bir nefes alıyor`,
-      tone: 'navy',
-      kicker: phase === 'extra' ? 'SON 15’' : 'SOYUNMA ODASI',
-      duration: 2200
-    }, now);
+    preparePeriodStart(match, 1, phase, 1, now);
     return;
   }
-
   if (phase === 'regulation' && match.scores[0] === match.scores[1] && match.settings.extraTime) {
     const extraTotal = Core.roundExtraTimeSeconds(match.regulationSeconds) * 1000;
-    match.phase = 'extra';
-    match.periodIndex = 0;
-    match.periodElapsedMs = 0;
     match.periodDurationsMs = [extraTotal / 2, extraTotal / 2];
-    transitionTo(match, match.context.owner, { ...match.context }, {
-      title: 'UZATMALAR', subtitle: `${match.scores[0]} — ${match.scores[1]} · Mücadele devam ediyor`, tone: 'yellow', kicker: '90 DAKİKA BİTTİ', duration: 2200
-    }, now);
+    preparePeriodStart(match, 0, 'extra', 0, now);
     return;
   }
-
-  if (match.scores[0] === match.scores[1] && match.settings.shootout) {
-    startShootout(match, now);
-  } else {
-    finishMatch(match, match.scores[0] === match.scores[1] ? null : (match.scores[0] > match.scores[1] ? 0 : 1));
-  }
+  if (match.scores[0] === match.scores[1] && match.settings.shootout) startShootout(match, now);
+  else finishMatch(match, match.scores[0] === match.scores[1] ? null : (match.scores[0] > match.scores[1] ? 0 : 1));
 }
 
 function tickMatch(match, now = Date.now()) {
@@ -433,7 +455,7 @@ function tickMatch(match, now = Date.now()) {
     return false;
   }
 
-  if (!match.running || match.paused) return false;
+  if (!match.running || match.paused || match.awaitingPeriodStart) return false;
 
   match.rollElapsedMs += dt;
   match.turnElapsedMs += dt;
@@ -443,8 +465,6 @@ function tickMatch(match, now = Date.now()) {
     match.possessionMs[match.context.owner] += dt;
   }
 
-  const digit = Math.floor(Math.max(0, match.rollElapsedMs) / 10) % 10;
-  if (match.context.type === 'main') mapActivePlayerFromDigit(match, digit);
 
   if (match.turnElapsedMs >= 10000) {
     handleTurnTimeout(match, now);
@@ -458,7 +478,7 @@ function tickMatch(match, now = Date.now()) {
 }
 
 function togglePause(match, now = Date.now()) {
-  if (!match || match.phase === 'finished' || match.resolving) return false;
+  if (!match || match.phase === 'finished' || match.resolving || match.awaitingPeriodStart) return false;
   match.paused = !match.paused;
   match.running = !match.paused;
   match.lastTickAt = now;
@@ -470,6 +490,7 @@ module.exports = {
   tickMatch,
   stopRoll,
   togglePause,
+  startWaitingPeriod,
   availableOutfield,
   pickRestartPlayer
 };

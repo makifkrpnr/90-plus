@@ -1,6 +1,6 @@
 {
   "name": "90-plus-football-game",
-  "version": "2.1.2",
+  "version": "3.0.0",
   "private": true,
   "description": "90+ retro kronometre futbol oyunu — AI, aynı cihaz co-op ve oda kodlu uzaktan arkadaş modu",
   "main": "server.js",

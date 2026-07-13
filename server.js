@@ -20,7 +20,8 @@ const MIME = {
   '.png': 'image/png',
   '.svg': 'image/svg+xml',
   '.ico': 'image/x-icon',
-  '.md': 'text/markdown; charset=utf-8'
+  '.md': 'text/markdown; charset=utf-8',
+  '.ttf': 'font/ttf'
 };
 
 function safeText(value, fallback, max = 24) {
@@ -66,7 +67,7 @@ function validateTeam(raw) {
 
 function validateSettings(raw) {
   return {
-    durationMinutes: Math.max(5, Math.min(10, Number(raw?.durationMinutes) || 5)),
+    durationMinutes: Math.max(1, Math.min(10, Number(raw?.durationMinutes) || 5)),
     cards: raw?.cards !== false,
     injury: Boolean(raw?.injury),
     extraTime: raw?.extraTime !== false,
@@ -248,6 +249,16 @@ io.on('connection', socket => {
     if (!result.ok) return ack(result);
     touch(room);
     ack({ ok: true, digit: result.digit });
+    io.to(room.code).emit('match:state', { match: room.match, serverNow: Date.now() });
+  });
+
+  socket.on('match:startPeriod', (_payload, ack = () => {}) => {
+    const room = currentRoom(socket);
+    if (!room?.match || room.phase !== 'match') return ack({ ok: false, error: 'Aktif maç bulunamadı.' });
+    const result = Engine.startWaitingPeriod(room.match, socket.data.side, Date.now());
+    if (!result.ok) return ack(result);
+    touch(room);
+    ack({ ok: true });
     io.to(room.code).emit('match:state', { match: room.match, serverNow: Date.now() });
   });
 

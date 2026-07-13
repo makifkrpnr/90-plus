@@ -19,6 +19,7 @@
     </button>
     <div class="topbar-actions">
       <span id="networkBadge" class="network-badge hidden">ÇEVRİMİÇİ</span>
+      <button id="themeButton" class="icon-button" type="button" aria-label="Açık veya koyu temaya geç">◐</button>
       <button id="soundButton" class="icon-button" type="button" aria-label="Sesi aç veya kapat">♪</button>
     </div>
   </header>
@@ -32,12 +33,35 @@
         <div class="hero-clock" aria-hidden="true">
           <span>00:00</span><small>.0</small>
         </div>
-        <button id="startButton" class="primary-button jumbo" type="button">OYUNU BAŞLAT</button>
+        <div class="hero-actions">
+          <button id="startButton" class="primary-button jumbo" type="button">OYUNU BAŞLAT</button>
+          <button id="howToButton" class="secondary-button jumbo" type="button">NASIL OYNANIR?</button>
+        </div>
         <button id="continueButton" class="text-button hidden" type="button">KAYITLI MAÇA DÖN</button>
       </div>
       <div class="feature-strip">
         <span>AI</span><span>AYNI CİHAZ CO-OP</span><span>ODA KODUYLA ARKADAŞ</span><span>OFFLINE PWA</span>
       </div>
+    </section>
+
+    <section id="screen-howto" class="screen" aria-labelledby="howto-title">
+      <div class="section-heading">
+        <p class="eyebrow">90+ OYUN REHBERİ</p>
+        <h2 id="howto-title">NASIL OYNANIR?</h2>
+        <p class="subheading">İKİ DOKUNUŞ, BİR FUTBOL HİKÂYESİ.</p>
+      </div>
+      <div class="howto-grid">
+        <article class="howto-card"><span>01</span><h3>OYUNCUYU SEÇ</h3><p>Her hücum önce oyuncu seçimiyle başlar. Kronometreyi durdur; son rakam sahadaki 10 oyuncudan birini belirler.</p></article>
+        <article class="howto-card"><span>02</span><h3>OLAYI BELİRLE</h3><p>Aynı takım tekrar kronometreyi durdurur. 0 gol, 1-2-5-7 pas, 3 taç, 4 faul, 6 korner, 8 frikik, 9 aut/top kaybıdır.</p></article>
+        <article class="howto-card"><span>03</span><h3>PAS SONRASI</h3><p>Pas gelirse top aynı takımda kalır fakat yeni pasın hedefi için yeniden oyuncu seçimi yapılır. Yani Pirlo → pas → Ronaldo → aut gibi.</p></article>
+        <article class="howto-card"><span>04</span><h3>FAUL VE KART</h3><p>Faulde rakip önce sonuç atışı, ardından kart atışı yapar. Frikik veya penaltıda çift rakam gol, tek rakam kurtarıştır.</p></article>
+        <article class="howto-card"><span>05</span><h3>KORNER VE SÜRE</h3><p>Üç korner penaltıya dönüşür. Her kronometre atışı için 10 saniye vardır; tekrar eden ihlaller penaltı, kırmızı kart ve hükmen mağlubiyete kadar gider.</p></article>
+        <article class="howto-card"><span>06</span><h3>İKİNCİ DEVRE</h3><p>İlk devreyi Takım 1, ikinci devreyi Takım 2 başlatır. Devre arasında ikinci yarıya başlayacak oyuncu “İkinci Devreyi Başlat” düğmesine basar.</p></article>
+      </div>
+      <div class="digit-table" aria-label="Olay rakamları">
+        <b>0<br><small>GOL</small></b><b>1<br><small>PAS</small></b><b>2<br><small>PAS</small></b><b>3<br><small>TAÇ</small></b><b>4<br><small>FAUL</small></b><b>5<br><small>PAS</small></b><b>6<br><small>KORNER</small></b><b>7<br><small>PAS</small></b><b>8<br><small>FRİKİK</small></b><b>9<br><small>AUT</small></b>
+      </div>
+      <button class="back-button" data-back="home" type="button">← ANA MENÜ</button>
     </section>
 
     <section id="screen-mode" class="screen" aria-labelledby="mode-title">
@@ -58,12 +82,12 @@
         </button>
         <button class="mode-card friend-card" type="button" data-mode="friend">
           <span class="mode-number">03</span>
-          <strong>PLAY WITH A FRIEND</strong>
+          <strong>ARKADAŞINLA OYNA</strong>
           <small>Oda oluştur, altı haneli kodu paylaş ve başka cihazdan canlı maç yap.</small>
         </button>
         <button class="mode-card locked" type="button" disabled>
           <span class="mode-number">04</span>
-          <strong>ONLINE LİG</strong>
+          <strong>ÇEVRİMİÇİ LİG</strong>
           <small>Faz 2 — hesap, sezon, fikstür ve puan tablosuyla gelecek.</small>
           <em>KİLİTLİ</em>
         </button>
@@ -73,7 +97,7 @@
 
     <section id="screen-online" class="screen" aria-labelledby="online-title">
       <div class="section-heading">
-        <p class="eyebrow">PLAY WITH A FRIEND</p>
+        <p class="eyebrow">ARKADAŞINLA OYNA</p>
         <h2 id="online-title">UZAKTAN MAÇ</h2>
         <p class="subheading">BİR ODA KUR YA DA ARKADAŞININ KODUYLA SAHAYA ÇIK.</p>
       </div>
@@ -85,7 +109,7 @@
           <label>Oyuncu adı
             <input id="hostNameInput" maxlength="22" value="Ev Sahibi" autocomplete="nickname">
           </label>
-          <button id="createRoomButton" class="primary-button" type="button">CREATE A ROOM</button>
+          <button id="createRoomButton" class="primary-button" type="button">ODA OLUŞTUR</button>
         </article>
         <article class="online-card join-card">
           <p class="eyebrow">MİSAFİR</p>
@@ -97,7 +121,7 @@
           <label>Oda kodu
             <input id="joinCodeInput" class="room-code-input" maxlength="6" placeholder="ABC123" autocomplete="off" inputmode="text">
           </label>
-          <button id="joinRoomButton" class="primary-button" type="button">JOIN WITH A CODE</button>
+          <button id="joinRoomButton" class="primary-button" type="button">KODLA KATIL</button>
         </article>
       </div>
       <p id="onlineStatus" class="online-status">Oda oluşturabilir veya arkadaşının koduyla katılabilirsin.</p>
@@ -106,7 +130,7 @@
 
     <section id="screen-lobby" class="screen" aria-labelledby="lobby-title">
       <div class="section-heading compact-heading">
-        <p class="eyebrow">90+ ONLINE SOYUNMA ODASI</p>
+        <p class="eyebrow">90+ ÇEVRİMİÇİ SOYUNMA ODASI</p>
         <h2 id="lobby-title">MAÇ LOBİSİ</h2>
       </div>
       <div class="room-code-panel">
@@ -217,7 +241,7 @@
       <div class="settings-card">
         <label class="range-row">
           <span>Maç süresi <b id="durationValue">5 dk</b></span>
-          <input id="durationRange" type="range" min="5" max="10" value="5" step="1">
+          <input id="durationRange" type="range" min="1" max="10" value="5" step="1">
         </label>
         <label class="toggle-row"><span><b>Kart sistemi</b><small>Sarı, ikinci sarı ve kırmızı</small></span><input id="cardsToggle" type="checkbox" checked><i></i></label>
         <label class="toggle-row"><span><b>Sakatlık riski</b><small>Faul sonrası deneysel %10 kontrol</small></span><input id="injuryToggle" type="checkbox"><i></i></label>
@@ -239,36 +263,41 @@
 
     <section id="screen-match" class="screen match-screen" aria-labelledby="match-title">
       <h2 id="match-title" class="sr-only">Maç ekranı</h2>
-      <div id="remoteMatchBar" class="remote-match-bar hidden">
-        <span>ODA <b id="remoteRoomCode">------</b></span>
-        <span id="remoteConnectionText">BAĞLANIYOR…</span>
-      </div>
-      <div class="scoreboard">
-        <div class="score-team"><span id="homeTeamName">EV SAHİBİ</span><b id="homeScore">0</b></div>
-        <div class="match-meta"><strong id="periodLabel">1. DEVRE</strong><span id="matchClock">00:00</span></div>
-        <div class="score-team away"><b id="awayScore">0</b><span id="awayTeamName">DEPLASMAN</span></div>
+      <div class="match-sticky-head">
+        <div id="remoteMatchBar" class="remote-match-bar hidden">
+          <span>ODA <b id="remoteRoomCode">------</b></span>
+          <span id="remoteConnectionText">BAĞLANIYOR…</span>
+        </div>
+        <div class="scoreboard">
+          <div id="homeTeamBox" class="score-team"><span id="homeTurnMark" class="turn-mark">●</span><span id="homeTeamName">EV SAHİBİ</span><b id="homeScore">0</b></div>
+          <div class="match-meta"><strong id="periodLabel">1. DEVRE</strong><span id="matchClock">00:00</span></div>
+          <div id="awayTeamBox" class="score-team away"><b id="awayScore">0</b><span id="awayTeamName">DEPLASMAN</span><span id="awayTurnMark" class="turn-mark">●</span></div>
+        </div>
       </div>
 
       <div class="pitch-panel">
         <div class="pitch-lines" aria-hidden="true"></div>
-        <div class="turn-banner"><span id="turnTeam">90+ XI</span><b id="rollContextLabel">HÜCUM</b></div>
+        <div class="turn-banner"><span id="turnTeam">90+ XI</span><b id="rollContextLabel">OYUNCU SEÇİMİ</b></div>
+        <p id="rollInstruction" class="roll-instruction">Kronometreyi durdur ve topla buluşacak oyuncuyu seç.</p>
         <div class="player-card-mini">
-          <small>TOPLA OYNAYAN</small>
+          <small id="activePlayerCaption">SEÇİLEN OYUNCU</small>
           <strong id="activePlayerName">—</strong>
-          <span id="activePlayerMeta">—</span>
+          <span id="activePlayerMeta">Henüz seçilmedi</span>
         </div>
-        <div id="matchWatchDisplay" class="digital-display match-watch">00:00.0</div>
-        <div class="turn-time"><span>Tur süresi</span><b id="turnCountdown">10.0</b></div>
-        <button id="matchStopButton" class="stop-button match-stop" type="button">DURDUR</button>
+        <div id="matchWatchDisplay" class="digital-display match-watch">00:00.00</div>
+        <div class="turn-time"><span>Atış süresi</span><b id="turnCountdown">10.0</b></div>
+        <button id="matchStopButton" class="stop-button match-stop" type="button">OYUNCUYU SEÇ</button>
         <p id="aiHint" class="ai-hint hidden">Rakip kronometreyi kolluyor…</p>
       </div>
 
-      <div class="match-stats-row">
+      <ol id="liveTimeline" class="live-timeline"></ol>
+
+      <div class="match-bottom-dock">
         <div><small>KORNER</small><b><span id="homeCorners">0</span> — <span id="awayCorners">0</span></b></div>
         <div><small>VAKİT İHLALİ</small><b><span id="homeTimeouts">0</span> — <span id="awayTimeouts">0</span></b></div>
-        <button id="pauseButton" class="small-button" type="button">DURAKLAT</button>
+        <button id="squadsButton" class="dock-button" type="button">KADROLAR</button>
+        <button id="pauseButton" class="dock-button" type="button">DURAKLAT</button>
       </div>
-      <ol id="liveTimeline" class="live-timeline"></ol>
     </section>
 
     <section id="screen-results" class="screen" aria-labelledby="results-title">
@@ -278,13 +307,12 @@
         <div class="final-score"><span id="finalHomeName">TAKIM 1</span><b id="finalScore">0 — 0</b><span id="finalAwayName">TAKIM 2</span></div>
         <p id="winnerText" class="winner-text">BERABERE</p>
       </div>
-      <div class="result-grid">
+      <div class="result-grid single-result">
         <div class="result-card"><small>TOP SENDE KALMA</small><b id="possessionResult">50% — 50%</b></div>
-        <div class="result-card"><small>ÖNE ÇIKAN</small><b id="highlightResult">—</b></div>
       </div>
       <div class="timeline-card">
-        <h3>OLAY ZAMAN ÇİZELGESİ</h3>
-        <ol id="resultTimeline"></ol>
+        <div class="timeline-heading"><h3>MAÇ AKIŞI</h3><span>RETRO MAÇ MERKEZİ</span></div>
+        <ol id="resultTimeline" class="result-timeline"></ol>
       </div>
       <div class="screen-actions">
         <button id="rematchButton" class="secondary-button" type="button">RÖVANŞ</button>
@@ -299,6 +327,8 @@
     <p id="overlayKicker">00</p>
     <h2 id="overlayTitle">GOL!</h2>
     <p id="overlaySubtitle">—</p>
+    <div class="overlay-progress"><i id="overlayProgressBar"></i></div>
+    <small class="overlay-read-hint">OLAY OKUNURKEN OYUN DURUR</small>
   </div>
 
   <div id="dialogOverlay" class="dialog-overlay hidden" role="dialog" aria-modal="true">
@@ -307,6 +337,16 @@
       <h2 id="dialogTitle">SOYUNMA ODASI</h2>
       <p id="dialogText">Nefeslen. Kronometre birazdan yeniden akacak.</p>
       <button id="dialogButton" class="primary-button" type="button">DEVAM ET</button>
+    </div>
+  </div>
+
+
+  <div id="squadsOverlay" class="dialog-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="squads-title">
+    <div class="squads-modal">
+      <div class="squads-modal-head"><div><p class="eyebrow">CANLI MAÇ KADROLARI</p><h2 id="squads-title">SAHADAKİLER</h2></div><button id="closeSquadsButton" class="icon-button" type="button" aria-label="Kadroları kapat">×</button></div>
+      <div class="squad-tabs"><button class="squad-match-tab active" data-side="0" type="button">TAKIM 1</button><button class="squad-match-tab" data-side="1" type="button">TAKIM 2</button></div>
+      <div id="matchSquadList" class="match-squad-list"></div>
+      <div class="status-legend"><span><i class="status-dot goal-dot">⚽</i> Gol</span><span><i class="card-icon yellow-card"></i> Sarı</span><span><i class="card-icon red-card"></i> Kırmızı</span><span><i class="card-icon double-card"></i> 2. sarı</span></div>
     </div>
   </div>
 
