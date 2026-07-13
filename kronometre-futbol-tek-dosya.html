@@ -1,0 +1,2118 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#13233f">
+  <meta name="description" content="Kronometreyi durdur, futbol tarihini yeniden yaz.">
+  <title>90+ Offline</title>
+  <style>
+:root {
+  --cream: #efe5cf;
+  --paper: #f7efdf;
+  --navy: #13233f;
+  --red: #c93b32;
+  --green: #285c3c;
+  --yellow: #e5b94c;
+  --ink: #171816;
+  --muted: #6d685e;
+  --line: rgba(19, 35, 63, .18);
+  --shadow: 0 16px 38px rgba(22, 24, 22, .16);
+  --radius: 20px;
+}
+
+* { box-sizing: border-box; }
+html { background: var(--cream); color: var(--ink); }
+body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(201,59,50,.13), transparent 28rem),
+    radial-gradient(circle at 100% 90%, rgba(40,92,60,.14), transparent 34rem),
+    var(--cream);
+  overflow-x: hidden;
+}
+button, input, select { font: inherit; }
+button { -webkit-tap-highlight-color: transparent; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--yellow); outline-offset: 3px; }
+
+.grain {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  opacity: .12;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.38'/%3E%3C/svg%3E");
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 66px;
+  padding: max(10px, env(safe-area-inset-top)) 18px 10px;
+  background: rgba(239,229,207,.88);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--line);
+}
+.brand-button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  color: var(--navy);
+  background: none;
+  border: 0;
+  text-align: left;
+  font-size: 11px;
+  letter-spacing: .1em;
+  line-height: 1.05;
+  cursor: pointer;
+}
+.brand-button b { color: var(--red); font-size: 15px; }
+.mini-clock {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 34px;
+  border: 3px solid var(--navy);
+  border-radius: 8px;
+  background: #d6d2ae;
+  font-family: "Courier New", monospace;
+  font-size: 18px;
+  font-weight: 800;
+  box-shadow: 3px 3px 0 var(--red);
+}
+.icon-button {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 2px solid var(--navy);
+  color: var(--navy);
+  background: var(--paper);
+  font-weight: 900;
+  cursor: pointer;
+}
+.icon-button.muted { opacity: .45; text-decoration: line-through; }
+
+.app-shell { width: min(100%, 1040px); margin: 0 auto; padding: 18px 16px 42px; }
+.screen { display: none; animation: pageIn .28s ease both; }
+.screen.active { display: block; }
+@keyframes pageIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+.hero-card {
+  position: relative;
+  overflow: hidden;
+  min-height: calc(100dvh - 150px);
+  padding: clamp(28px, 6vw, 68px);
+  border: 3px solid var(--navy);
+  border-radius: 28px;
+  background: var(--paper);
+  box-shadow: 9px 9px 0 var(--navy), var(--shadow);
+}
+.halftone-card::after {
+  content: "";
+  position: absolute;
+  width: 240px;
+  height: 240px;
+  right: -44px;
+  top: -44px;
+  border-radius: 50%;
+  opacity: .16;
+  background-image: radial-gradient(var(--navy) 1.8px, transparent 1.8px);
+  background-size: 10px 10px;
+  transform: rotate(12deg);
+}
+.eyebrow {
+  margin: 0 0 10px;
+  color: var(--red);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+h1, h2, h3 { margin: 0; color: var(--navy); font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif; font-weight: 900; letter-spacing: .025em; }
+h1 { max-width: 740px; font-size: clamp(52px, 10vw, 110px); line-height: .84; }
+h1 span { color: var(--red); }
+.lead { max-width: 620px; margin: 26px 0 24px; color: #3a3933; font-family: Georgia, serif; font-size: clamp(17px, 2.6vw, 22px); line-height: 1.55; }
+.hero-clock {
+  display: inline-flex;
+  align-items: baseline;
+  margin: 4px 0 30px;
+  padding: 14px 20px 10px;
+  border: 4px solid var(--navy);
+  border-radius: 12px;
+  background: #c9c7a0;
+  color: #101611;
+  font-family: "Courier New", monospace;
+  box-shadow: 7px 7px 0 var(--red);
+}
+.hero-clock span { font-size: clamp(32px, 7vw, 58px); font-weight: 900; letter-spacing: -.08em; }
+.hero-clock small { font-size: 28px; font-weight: 900; }
+.feature-strip { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 26px; }
+.feature-strip span { padding: 8px 12px; border: 1px solid var(--navy); border-radius: 999px; color: var(--navy); font-size: 11px; font-weight: 900; letter-spacing: .08em; }
+
+.primary-button, .secondary-button, .back-button, .small-button, .text-button {
+  border: 0;
+  cursor: pointer;
+  font-weight: 900;
+  letter-spacing: .04em;
+}
+.primary-button {
+  min-height: 54px;
+  padding: 14px 22px;
+  border: 3px solid var(--navy);
+  border-radius: 12px;
+  background: var(--red);
+  color: white;
+  box-shadow: 5px 5px 0 var(--navy);
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.primary-button:hover { transform: translate(-2px, -2px); box-shadow: 7px 7px 0 var(--navy); }
+.primary-button:active { transform: translate(3px, 3px); box-shadow: 2px 2px 0 var(--navy); }
+.primary-button:disabled { opacity: .45; cursor: not-allowed; transform: none; box-shadow: 3px 3px 0 var(--navy); }
+.jumbo { min-width: min(100%, 320px); font-size: 17px; }
+.secondary-button { min-height: 50px; padding: 12px 20px; border: 3px solid var(--navy); border-radius: 12px; background: var(--paper); color: var(--navy); box-shadow: 4px 4px 0 var(--navy); }
+.back-button { padding: 12px 0; background: transparent; color: var(--navy); }
+.text-button { margin: 14px 0 0 18px; background: transparent; color: var(--navy); text-decoration: underline; }
+.small-button { padding: 9px 12px; border: 2px solid var(--navy); border-radius: 8px; color: var(--navy); background: var(--paper); }
+.hidden { display: none !important; }
+
+.section-heading { margin: 18px 0 30px; }
+.section-heading h2 { font-size: clamp(42px, 8vw, 76px); line-height: .92; }
+.compact-heading { margin-bottom: 18px; }
+.subheading { margin: 8px 0 0; color: var(--green); font-weight: 900; letter-spacing: .12em; }
+.mode-grid { display: grid; gap: 18px; grid-template-columns: repeat(3, 1fr); margin-bottom: 28px; }
+.mode-card {
+  position: relative;
+  min-height: 270px;
+  padding: 26px;
+  border: 3px solid var(--navy);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--navy);
+  text-align: left;
+  box-shadow: 7px 7px 0 var(--navy);
+  cursor: pointer;
+  transition: transform .16s ease;
+}
+.mode-card:hover:not(:disabled) { transform: translateY(-6px) rotate(-.5deg); }
+.mode-card:nth-child(2) { background: var(--green); color: white; }
+.mode-card:nth-child(2) strong, .mode-card:nth-child(2) small { color: white; }
+.mode-number { display: block; margin-bottom: 42px; color: var(--red); font-family: Impact, sans-serif; font-size: 46px; }
+.mode-card strong { display: block; margin-bottom: 14px; color: var(--navy); font-size: 24px; line-height: 1; }
+.mode-card small { display: block; color: #494941; font-family: Georgia, serif; font-size: 15px; line-height: 1.45; }
+.mode-card.locked { opacity: .55; cursor: not-allowed; }
+.mode-card em { position: absolute; right: 18px; top: 18px; padding: 5px 8px; border: 2px solid currentColor; font-size: 10px; font-style: normal; font-weight: 900; }
+
+.team-name-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 12px; margin-bottom: 18px; }
+label { color: var(--navy); font-size: 12px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+input, select {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 8px;
+  padding: 10px 12px;
+  border: 2px solid var(--navy);
+  border-radius: 10px;
+  background: var(--paper);
+  color: var(--ink);
+  font-weight: 700;
+}
+.built-status { padding: 12px 14px; border: 2px dashed var(--navy); border-radius: 10px; color: var(--muted); font-size: 12px; font-weight: 900; }
+.built-status.done { border-style: solid; background: var(--green); color: white; }
+.segmented { display: grid; grid-template-columns: repeat(3, 1fr); padding: 5px; border: 2px solid var(--navy); border-radius: 12px; background: rgba(255,255,255,.3); }
+.builder-tab { min-height: 44px; border: 0; border-radius: 8px; background: transparent; color: var(--navy); font-size: 12px; font-weight: 900; cursor: pointer; }
+.builder-tab.active { background: var(--navy); color: white; }
+.builder-panel { display: none; margin-top: 18px; }
+.builder-panel.active { display: block; }
+.poster-panel { position: relative; display: flex; align-items: center; gap: 22px; overflow: hidden; min-height: 150px; margin-bottom: 16px; padding: 22px; border: 3px solid var(--navy); border-radius: var(--radius); color: white; box-shadow: 6px 6px 0 var(--navy); }
+.red-poster { background: var(--red); }
+.poster-number { opacity: .24; font-family: Impact, sans-serif; font-size: 110px; line-height: .7; }
+.poster-panel h3 { color: white; font-size: 32px; }
+.poster-panel p { margin: 8px 0 0; font-family: Georgia, serif; }
+.form-card, .settings-card, .timeline-card {
+  padding: 20px;
+  border: 3px solid var(--navy);
+  border-radius: var(--radius);
+  background: var(--paper);
+  box-shadow: 6px 6px 0 var(--navy);
+}
+fieldset { margin: 0 0 18px; padding: 0; border: 0; }
+legend { margin-bottom: 10px; color: var(--navy); font-size: 12px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.chip-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.period-chip { padding: 9px 11px; border: 2px solid var(--navy); border-radius: 999px; background: transparent; color: var(--navy); font-size: 12px; font-weight: 900; cursor: pointer; }
+.period-chip.active { background: var(--red); color: white; }
+.two-column { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-note { margin: 16px 0 0; color: var(--muted); font-family: Georgia, serif; font-size: 14px; }
+.manual-toolbar { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px; }
+.manual-toolbar span { min-width: 64px; text-align: right; color: var(--navy); font-weight: 900; }
+.manual-list { display: grid; gap: 8px; max-height: 390px; margin: 14px 0; padding-right: 5px; overflow-y: auto; }
+.manual-player { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; padding: 11px 12px; border: 2px solid var(--line); border-radius: 10px; background: rgba(255,255,255,.38); cursor: pointer; }
+.manual-player.selected { border-color: var(--green); background: rgba(40,92,60,.12); }
+.manual-player input { width: 18px; min-height: 18px; margin: 0; }
+.manual-player strong { color: var(--navy); }
+.manual-player small { color: var(--muted); }
+.manual-player b { font-family: "Courier New", monospace; color: var(--red); }
+.squad-preview { margin-top: 20px; padding: 16px; border: 2px solid var(--navy); border-radius: 14px; background: rgba(255,255,255,.35); }
+.squad-preview h3 { margin-bottom: 12px; }
+.lineup-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 7px 12px; margin: 0; padding: 0; list-style: none; }
+.lineup-list li { display: flex; justify-content: space-between; gap: 10px; padding-bottom: 5px; border-bottom: 1px dashed var(--line); font-size: 13px; }
+.lineup-list b { color: var(--red); }
+.screen-actions { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 24px; }
+
+.candidate-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.candidate-card { position: relative; min-height: 210px; padding: 18px; border: 3px solid var(--navy); border-radius: 18px; background: var(--paper); box-shadow: 5px 5px 0 var(--navy); }
+.candidate-card:nth-child(2) { transform: translateY(10px); }
+.candidate-index { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--red); color: white; font-weight: 900; }
+.candidate-card strong { display: block; margin-top: 34px; color: var(--navy); font-size: 20px; line-height: 1; }
+.candidate-card small { display: block; margin-top: 9px; color: var(--muted); }
+.candidate-card b { position: absolute; right: 16px; bottom: 14px; color: var(--green); font-family: Impact, sans-serif; font-size: 34px; }
+.candidate-card.chosen { animation: chosen .55s ease both; background: var(--yellow); }
+@keyframes chosen { 50% { transform: translateY(-10px) rotate(-2deg) scale(1.04); } 100% { transform: none; } }
+.draft-watch { display: grid; justify-items: center; margin-top: 36px; }
+.draft-watch p { color: var(--muted); font-family: Georgia, serif; text-align: center; }
+.digital-display { padding: 16px 20px 11px; border: 5px solid var(--navy); border-radius: 12px; background: #c9c7a0; color: #111811; font-family: "Courier New", monospace; font-size: clamp(38px, 10vw, 72px); font-weight: 900; letter-spacing: -.08em; box-shadow: 7px 7px 0 var(--red); }
+.stop-button { width: 154px; height: 154px; margin-top: 20px; border: 8px solid var(--paper); border-radius: 50%; background: var(--red); color: white; font-family: Impact, sans-serif; font-size: 34px; letter-spacing: .04em; box-shadow: 0 0 0 5px var(--navy), 0 12px 0 var(--navy); cursor: pointer; transition: transform .1s ease, box-shadow .1s ease; }
+.stop-button:active { transform: translateY(8px); box-shadow: 0 0 0 5px var(--navy), 0 4px 0 var(--navy); }
+.stop-button:disabled { filter: grayscale(.8); opacity: .55; cursor: not-allowed; }
+
+.settings-card { display: grid; gap: 0; }
+.settings-card > label { padding: 18px 0; border-bottom: 1px dashed var(--line); }
+.settings-card > label:last-child { border-bottom: 0; }
+.range-row span { display: flex; justify-content: space-between; }
+.range-row input { padding: 0; border: 0; background: transparent; accent-color: var(--red); }
+.toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 18px; cursor: pointer; }
+.toggle-row span { display: grid; gap: 5px; }
+.toggle-row small { color: var(--muted); font-family: Georgia, serif; font-size: 13px; font-weight: 400; letter-spacing: 0; text-transform: none; }
+.toggle-row input { position: absolute; opacity: 0; pointer-events: none; }
+.toggle-row i { position: relative; flex: 0 0 54px; width: 54px; height: 30px; border: 2px solid var(--navy); border-radius: 999px; background: #c8bea9; }
+.toggle-row i::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--navy); transition: .18s ease; }
+.toggle-row input:checked + i { background: var(--green); }
+.toggle-row input:checked + i::after { transform: translateX(24px); background: white; }
+
+.match-screen { max-width: 820px; margin: 0 auto; }
+.scoreboard { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 14px; padding: 14px; border: 3px solid var(--navy); border-radius: 16px; background: var(--paper); box-shadow: 5px 5px 0 var(--navy); }
+.score-team { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.score-team.away { justify-content: flex-end; text-align: right; }
+.score-team span { overflow: hidden; color: var(--navy); font-size: clamp(11px, 2.4vw, 16px); font-weight: 900; text-overflow: ellipsis; white-space: nowrap; }
+.score-team b { color: var(--red); font-family: Impact, sans-serif; font-size: 48px; }
+.match-meta { display: grid; justify-items: center; gap: 4px; padding: 0 12px; border-left: 1px solid var(--line); border-right: 1px solid var(--line); }
+.match-meta strong { color: var(--green); font-size: 11px; }
+.match-meta span { color: var(--navy); font-family: "Courier New", monospace; font-size: 17px; font-weight: 900; }
+.pitch-panel { position: relative; display: grid; justify-items: center; overflow: hidden; min-height: 600px; margin-top: 20px; padding: 22px 18px 30px; border: 5px solid var(--navy); border-radius: 26px; background: var(--green); box-shadow: 8px 8px 0 var(--navy); }
+.pitch-panel::before { content: ""; position: absolute; inset: 0; opacity: .12; background: repeating-linear-gradient(90deg, transparent 0 56px, white 56px 112px); }
+.pitch-lines { position: absolute; inset: 34px 24px; border: 3px solid rgba(255,255,255,.5); pointer-events: none; }
+.pitch-lines::before { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; border-left: 3px solid rgba(255,255,255,.5); }
+.pitch-lines::after { content: ""; position: absolute; left: 50%; top: 50%; width: 120px; height: 120px; border: 3px solid rgba(255,255,255,.5); border-radius: 50%; transform: translate(-50%,-50%); }
+.turn-banner, .player-card-mini, .match-watch, .turn-time, .match-stop, .ai-hint { position: relative; z-index: 2; }
+.turn-banner { display: flex; align-items: center; gap: 8px; max-width: 100%; padding: 8px 12px; border-radius: 999px; background: var(--paper); color: var(--navy); font-size: 11px; font-weight: 900; }
+.turn-banner span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.turn-banner b { color: var(--red); }
+.player-card-mini { width: min(100%, 390px); margin-top: 24px; padding: 15px 18px; border: 3px solid var(--navy); border-radius: 14px; background: rgba(247,239,223,.94); text-align: center; box-shadow: 5px 5px 0 var(--navy); }
+.player-card-mini small { color: var(--muted); font-size: 10px; font-weight: 900; letter-spacing: .12em; }
+.player-card-mini strong { display: block; margin: 4px 0; color: var(--navy); font-size: 22px; }
+.player-card-mini span { color: var(--red); font-size: 12px; font-weight: 900; }
+.match-watch { margin-top: 32px; font-size: clamp(46px, 12vw, 82px); }
+.turn-time { display: flex; gap: 10px; align-items: baseline; margin-top: 16px; color: white; text-shadow: 2px 2px 0 rgba(0,0,0,.25); }
+.turn-time span { font-size: 12px; font-weight: 900; text-transform: uppercase; }
+.turn-time b { font-family: "Courier New", monospace; font-size: 22px; }
+.match-stop { margin-top: 16px; }
+.ai-hint { margin: 18px 0 0; color: white; font-family: Georgia, serif; }
+.match-stats-row { display: grid; grid-template-columns: 1fr 1fr auto; align-items: center; gap: 12px; margin-top: 20px; padding: 14px; border: 2px solid var(--navy); border-radius: 14px; background: rgba(247,239,223,.72); }
+.match-stats-row div { display: grid; gap: 4px; }
+.match-stats-row small { color: var(--muted); font-size: 10px; font-weight: 900; }
+.match-stats-row b { color: var(--navy); }
+.live-timeline { max-height: 150px; margin: 14px 0 0; padding: 0; overflow-y: auto; list-style: none; }
+.live-timeline li { display: grid; grid-template-columns: 44px 1fr; gap: 8px; padding: 7px 4px; border-bottom: 1px dashed var(--line); font-size: 13px; }
+.live-timeline time { color: var(--red); font-weight: 900; }
+
+.event-overlay { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; align-content: center; overflow: hidden; padding: 24px; background: var(--red); color: white; text-align: center; animation: overlayIn .25s ease both; }
+.event-overlay.green { background: var(--green); }
+.event-overlay.yellow { background: var(--yellow); color: var(--navy); }
+.event-overlay.navy { background: var(--navy); }
+.event-overlay h2 { position: relative; z-index: 2; color: inherit; font-size: clamp(84px, 24vw, 210px); line-height: .8; text-shadow: 8px 8px 0 rgba(0,0,0,.18); }
+.event-overlay p { position: relative; z-index: 2; margin: 18px 0 0; font-family: Georgia, serif; font-size: clamp(18px, 4vw, 28px); }
+.event-overlay #overlayKicker { margin: 0 0 10px; font-family: "Courier New", monospace; font-size: 22px; font-weight: 900; letter-spacing: .25em; }
+.rays { position: absolute; width: 140vmax; height: 140vmax; opacity: .13; background: repeating-conic-gradient(from 0deg, white 0 7deg, transparent 7deg 14deg); animation: spin 10s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes overlayIn { from { opacity: 0; transform: scale(1.08); } to { opacity: 1; transform: scale(1); } }
+
+.dialog-overlay { position: fixed; inset: 0; z-index: 190; display: grid; place-items: center; padding: 18px; background: rgba(19,35,63,.78); backdrop-filter: blur(10px); }
+.dialog-card { width: min(100%, 520px); padding: 30px; border: 4px solid var(--navy); border-radius: 20px; background: var(--paper); box-shadow: 10px 10px 0 var(--red); text-align: center; }
+.dialog-card h2 { font-size: 52px; line-height: .9; }
+.dialog-card p:not(.eyebrow) { margin: 18px 0 24px; color: var(--muted); font-family: Georgia, serif; font-size: 17px; line-height: 1.5; }
+
+.results-poster { position: relative; overflow: hidden; padding: 34px; border: 4px solid var(--navy); border-radius: 24px; background: var(--paper); box-shadow: 8px 8px 0 var(--navy); text-align: center; }
+.results-poster h2 { font-size: clamp(54px, 12vw, 100px); }
+.final-score { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 16px; margin-top: 26px; }
+.final-score span { color: var(--navy); font-size: 14px; font-weight: 900; }
+.final-score b { color: var(--red); font-family: Impact, sans-serif; font-size: clamp(40px, 10vw, 74px); white-space: nowrap; }
+.winner-text { margin: 16px 0 0; color: var(--green); font-weight: 900; letter-spacing: .1em; }
+.result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 22px; }
+.result-card { padding: 20px; border: 3px solid var(--navy); border-radius: 16px; background: var(--paper); box-shadow: 5px 5px 0 var(--navy); }
+.result-card small { color: var(--muted); font-size: 10px; font-weight: 900; letter-spacing: .1em; }
+.result-card b { display: block; margin-top: 8px; color: var(--navy); font-size: 22px; }
+.timeline-card { margin-top: 22px; }
+.timeline-card h3 { margin-bottom: 14px; font-size: 24px; }
+.timeline-card ol { margin: 0; padding-left: 24px; }
+.timeline-card li { padding: 8px 0; border-bottom: 1px dashed var(--line); line-height: 1.4; }
+.legal { margin: 28px auto 0; max-width: 720px; color: var(--muted); font-family: Georgia, serif; font-size: 12px; text-align: center; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+@media (max-width: 760px) {
+  .app-shell { padding: 14px 12px 34px; }
+  .hero-card { min-height: auto; padding: 28px 20px 32px; box-shadow: 6px 6px 0 var(--navy); }
+  h1 { font-size: clamp(52px, 17vw, 78px); }
+  .mode-grid { grid-template-columns: 1fr; }
+  .mode-card { min-height: 190px; }
+  .mode-number { margin-bottom: 22px; }
+  .two-column, .result-grid { grid-template-columns: 1fr; }
+  .candidate-grid { grid-template-columns: 1fr; }
+  .candidate-card { min-height: 120px; }
+  .candidate-card:nth-child(2) { transform: none; }
+  .candidate-card strong { margin-top: 14px; }
+  .draft-watch { margin-top: 24px; }
+  .lineup-list { grid-template-columns: 1fr; }
+  .scoreboard { gap: 6px; padding: 10px; }
+  .score-team { display: grid; gap: 2px; }
+  .score-team.away { justify-items: end; }
+  .score-team b { font-size: 38px; }
+  .match-meta { padding: 0 8px; }
+  .pitch-panel { min-height: 560px; padding-inline: 12px; }
+  .match-stats-row { grid-template-columns: 1fr 1fr; }
+  .match-stats-row .small-button { grid-column: 1 / -1; }
+  .final-score { grid-template-columns: 1fr; gap: 5px; }
+  .screen-actions { align-items: stretch; }
+  .screen-actions .primary-button, .screen-actions .secondary-button { flex: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
+}
+
+</style>
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+  <header class="topbar">
+    <button id="homeButton" class="brand-button" type="button" aria-label="Ana menü">
+      <span class="mini-clock">00</span>
+      <span><b>90+</b><br>OFFLINE</span>
+    </button>
+    <button id="soundButton" class="icon-button" type="button" aria-label="Sesi aç veya kapat">♪</button>
+  </header>
+
+  <main id="app" class="app-shell">
+    <section id="screen-home" class="screen active" aria-labelledby="home-title">
+      <div class="hero-card halftone-card">
+        <p class="eyebrow">RETRO FUTBOL SİMÜLASYONU</p>
+        <h1 id="home-title">ZAMANI<br><span>DURDUR.</span><br>MAÇI DEĞİŞTİR.</h1>
+        <p class="lead">Bir kronometre, on rakam, doksan dakikalık futbol deliliği. Burada taktik tahtası değil, başparmak konuşur.</p>
+        <div class="hero-clock" aria-hidden="true">
+          <span>00:00</span><small>.0</small>
+        </div>
+        <button id="startButton" class="primary-button jumbo" type="button">OYUNU BAŞLAT</button>
+        <button id="continueButton" class="text-button hidden" type="button">KAYITLI MAÇA DÖN</button>
+      </div>
+      <div class="feature-strip">
+        <span>AI</span><span>AYNI CİHAZ CO-OP</span><span>OFFLINE PWA</span>
+      </div>
+    </section>
+
+    <section id="screen-mode" class="screen" aria-labelledby="mode-title">
+      <div class="section-heading">
+        <p class="eyebrow">1 / 4</p>
+        <h2 id="mode-title">OYUN MODUNU SEÇ</h2>
+      </div>
+      <div class="mode-grid">
+        <button class="mode-card" type="button" data-mode="ai">
+          <span class="mode-number">01</span>
+          <strong>YAPAY ZEKAYA KARŞI</strong>
+          <small>Rakip 1,5–4 saniye arasında kronometreyi otomatik durdurur.</small>
+        </button>
+        <button class="mode-card" type="button" data-mode="coop">
+          <span class="mode-number">02</span>
+          <strong>AYNI CİHAZ CO-OP</strong>
+          <small>Telefon el değiştirir, dostluklar sınanır. Klasik.</small>
+        </button>
+        <button class="mode-card locked" type="button" disabled>
+          <span class="mode-number">03</span>
+          <strong>ONLINE LİG</strong>
+          <small>Faz 2 — backend ve asenkron sezon sistemiyle gelecek.</small>
+          <em>KİLİTLİ</em>
+        </button>
+      </div>
+      <button class="back-button" data-back="home" type="button">← GERİ</button>
+    </section>
+
+    <section id="screen-squad" class="screen" aria-labelledby="squad-title">
+      <div class="section-heading compact-heading">
+        <p class="eyebrow">2 / 4 · KADRO</p>
+        <h2 id="squad-title">TAKIMINI KUR</h2>
+        <p id="setupTeamLabel" class="subheading">TAKIM 1</p>
+      </div>
+
+      <div class="team-name-row">
+        <label>Takım adı
+          <input id="teamNameInput" maxlength="22" value="Kronometre XI" autocomplete="off">
+        </label>
+        <div id="builtStatus" class="built-status">Henüz kurulmadı</div>
+      </div>
+
+      <div class="segmented" role="tablist" aria-label="Kadro kurma yöntemi">
+        <button class="builder-tab active" data-builder="random" type="button">KARIŞIK</button>
+        <button class="builder-tab" data-builder="criteria" type="button">KRİTER</button>
+        <button class="builder-tab" data-builder="manual" type="button">MANUEL</button>
+      </div>
+
+      <div id="builder-random" class="builder-panel active">
+        <div class="poster-panel red-poster">
+          <span class="poster-number">11</span>
+          <div><h3>TEK TUŞLA KADRO</h3><p>Tüm dönemlerden, pozisyon dengeli rastgele ilk 11.</p></div>
+        </div>
+        <button id="randomBuildButton" class="primary-button" type="button">RASTGELE KADRO OLUŞTUR</button>
+      </div>
+
+      <div id="builder-criteria" class="builder-panel">
+        <div class="form-card">
+          <fieldset>
+            <legend>Dönem — en fazla 2</legend>
+            <div id="periodChips" class="chip-grid"></div>
+          </fieldset>
+          <div class="two-column">
+            <label>Milliyet
+              <select id="nationalitySelect"><option value="">Tümü</option></select>
+            </label>
+            <label>Lig
+              <select id="leagueSelect"><option value="">Tümü</option></select>
+            </label>
+          </div>
+          <p class="form-note">Takım adı yalnızca kozmetiktir; oyuncu havuzunu etkilemez.</p>
+        </div>
+        <button id="criteriaBuildButton" class="primary-button" type="button">27 KİŞİLİK HAVUZU HAZIRLA</button>
+      </div>
+
+      <div id="builder-manual" class="builder-panel">
+        <div class="manual-toolbar">
+          <input id="manualSearch" type="search" placeholder="Oyuncu ara…" autocomplete="off">
+          <span id="manualCount">0 / 11</span>
+        </div>
+        <div id="manualPlayerList" class="manual-list"></div>
+        <button id="manualBuildButton" class="primary-button" type="button" disabled>SEÇİLİ 11'İ ONAYLA</button>
+      </div>
+
+      <div id="squadPreview" class="squad-preview hidden"></div>
+      <div class="screen-actions">
+        <button class="back-button" data-back="mode" type="button">← GERİ</button>
+        <button id="nextSetupButton" class="primary-button hidden" type="button">AYARLARA GEÇ →</button>
+      </div>
+    </section>
+
+    <section id="screen-draft" class="screen" aria-labelledby="draft-title">
+      <div class="section-heading compact-heading">
+        <p class="eyebrow">KRONOMETRE DRAFTI</p>
+        <h2 id="draft-title">ADAYI DURDUR</h2>
+        <p id="draftProgress" class="subheading">1 / 11 · KALECİ</p>
+      </div>
+      <div id="draftCandidates" class="candidate-grid"></div>
+      <div class="draft-watch">
+        <div id="draftWatchDisplay" class="digital-display">00:00.0</div>
+        <p>Son rakam, aday sayısına göre mod alınır.</p>
+        <button id="draftStopButton" class="stop-button" type="button">DURDUR</button>
+      </div>
+    </section>
+
+    <section id="screen-settings" class="screen" aria-labelledby="settings-title">
+      <div class="section-heading">
+        <p class="eyebrow">3 / 4</p>
+        <h2 id="settings-title">MAÇ AYARLARI</h2>
+      </div>
+      <div class="settings-card">
+        <label class="range-row">
+          <span>Maç süresi <b id="durationValue">5 dk</b></span>
+          <input id="durationRange" type="range" min="5" max="10" value="5" step="1">
+        </label>
+        <label class="toggle-row"><span><b>Kart sistemi</b><small>Sarı, ikinci sarı ve kırmızı</small></span><input id="cardsToggle" type="checkbox" checked><i></i></label>
+        <label class="toggle-row"><span><b>Sakatlık riski</b><small>Faul sonrası deneysel %10 kontrol</small></span><input id="injuryToggle" type="checkbox"><i></i></label>
+        <label class="toggle-row"><span><b>Uzatma</b><small>Beraberlikte oranlı 2 mini devre</small></span><input id="extraToggle" type="checkbox" checked><i></i></label>
+        <label class="toggle-row"><span><b>Seri penaltı</b><small>Net kazanan için</small></span><input id="shootoutToggle" type="checkbox" checked><i></i></label>
+        <label>Ses yoğunluğu
+          <select id="soundIntensity">
+            <option value="low">Düşük</option>
+            <option value="medium" selected>Orta</option>
+            <option value="high">Yüksek</option>
+          </select>
+        </label>
+      </div>
+      <div class="screen-actions">
+        <button class="back-button" data-back="squad" type="button">← GERİ</button>
+        <button id="kickoffButton" class="primary-button" type="button">MAÇI BAŞLAT →</button>
+      </div>
+    </section>
+
+    <section id="screen-match" class="screen match-screen" aria-labelledby="match-title">
+      <h2 id="match-title" class="sr-only">Maç ekranı</h2>
+      <div class="scoreboard">
+        <div class="score-team"><span id="homeTeamName">EV SAHİBİ</span><b id="homeScore">0</b></div>
+        <div class="match-meta"><strong id="periodLabel">1. DEVRE</strong><span id="matchClock">00:00</span></div>
+        <div class="score-team away"><b id="awayScore">0</b><span id="awayTeamName">DEPLASMAN</span></div>
+      </div>
+
+      <div class="pitch-panel">
+        <div class="pitch-lines" aria-hidden="true"></div>
+        <div class="turn-banner"><span id="turnTeam">KRONOMETRE XI</span><b id="rollContextLabel">HÜCUM</b></div>
+        <div class="player-card-mini">
+          <small>TOPLA OYNAYAN</small>
+          <strong id="activePlayerName">—</strong>
+          <span id="activePlayerMeta">—</span>
+        </div>
+        <div id="matchWatchDisplay" class="digital-display match-watch">00:00.0</div>
+        <div class="turn-time"><span>Tur süresi</span><b id="turnCountdown">10.0</b></div>
+        <button id="matchStopButton" class="stop-button match-stop" type="button">DURDUR</button>
+        <p id="aiHint" class="ai-hint hidden">Rakip kronometreyi kolluyor…</p>
+      </div>
+
+      <div class="match-stats-row">
+        <div><small>KORNER</small><b><span id="homeCorners">0</span> — <span id="awayCorners">0</span></b></div>
+        <div><small>VAKİT İHLALİ</small><b><span id="homeTimeouts">0</span> — <span id="awayTimeouts">0</span></b></div>
+        <button id="pauseButton" class="small-button" type="button">DURAKLAT</button>
+      </div>
+      <ol id="liveTimeline" class="live-timeline"></ol>
+    </section>
+
+    <section id="screen-results" class="screen" aria-labelledby="results-title">
+      <div class="results-poster halftone-card">
+        <p class="eyebrow">MAÇ SONU</p>
+        <h2 id="results-title">SON DÜDÜK</h2>
+        <div class="final-score"><span id="finalHomeName">TAKIM 1</span><b id="finalScore">0 — 0</b><span id="finalAwayName">TAKIM 2</span></div>
+        <p id="winnerText" class="winner-text">BERABERE</p>
+      </div>
+      <div class="result-grid">
+        <div class="result-card"><small>TOP SENDE KALMA</small><b id="possessionResult">50% — 50%</b></div>
+        <div class="result-card"><small>ÖNE ÇIKAN</small><b id="highlightResult">—</b></div>
+      </div>
+      <div class="timeline-card">
+        <h3>OLAY ZAMAN ÇİZELGESİ</h3>
+        <ol id="resultTimeline"></ol>
+      </div>
+      <div class="screen-actions">
+        <button id="rematchButton" class="secondary-button" type="button">RÖVANŞ</button>
+        <button id="newGameButton" class="primary-button" type="button">YENİ OYUN</button>
+      </div>
+      <p class="legal">Bu oyun fantasy/eğitim amaçlıdır. Marka ve oyuncu isimleri ilgili sahiplerine aittir; resmi bağlantı yoktur.</p>
+    </section>
+  </main>
+
+  <div id="eventOverlay" class="event-overlay hidden" role="status" aria-live="assertive">
+    <div class="rays"></div>
+    <p id="overlayKicker">00</p>
+    <h2 id="overlayTitle">GOL!</h2>
+    <p id="overlaySubtitle">—</p>
+  </div>
+
+  <div id="dialogOverlay" class="dialog-overlay hidden" role="dialog" aria-modal="true">
+    <div class="dialog-card">
+      <p id="dialogEyebrow" class="eyebrow">DEVRE ARASI</p>
+      <h2 id="dialogTitle">SOYUNMA ODASI</h2>
+      <p id="dialogText">Nefeslen. Kronometre birazdan yeniden akacak.</p>
+      <button id="dialogButton" class="primary-button" type="button">DEVAM ET</button>
+    </div>
+  </div>
+
+  <script>
+(function (root, factory) {
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  if (root) root.GameCore = api;
+})(typeof window !== 'undefined' ? window : globalThis, function () {
+  'use strict';
+
+  const MAIN_EVENTS = Object.freeze({
+    0: { key: 'goal', label: 'GOL', keepsPossession: false },
+    1: { key: 'pass', label: 'PAS', keepsPossession: true },
+    2: { key: 'pass', label: 'PAS', keepsPossession: true },
+    3: { key: 'throwIn', label: 'TAÇ', keepsPossession: false },
+    4: { key: 'foul', label: 'FAUL', keepsPossession: false },
+    5: { key: 'pass', label: 'PAS', keepsPossession: true },
+    6: { key: 'corner', label: 'KORNER', keepsPossession: true },
+    7: { key: 'pass', label: 'PAS', keepsPossession: true },
+    8: { key: 'freeKick', label: 'FRİKİK', keepsPossession: true },
+    9: { key: 'turnover', label: 'AUT / TOP KAYBI', keepsPossession: false }
+  });
+
+  function normalizeDigit(value) {
+    const parsed = Number.parseInt(value, 10);
+    if (!Number.isFinite(parsed)) return 0;
+    return Math.abs(parsed) % 10;
+  }
+
+  function mainEventForDigit(digit) {
+    return MAIN_EVENTS[normalizeDigit(digit)];
+  }
+
+  function foulResultForDigit(digit) {
+    const d = normalizeDigit(digit);
+    if (d === 1 || d === 3) return 'freeKick';
+    if (d === 9) return 'penalty';
+    return 'indirect';
+  }
+
+  function cardForDigit(digit) {
+    const d = normalizeDigit(digit);
+    if (d === 1 || d === 3 || d === 5) return 'yellow';
+    if (d === 9) return 'red';
+    return 'none';
+  }
+
+  function shotForDigit(digit) {
+    return normalizeDigit(digit) % 2 === 0 ? 'goal' : 'saved';
+  }
+
+  function registerCorner(currentCorners) {
+    const next = Math.max(0, Number(currentCorners) || 0) + 1;
+    if (next >= 3) return { corners: 0, penalty: true };
+    return { corners: next, penalty: false };
+  }
+
+  function registerTimeout(currentCount) {
+    const count = Math.max(0, Number(currentCount) || 0) + 1;
+    const results = {
+      1: 'turnover',
+      2: 'turnover',
+      3: 'penaltyAgainst',
+      4: 'redCard',
+      5: 'forfeit'
+    };
+    return { count, consequence: results[Math.min(count, 5)] };
+  }
+
+  function applyCard(player, card) {
+    const next = {
+      ...player,
+      yellowCards: Number(player.yellowCards) || 0,
+      red: Boolean(player.red),
+      injured: Boolean(player.injured)
+    };
+
+    if (card === 'yellow' && !next.red) {
+      next.yellowCards += 1;
+      if (next.yellowCards >= 2) next.red = true;
+    }
+    if (card === 'red') next.red = true;
+    return next;
+  }
+
+  function roundExtraTimeSeconds(matchSeconds) {
+    const raw = (Math.max(0, Number(matchSeconds) || 0) * 15) / 90;
+    return Math.max(30, Math.round(raw / 30) * 30);
+  }
+
+  function matchMinute(elapsedSeconds, regulationSeconds, periodType) {
+    const elapsed = Math.max(0, Number(elapsedSeconds) || 0);
+    const regulation = Math.max(1, Number(regulationSeconds) || 1);
+    if (periodType === 'extra') {
+      return Math.min(120, 90 + Math.round((elapsed / Math.max(1, roundExtraTimeSeconds(regulation))) * 30));
+    }
+    return Math.min(90, Math.max(1, Math.round((elapsed / regulation) * 90)));
+  }
+
+  function possessionPercent(possessionMs) {
+    const a = Math.max(0, Number(possessionMs && possessionMs[0]) || 0);
+    const b = Math.max(0, Number(possessionMs && possessionMs[1]) || 0);
+    const total = a + b;
+    if (!total) return [50, 50];
+    const first = Math.round((a / total) * 100);
+    return [first, 100 - first];
+  }
+
+  function forfeitScore(scores, losingSide) {
+    const next = [Number(scores[0]) || 0, Number(scores[1]) || 0];
+    const winner = losingSide === 0 ? 1 : 0;
+    next[winner] = Math.max(next[winner], next[losingSide] + 3, 3);
+    return next;
+  }
+
+  function chooseByModulo(items, digit) {
+    if (!Array.isArray(items) || !items.length) return null;
+    return items[normalizeDigit(digit) % items.length];
+  }
+
+  return Object.freeze({
+    MAIN_EVENTS,
+    normalizeDigit,
+    mainEventForDigit,
+    foulResultForDigit,
+    cardForDigit,
+    shotForDigit,
+    registerCorner,
+    registerTimeout,
+    applyCard,
+    roundExtraTimeSeconds,
+    matchMinute,
+    possessionPercent,
+    forfeitScore,
+    chooseByModulo
+  });
+});
+
+</script>
+  <script>
+(function (root) {
+  'use strict';
+
+  const rows = [
+    ['lev-yashin','Lev Yaşin','SSCB','GK',1950,1970,['Sovyet Ligi'],96],
+    ['gordon-banks','Gordon Banks','İngiltere','GK',1958,1978,['Premier Lig'],91],
+    ['dino-zoff','Dino Zoff','İtalya','GK',1961,1983,['Serie A'],93],
+    ['peter-schmeichel','Peter Schmeichel','Danimarka','GK',1981,2003,['Premier Lig','Danimarka Ligi'],92],
+    ['oliver-kahn','Oliver Kahn','Almanya','GK',1987,2008,['Bundesliga'],92],
+    ['gianluigi-buffon','Gianluigi Buffon','İtalya','GK',1995,2023,['Serie A','Ligue 1'],96],
+    ['iker-casillas','Iker Casillas','İspanya','GK',1998,2020,['La Liga','Portekiz Ligi'],94],
+    ['manuel-neuer','Manuel Neuer','Almanya','GK',2005,2026,['Bundesliga'],95],
+    ['alisson','Alisson Becker','Brezilya','GK',2013,2026,['Premier Lig','Serie A'],90],
+    ['courtois','Thibaut Courtois','Belçika','GK',2009,2026,['La Liga','Premier Lig'],91],
+    ['rustu','Rüştü Reçber','Türkiye','GK',1988,2012,['Süper Lig','La Liga'],87],
+
+    ['bobby-moore','Bobby Moore','İngiltere','CB',1958,1978,['Premier Lig'],93],
+    ['beckenbauer','Franz Beckenbauer','Almanya','CB',1964,1983,['Bundesliga','ABD Ligi'],97],
+    ['carlos-alberto','Carlos Alberto','Brezilya','RB',1963,1982,['Brezilya Ligi','ABD Ligi'],93],
+    ['facchetti','Giacinto Facchetti','İtalya','LB',1960,1978,['Serie A'],92],
+    ['baresi','Franco Baresi','İtalya','CB',1977,1997,['Serie A'],96],
+    ['maldini','Paolo Maldini','İtalya','LB',1984,2009,['Serie A'],97],
+    ['koeman','Ronald Koeman','Hollanda','CB',1980,1997,['La Liga','Hollanda Ligi'],92],
+    ['cafu','Cafu','Brezilya','RB',1989,2008,['Serie A','Brezilya Ligi'],94],
+    ['roberto-carlos','Roberto Carlos','Brezilya','LB',1991,2015,['La Liga','Süper Lig','Brezilya Ligi'],94],
+    ['nesta','Alessandro Nesta','İtalya','CB',1993,2014,['Serie A','MLS'],93],
+    ['cannavaro','Fabio Cannavaro','İtalya','CB',1992,2011,['Serie A','La Liga'],94],
+    ['thuram','Lilian Thuram','Fransa','RB',1991,2008,['Serie A','La Liga','Ligue 1'],92],
+    ['puyol','Carles Puyol','İspanya','CB',1999,2014,['La Liga'],93],
+    ['daniel-alves','Dani Alves','Brezilya','RB',2001,2023,['La Liga','Serie A','Ligue 1'],93],
+    ['lahm','Philipp Lahm','Almanya','LB',2002,2017,['Bundesliga'],93],
+    ['sergio-ramos','Sergio Ramos','İspanya','CB',2004,2026,['La Liga','Ligue 1'],94],
+    ['marcelo','Marcelo','Brezilya','LB',2005,2024,['La Liga','Brezilya Ligi'],91],
+    ['van-dijk','Virgil van Dijk','Hollanda','CB',2011,2026,['Premier Lig','İskoçya Ligi'],92],
+    ['hakimi','Achraf Hakimi','Fas','RB',2016,2026,['Ligue 1','Serie A','Bundesliga'],89],
+    ['alphonso-davies','Alphonso Davies','Kanada','LB',2016,2026,['Bundesliga','MLS'],88],
+    ['bulent-korkmaz','Bülent Korkmaz','Türkiye','CB',1987,2005,['Süper Lig'],87],
+    ['alpay','Alpay Özalan','Türkiye','CB',1992,2008,['Süper Lig','Premier Lig','Bundesliga'],82],
+
+    ['didi','Didi','Brezilya','CM',1946,1966,['Brezilya Ligi','La Liga'],93],
+    ['bobby-charlton','Bobby Charlton','İngiltere','AM',1956,1980,['Premier Lig'],95],
+    ['gerson','Gérson','Brezilya','CM',1959,1974,['Brezilya Ligi'],90],
+    ['cruyff','Johan Cruyff','Hollanda','AM',1964,1984,['Hollanda Ligi','La Liga'],98],
+    ['zico','Zico','Brezilya','AM',1971,1994,['Brezilya Ligi','Serie A'],95],
+    ['socrates','Sócrates','Brezilya','CM',1974,1989,['Brezilya Ligi','Serie A'],92],
+    ['platini','Michel Platini','Fransa','AM',1972,1987,['Serie A','Ligue 1'],96],
+    ['matthaus','Lothar Matthäus','Almanya','DM',1979,2000,['Bundesliga','Serie A'],95],
+    ['gullit','Ruud Gullit','Hollanda','AM',1979,1998,['Serie A','Premier Lig','Hollanda Ligi'],94],
+    ['hagi','Gheorghe Hagi','Romanya','AM',1982,2001,['La Liga','Süper Lig'],93],
+    ['rijkaard','Frank Rijkaard','Hollanda','DM',1980,1995,['Serie A','Hollanda Ligi','La Liga'],93],
+    ['zidane','Zinedine Zidane','Fransa','AM',1989,2006,['Serie A','La Liga','Ligue 1'],98],
+    ['figo','Luís Figo','Portekiz','RW',1989,2009,['La Liga','Serie A'],95],
+    ['beckham','David Beckham','İngiltere','CM',1992,2013,['Premier Lig','La Liga','MLS','Ligue 1'],91],
+    ['rivaldo','Rivaldo','Brezilya','AM',1991,2015,['La Liga','Serie A','Brezilya Ligi'],94],
+    ['riquelme','Juan Román Riquelme','Arjantin','AM',1996,2014,['Arjantin Ligi','La Liga'],92],
+    ['pirlo','Andrea Pirlo','İtalya','CM',1995,2017,['Serie A','MLS'],94],
+    ['vieira','Patrick Vieira','Fransa','DM',1994,2011,['Premier Lig','Serie A','Ligue 1'],91],
+    ['makelele','Claude Makélélé','Fransa','DM',1991,2011,['La Liga','Premier Lig','Ligue 1'],90],
+    ['kaka','Kaká','Brezilya','AM',2001,2017,['Serie A','La Liga','MLS'],94],
+    ['xavi','Xavi Hernández','İspanya','CM',1998,2019,['La Liga','Katar Ligi'],96],
+    ['iniesta','Andrés Iniesta','İspanya','AM',2002,2024,['La Liga','Japonya Ligi'],96],
+    ['busquets','Sergio Busquets','İspanya','DM',2008,2026,['La Liga','MLS'],92],
+    ['modric','Luka Modrić','Hırvatistan','CM',2003,2026,['La Liga','Premier Lig'],96],
+    ['kroos','Toni Kroos','Almanya','CM',2007,2024,['Bundesliga','La Liga'],94],
+    ['de-bruyne','Kevin De Bruyne','Belçika','AM',2008,2026,['Premier Lig','Bundesliga'],94],
+    ['rodri','Rodri','İspanya','DM',2015,2026,['Premier Lig','La Liga'],92],
+    ['bellingham','Jude Bellingham','İngiltere','AM',2019,2026,['La Liga','Bundesliga'],91],
+    ['hakan-calhanoglu','Hakan Çalhanoğlu','Türkiye','CM',2010,2026,['Serie A','Bundesliga'],88],
+    ['sergen','Sergen Yalçın','Türkiye','AM',1991,2008,['Süper Lig'],88],
+    ['arda-turan','Arda Turan','Türkiye','AM',2005,2020,['Süper Lig','La Liga'],87],
+
+    ['di-stefano','Alfredo Di Stéfano','Arjantin','ST',1945,1966,['La Liga','Arjantin Ligi'],98],
+    ['puskas','Ferenc Puskás','Macaristan','ST',1943,1966,['Macaristan Ligi','La Liga'],98],
+    ['pele','Pelé','Brezilya','ST',1956,1977,['Brezilya Ligi','ABD Ligi'],99],
+    ['garrincha','Garrincha','Brezilya','RW',1953,1972,['Brezilya Ligi'],96],
+    ['eusebio','Eusébio','Portekiz','ST',1957,1979,['Portekiz Ligi','ABD Ligi'],97],
+    ['george-best','George Best','Kuzey İrlanda','LW',1963,1984,['Premier Lig','ABD Ligi'],95],
+    ['metin-oktay','Metin Oktay','Türkiye','ST',1955,1969,['Süper Lig','Serie A'],92],
+    ['lefter','Lefter Küçükandonyadis','Türkiye','RW',1947,1964,['Süper Lig','Serie A','Ligue 1'],92],
+    ['maradona','Diego Maradona','Arjantin','AM',1976,1997,['Arjantin Ligi','La Liga','Serie A'],99],
+    ['van-basten','Marco van Basten','Hollanda','ST',1981,1995,['Hollanda Ligi','Serie A'],97],
+    ['romario','Romário','Brezilya','ST',1985,2009,['Brezilya Ligi','La Liga','Hollanda Ligi'],96],
+    ['stoichkov','Hristo Stoichkov','Bulgaristan','LW',1982,2003,['La Liga','Bulgaristan Ligi'],92],
+    ['batistuta','Gabriel Batistuta','Arjantin','ST',1988,2005,['Serie A','Arjantin Ligi'],94],
+    ['weah','George Weah','Liberya','ST',1985,2003,['Serie A','Ligue 1','Premier Lig'],93],
+    ['ronaldo','Ronaldo Nazário','Brezilya','ST',1993,2011,['La Liga','Serie A','Hollanda Ligi'],98],
+    ['shevchenko','Andriy Shevchenko','Ukrayna','ST',1994,2012,['Serie A','Premier Lig','Ukrayna Ligi'],94],
+    ['henry','Thierry Henry','Fransa','LW',1994,2014,['Premier Lig','La Liga','Ligue 1','MLS'],96],
+    ['ronaldinho','Ronaldinho','Brezilya','LW',1998,2015,['La Liga','Serie A','Ligue 1','Brezilya Ligi'],97],
+    ['eto-o','Samuel Eto’o','Kamerun','ST',1997,2019,['La Liga','Serie A','Premier Lig'],94],
+    ['drogba','Didier Drogba','Fildişi Sahili','ST',1998,2018,['Premier Lig','Ligue 1','Süper Lig','MLS'],93],
+    ['hakan-sukur','Hakan Şükür','Türkiye','ST',1987,2008,['Süper Lig','Serie A','Premier Lig'],90],
+    ['n-ihat','Nihat Kahveci','Türkiye','ST',1997,2012,['Süper Lig','La Liga'],87],
+    ['cristiano','Cristiano Ronaldo','Portekiz','LW',2002,2026,['Premier Lig','La Liga','Serie A','Suudi Ligi'],99],
+    ['messi','Lionel Messi','Arjantin','RW',2004,2026,['La Liga','Ligue 1','MLS'],99],
+    ['rooney','Wayne Rooney','İngiltere','ST',2002,2018,['Premier Lig','MLS'],93],
+    ['robben','Arjen Robben','Hollanda','RW',2000,2021,['Premier Lig','La Liga','Bundesliga'],94],
+    ['ribery','Franck Ribéry','Fransa','LW',2000,2022,['Bundesliga','Serie A','Ligue 1','Süper Lig'],93],
+    ['suarez','Luis Suárez','Uruguay','ST',2005,2026,['La Liga','Premier Lig','Hollanda Ligi','MLS'],95],
+    ['lewandowski','Robert Lewandowski','Polonya','ST',2006,2026,['Bundesliga','La Liga'],96],
+    ['benzema','Karim Benzema','Fransa','ST',2004,2026,['Ligue 1','La Liga','Suudi Ligi'],96],
+    ['neymar','Neymar','Brezilya','LW',2009,2026,['Brezilya Ligi','La Liga','Ligue 1','Suudi Ligi'],95],
+    ['salah','Mohamed Salah','Mısır','RW',2010,2026,['Premier Lig','Serie A'],94],
+    ['mbappe','Kylian Mbappé','Fransa','ST',2015,2026,['Ligue 1','La Liga'],96],
+    ['haaland','Erling Haaland','Norveç','ST',2016,2026,['Bundesliga','Premier Lig'],94],
+    ['vinicius','Vinícius Júnior','Brezilya','LW',2017,2026,['La Liga','Brezilya Ligi'],93],
+    ['saka','Bukayo Saka','İngiltere','RW',2018,2026,['Premier Lig'],90],
+    ['yamal','Lamine Yamal','İspanya','RW',2023,2026,['La Liga'],90]
+  ];
+
+  const players = rows.map(([id, name, nationality, position, activeStart, activeEnd, leagues, rating]) => ({
+    id, name, nationality, position, activeStart, activeEnd, leagues, rating
+  }));
+
+  root.KRONOMETRE_PLAYERS = Object.freeze(players);
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+  <script>
+(function () {
+  'use strict';
+
+  const Core = window.GameCore;
+  const PLAYERS = window.KRONOMETRE_PLAYERS || [];
+  const SAVE_KEY = 'kronometre-futbol-save-v1';
+  const SLOTS = ['GK', 'LB', 'CB', 'CB', 'RB', 'DM', 'CM', 'AM', 'LW', 'RW', 'ST'];
+  const PERIODS = [
+    { id: '1950-1965', label: '1950–1965', start: 1950, end: 1965 },
+    { id: '1966-1980', label: '1966–1980', start: 1966, end: 1980 },
+    { id: '1981-1995', label: '1981–1995', start: 1981, end: 1995 },
+    { id: '1996-2005', label: '1996–2005', start: 1996, end: 2005 },
+    { id: '2006-2013', label: '2006–2013', start: 2006, end: 2013 },
+    { id: '2014-2020', label: '2014–2020', start: 2014, end: 2020 },
+    { id: '2021-2026', label: '2021–2026', start: 2021, end: 2026 }
+  ];
+
+  const $ = selector => document.querySelector(selector);
+  const $$ = selector => [...document.querySelectorAll(selector)];
+  const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+  const randomItem = items => items[Math.floor(Math.random() * items.length)];
+  const shuffle = items => {
+    const copy = [...items];
+    for (let i = copy.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  };
+  const uniqueById = items => [...new Map(items.map(item => [item.id, item])).values()];
+
+  const els = {
+    screens: $$('.screen'),
+    homeButton: $('#homeButton'),
+    soundButton: $('#soundButton'),
+    startButton: $('#startButton'),
+    continueButton: $('#continueButton'),
+    modeButtons: $$('.mode-card[data-mode]'),
+    builderTabs: $$('.builder-tab'),
+    setupTeamLabel: $('#setupTeamLabel'),
+    teamNameInput: $('#teamNameInput'),
+    builtStatus: $('#builtStatus'),
+    periodChips: $('#periodChips'),
+    nationalitySelect: $('#nationalitySelect'),
+    leagueSelect: $('#leagueSelect'),
+    randomBuildButton: $('#randomBuildButton'),
+    criteriaBuildButton: $('#criteriaBuildButton'),
+    manualSearch: $('#manualSearch'),
+    manualCount: $('#manualCount'),
+    manualPlayerList: $('#manualPlayerList'),
+    manualBuildButton: $('#manualBuildButton'),
+    squadPreview: $('#squadPreview'),
+    nextSetupButton: $('#nextSetupButton'),
+    draftProgress: $('#draftProgress'),
+    draftCandidates: $('#draftCandidates'),
+    draftWatchDisplay: $('#draftWatchDisplay'),
+    draftStopButton: $('#draftStopButton'),
+    durationRange: $('#durationRange'),
+    durationValue: $('#durationValue'),
+    cardsToggle: $('#cardsToggle'),
+    injuryToggle: $('#injuryToggle'),
+    extraToggle: $('#extraToggle'),
+    shootoutToggle: $('#shootoutToggle'),
+    soundIntensity: $('#soundIntensity'),
+    kickoffButton: $('#kickoffButton'),
+    homeTeamName: $('#homeTeamName'),
+    awayTeamName: $('#awayTeamName'),
+    homeScore: $('#homeScore'),
+    awayScore: $('#awayScore'),
+    periodLabel: $('#periodLabel'),
+    matchClock: $('#matchClock'),
+    turnTeam: $('#turnTeam'),
+    rollContextLabel: $('#rollContextLabel'),
+    activePlayerName: $('#activePlayerName'),
+    activePlayerMeta: $('#activePlayerMeta'),
+    matchWatchDisplay: $('#matchWatchDisplay'),
+    turnCountdown: $('#turnCountdown'),
+    matchStopButton: $('#matchStopButton'),
+    aiHint: $('#aiHint'),
+    homeCorners: $('#homeCorners'),
+    awayCorners: $('#awayCorners'),
+    homeTimeouts: $('#homeTimeouts'),
+    awayTimeouts: $('#awayTimeouts'),
+    pauseButton: $('#pauseButton'),
+    liveTimeline: $('#liveTimeline'),
+    eventOverlay: $('#eventOverlay'),
+    overlayKicker: $('#overlayKicker'),
+    overlayTitle: $('#overlayTitle'),
+    overlaySubtitle: $('#overlaySubtitle'),
+    dialogOverlay: $('#dialogOverlay'),
+    dialogEyebrow: $('#dialogEyebrow'),
+    dialogTitle: $('#dialogTitle'),
+    dialogText: $('#dialogText'),
+    dialogButton: $('#dialogButton'),
+    finalHomeName: $('#finalHomeName'),
+    finalAwayName: $('#finalAwayName'),
+    finalScore: $('#finalScore'),
+    winnerText: $('#winnerText'),
+    possessionResult: $('#possessionResult'),
+    highlightResult: $('#highlightResult'),
+    resultTimeline: $('#resultTimeline'),
+    rematchButton: $('#rematchButton'),
+    newGameButton: $('#newGameButton')
+  };
+
+  const setup = {
+    mode: null,
+    builder: 'random',
+    side: 0,
+    teams: [null, null],
+    selectedPeriods: ['1996-2005'],
+    manualSelected: new Set(),
+    criteria: { nationality: '', league: '' }
+  };
+
+  let draft = null;
+  let draftRaf = null;
+  let match = null;
+  let matchRaf = null;
+  let aiTimer = null;
+  let overlayTimer = null;
+  let dialogAction = null;
+  let audioContext = null;
+  let muted = false;
+
+  function showScreen(name) {
+    els.screens.forEach(screen => screen.classList.toggle('active', screen.id === `screen-${name}`));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function escapeHtml(value) {
+    return String(value)
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
+  }
+
+  function formatStopwatch(ms) {
+    const safe = Math.max(0, ms || 0);
+    const minutes = Math.floor(safe / 60000);
+    const seconds = Math.floor((safe % 60000) / 1000);
+    const hundredths = Math.floor((safe % 1000) / 10);
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(hundredths).padStart(2, '0')}`;
+  }
+
+  function formatClock(ms) {
+    const total = Math.max(0, Math.floor((ms || 0) / 1000));
+    return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+  }
+
+  function digitFromMs(ms) {
+    return Math.floor(Math.max(0, ms || 0) / 10) % 10;
+  }
+
+  function ensureAudio() {
+    if (!audioContext) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) audioContext = new AudioCtx();
+    }
+    if (audioContext && audioContext.state === 'suspended') audioContext.resume().catch(() => {});
+  }
+
+  function soundGain() {
+    const intensity = match?.settings?.soundIntensity || els.soundIntensity.value || 'medium';
+    return intensity === 'low' ? 0.025 : intensity === 'high' ? 0.09 : 0.055;
+  }
+
+  function beep(kind) {
+    if (muted) return;
+    ensureAudio();
+    if (!audioContext) return;
+    const now = audioContext.currentTime;
+    const patterns = {
+      click: [[520, .055]],
+      whistle: [[950, .08], [720, .1]],
+      goal: [[440, .08], [660, .1], [880, .18]],
+      card: [[260, .11], [180, .12]],
+      save: [[360, .09], [260, .14]]
+    };
+    let cursor = now;
+    (patterns[kind] || patterns.click).forEach(([frequency, duration]) => {
+      const oscillator = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      oscillator.type = kind === 'goal' ? 'triangle' : 'square';
+      oscillator.frequency.setValueAtTime(frequency, cursor);
+      gain.gain.setValueAtTime(soundGain(), cursor);
+      gain.gain.exponentialRampToValueAtTime(0.001, cursor + duration);
+      oscillator.connect(gain).connect(audioContext.destination);
+      oscillator.start(cursor);
+      oscillator.stop(cursor + duration);
+      cursor += duration + .025;
+    });
+  }
+
+  function initializeFilters() {
+    els.periodChips.innerHTML = PERIODS.map(period => (
+      `<button class="period-chip${setup.selectedPeriods.includes(period.id) ? ' active' : ''}" type="button" data-period="${period.id}">${period.label}</button>`
+    )).join('');
+
+    const nationalities = [...new Set(PLAYERS.map(player => player.nationality))].sort((a, b) => a.localeCompare(b, 'tr'));
+    els.nationalitySelect.innerHTML = '<option value="">Tümü</option>' + nationalities.map(item => `<option>${escapeHtml(item)}</option>`).join('');
+
+    const leagues = [...new Set(PLAYERS.flatMap(player => player.leagues))].sort((a, b) => a.localeCompare(b, 'tr'));
+    els.leagueSelect.innerHTML = '<option value="">Tümü</option>' + leagues.map(item => `<option>${escapeHtml(item)}</option>`).join('');
+  }
+
+  function positionScore(slot, player) {
+    if (slot === player.position) return 10;
+    const groups = {
+      GK: ['GK'],
+      LB: ['LB', 'RB', 'CB'],
+      RB: ['RB', 'LB', 'CB'],
+      CB: ['CB', 'LB', 'RB', 'DM'],
+      DM: ['DM', 'CM', 'CB'],
+      CM: ['CM', 'DM', 'AM'],
+      AM: ['AM', 'CM', 'LW', 'RW'],
+      LW: ['LW', 'RW', 'AM', 'ST'],
+      RW: ['RW', 'LW', 'AM', 'ST'],
+      ST: ['ST', 'LW', 'RW', 'AM']
+    };
+    const index = (groups[slot] || []).indexOf(player.position);
+    return index === -1 ? 0 : Math.max(1, 7 - index * 2);
+  }
+
+  function assignPlayersToSlots(selectedPlayers) {
+    const remaining = [...selectedPlayers];
+    const lineup = [];
+    SLOTS.forEach(slot => {
+      remaining.sort((a, b) => {
+        const scoreDiff = positionScore(slot, b) - positionScore(slot, a);
+        return scoreDiff || b.rating - a.rating;
+      });
+      let chosenIndex = remaining.findIndex(player => positionScore(slot, player) > 0);
+      if (chosenIndex < 0) chosenIndex = 0;
+      const [chosen] = remaining.splice(chosenIndex, 1);
+      if (chosen) lineup.push({ ...chosen, slot });
+    });
+    return lineup;
+  }
+
+  function buildRandomLineup(source = PLAYERS) {
+    const remaining = shuffle(uniqueById(source));
+    const lineup = [];
+    SLOTS.forEach(slot => {
+      const ranked = remaining
+        .map((player, index) => ({ player, index, score: positionScore(slot, player) }))
+        .filter(entry => entry.score > 0)
+        .sort((a, b) => b.score - a.score || Math.random() - .5);
+      const top = ranked.slice(0, Math.min(8, ranked.length));
+      const chosenEntry = randomItem(top.length ? top : remaining.map((player, index) => ({ player, index })));
+      if (!chosenEntry) return;
+      lineup.push({ ...chosenEntry.player, slot });
+      remaining.splice(chosenEntry.index, 1);
+    });
+    return lineup;
+  }
+
+  function criteriaFilteredPlayers() {
+    const periods = setup.selectedPeriods.map(id => PERIODS.find(period => period.id === id)).filter(Boolean);
+    return PLAYERS.filter(player => {
+      const periodMatch = periods.some(period => player.activeStart <= period.end && player.activeEnd >= period.start);
+      const nationalityMatch = !setup.criteria.nationality || player.nationality === setup.criteria.nationality;
+      const leagueMatch = !setup.criteria.league || player.leagues.includes(setup.criteria.league);
+      return periodMatch && nationalityMatch && leagueMatch;
+    });
+  }
+
+  function buildCriteriaPool() {
+    let filtered = criteriaFilteredPlayers();
+    if (filtered.length < 27) {
+      const periods = setup.selectedPeriods.map(id => PERIODS.find(period => period.id === id)).filter(Boolean);
+      const periodOnly = PLAYERS.filter(player => periods.some(period => player.activeStart <= period.end && player.activeEnd >= period.start));
+      filtered = uniqueById([...filtered, ...shuffle(periodOnly), ...shuffle(PLAYERS)]);
+    }
+    const sorted = [...filtered].sort((a, b) => a.rating - b.rating);
+    const stars = sorted.filter(player => player.rating >= 86).slice(-12);
+    const nonStars = sorted.filter(player => !stars.some(star => star.id === player.id));
+    const weak = shuffle(nonStars.slice(0, Math.ceil(nonStars.length / 2))).slice(0, 12);
+    const strong = shuffle(nonStars.slice(Math.ceil(nonStars.length / 2))).slice(0, 12);
+    const guaranteed = shuffle(stars).slice(0, 3);
+    let pool = uniqueById([...weak, ...strong, ...guaranteed]);
+    if (pool.length < 27) pool = uniqueById([...pool, ...shuffle(filtered)]).slice(0, 27);
+    return pool.slice(0, 27);
+  }
+
+  function renderManualList() {
+    const query = els.manualSearch.value.trim().toLocaleLowerCase('tr');
+    const visible = PLAYERS
+      .filter(player => !query || `${player.name} ${player.nationality} ${player.position}`.toLocaleLowerCase('tr').includes(query))
+      .sort((a, b) => b.rating - a.rating)
+      .slice(0, 80);
+    els.manualPlayerList.innerHTML = visible.map(player => {
+      const selected = setup.manualSelected.has(player.id);
+      return `<label class="manual-player${selected ? ' selected' : ''}">
+        <input type="checkbox" data-player-id="${player.id}" ${selected ? 'checked' : ''}>
+        <span><strong>${escapeHtml(player.name)}</strong><small>${escapeHtml(player.position)} · ${escapeHtml(player.nationality)}</small></span>
+        <b>${player.rating}</b>
+      </label>`;
+    }).join('');
+    els.manualCount.textContent = `${setup.manualSelected.size} / 11`;
+    els.manualBuildButton.disabled = setup.manualSelected.size !== 11;
+  }
+
+  function renderSetupState() {
+    const side = setup.side;
+    els.setupTeamLabel.textContent = setup.mode === 'coop' ? `TAKIM ${side + 1}` : 'SENİN TAKIMIN';
+    els.teamNameInput.value = setup.teams[side]?.name || (side === 0 ? 'Kronometre XI' : 'İkinci Takım');
+    const built = setup.teams[side];
+    els.builtStatus.textContent = built ? `${built.lineup.length} oyuncu hazır` : 'Henüz kurulmadı';
+    els.builtStatus.classList.toggle('done', Boolean(built));
+    els.squadPreview.classList.toggle('hidden', !built);
+    if (built) {
+      els.squadPreview.innerHTML = `<h3>${escapeHtml(built.name)}</h3><ul class="lineup-list">${built.lineup.map(player => `<li><span><b>${player.slot}</b> ${escapeHtml(player.name)}</span><small>${player.rating}</small></li>`).join('')}</ul>`;
+    }
+    if (setup.mode === 'coop' && setup.side === 0 && built) {
+      els.nextSetupButton.textContent = 'TAKIM 2’Yİ KUR →';
+      els.nextSetupButton.classList.remove('hidden');
+    } else if (built && (setup.mode === 'ai' || setup.side === 1)) {
+      els.nextSetupButton.textContent = 'AYARLARA GEÇ →';
+      els.nextSetupButton.classList.remove('hidden');
+    } else {
+      els.nextSetupButton.classList.add('hidden');
+    }
+  }
+
+  function completeTeam(lineup) {
+    const side = setup.side;
+    const defaultName = side === 0 ? 'Kronometre XI' : 'İkinci Takım';
+    setup.teams[side] = {
+      name: els.teamNameInput.value.trim() || defaultName,
+      lineup: lineup.map(player => ({ ...player, yellowCards: 0, red: false, injured: false }))
+    };
+    if (setup.mode === 'ai' && side === 0 && !setup.teams[1]) {
+      setup.teams[1] = {
+        name: 'Retro Makine',
+        lineup: buildRandomLineup().map(player => ({ ...player, yellowCards: 0, red: false, injured: false }))
+      };
+    }
+    renderSetupState();
+  }
+
+  function candidateSetForSlot(slot, pool, usedIds) {
+    const fromPool = shuffle(pool.filter(player => !usedIds.has(player.id) && positionScore(slot, player) > 0))
+      .sort((a, b) => positionScore(slot, b) - positionScore(slot, a));
+    const fallback = shuffle(PLAYERS.filter(player => !usedIds.has(player.id) && positionScore(slot, player) > 0));
+    return uniqueById([...fromPool, ...fallback]).slice(0, 3);
+  }
+
+  function startDraft(pool) {
+    draft = {
+      pool,
+      slotIndex: 0,
+      lineup: [],
+      candidates: [],
+      elapsedMs: 0,
+      lastFrame: performance.now(),
+      running: true
+    };
+    showScreen('draft');
+    prepareDraftSlot();
+    runDraftLoop();
+  }
+
+  function prepareDraftSlot() {
+    if (!draft) return;
+    if (draft.slotIndex >= SLOTS.length) {
+      cancelAnimationFrame(draftRaf);
+      completeTeam(draft.lineup);
+      draft = null;
+      showScreen('squad');
+      return;
+    }
+    const slot = SLOTS[draft.slotIndex];
+    const used = new Set(draft.lineup.map(player => player.id));
+    draft.candidates = candidateSetForSlot(slot, draft.pool, used);
+    draft.elapsedMs = 0;
+    draft.lastFrame = performance.now();
+    draft.running = true;
+    els.draftProgress.textContent = `${draft.slotIndex + 1} / 11 · ${slot}`;
+    els.draftCandidates.innerHTML = draft.candidates.map((player, index) => `<article class="candidate-card" data-candidate-index="${index}">
+      <span class="candidate-index">${index}</span>
+      <strong>${escapeHtml(player.name)}</strong>
+      <small>${escapeHtml(player.position)} · ${escapeHtml(player.nationality)}</small>
+      <b>${player.rating}</b>
+    </article>`).join('');
+    els.draftWatchDisplay.textContent = formatStopwatch(0);
+    els.draftStopButton.disabled = false;
+  }
+
+  function runDraftLoop() {
+    cancelAnimationFrame(draftRaf);
+    const loop = now => {
+      if (!draft) return;
+      if (draft.running) {
+        const dt = clamp(now - draft.lastFrame, 0, 100);
+        draft.elapsedMs += dt;
+        draft.lastFrame = now;
+        els.draftWatchDisplay.textContent = formatStopwatch(draft.elapsedMs);
+      } else {
+        draft.lastFrame = now;
+      }
+      draftRaf = requestAnimationFrame(loop);
+    };
+    draftRaf = requestAnimationFrame(loop);
+  }
+
+  function stopDraft() {
+    if (!draft || !draft.running) return;
+    draft.running = false;
+    els.draftStopButton.disabled = true;
+    beep('click');
+    const digit = digitFromMs(draft.elapsedMs);
+    const chosenIndex = digit % draft.candidates.length;
+    const chosen = draft.candidates[chosenIndex];
+    const slot = SLOTS[draft.slotIndex];
+    const card = $(`[data-candidate-index="${chosenIndex}"]`);
+    if (card) card.classList.add('chosen');
+    draft.lineup.push({ ...chosen, slot });
+    setTimeout(() => {
+      if (!draft) return;
+      draft.slotIndex += 1;
+      prepareDraftSlot();
+    }, 650);
+  }
+
+  function settingsFromUi() {
+    return {
+      durationMinutes: Number(els.durationRange.value),
+      cards: els.cardsToggle.checked,
+      injury: els.injuryToggle.checked,
+      extraTime: els.extraToggle.checked,
+      shootout: els.shootoutToggle.checked,
+      soundIntensity: els.soundIntensity.value
+    };
+  }
+
+  function makeRuntimeTeam(team) {
+    return {
+      name: team.name,
+      lineup: team.lineup.map(player => ({ ...player, yellowCards: 0, red: false, injured: false })),
+      corners: 0,
+      timeouts: 0
+    };
+  }
+
+  function createMatch() {
+    const settings = settingsFromUi();
+    const totalSeconds = settings.durationMinutes * 60;
+    match = {
+      version: 1,
+      mode: setup.mode,
+      teams: setup.teams.map(makeRuntimeTeam),
+      settings,
+      scores: [0, 0],
+      activeSide: 0,
+      activePlayerId: [null, null],
+      context: { type: 'main', owner: 0 },
+      pendingFoul: null,
+      phase: 'regulation',
+      periodIndex: 0,
+      periodElapsedMs: 0,
+      periodDurationsMs: [totalSeconds * 500, totalSeconds * 500],
+      regulationSeconds: totalSeconds,
+      totalElapsedMs: 0,
+      possessionMs: [0, 0],
+      rollElapsedMs: 0,
+      turnElapsedMs: 0,
+      lastFrame: performance.now(),
+      running: true,
+      paused: false,
+      resolving: false,
+      events: [],
+      winnerSide: null,
+      shootout: null
+    };
+    pickRestartPlayer(0);
+    showScreen('match');
+    updateMatchUi();
+    startMatchLoop();
+    scheduleAiIfNeeded();
+    saveMatch();
+  }
+
+  function availableOutfield(side) {
+    if (!match) return [];
+    return match.teams[side].lineup.filter(player => player.slot !== 'GK' && !player.red && !player.injured);
+  }
+
+  function getPlayer(side, playerId) {
+    return match?.teams?.[side]?.lineup.find(player => player.id === playerId) || null;
+  }
+
+  function currentActor() {
+    if (!match) return null;
+    const side = match.context.owner;
+    return getPlayer(side, match.activePlayerId[side]);
+  }
+
+  function pickRestartPlayer(side, digit = Math.floor(Math.random() * 10)) {
+    const candidates = availableOutfield(side);
+    const chosen = Core.chooseByModulo(candidates, digit) || match.teams[side].lineup.find(player => player.slot === 'GK');
+    match.activePlayerId[side] = chosen?.id || null;
+    return chosen;
+  }
+
+  function mapActivePlayerFromDigit(digit) {
+    if (!match || match.context.type !== 'main') return currentActor();
+    const side = match.context.owner;
+    const candidates = availableOutfield(side);
+    const chosen = Core.chooseByModulo(candidates, digit);
+    if (chosen) match.activePlayerId[side] = chosen.id;
+    return chosen;
+  }
+
+  function isAiSide(side) {
+    return match?.mode === 'ai' && side === 1;
+  }
+
+  function contextLabel() {
+    if (!match) return 'HÜCUM';
+    const labels = {
+      main: 'HÜCUM',
+      foulResult: 'FAUL SONUCU',
+      foulCard: 'KART ATIŞI',
+      shot: match.context.reason === 'penalty' ? 'PENALTI' : 'FRİKİK',
+      shootoutShot: 'SERİ PENALTI'
+    };
+    return labels[match.context.type] || 'ATIŞ';
+  }
+
+  function updateMatchUi() {
+    if (!match) return;
+    els.homeTeamName.textContent = match.teams[0].name;
+    els.awayTeamName.textContent = match.teams[1].name;
+    els.homeScore.textContent = match.scores[0];
+    els.awayScore.textContent = match.scores[1];
+    els.homeCorners.textContent = match.teams[0].corners;
+    els.awayCorners.textContent = match.teams[1].corners;
+    els.homeTimeouts.textContent = match.teams[0].timeouts;
+    els.awayTimeouts.textContent = match.teams[1].timeouts;
+
+    if (match.phase === 'shootout') {
+      els.periodLabel.textContent = 'PENALTILAR';
+      els.matchClock.textContent = `${match.shootout.scores[0]} — ${match.shootout.scores[1]}`;
+    } else {
+      els.periodLabel.textContent = match.phase === 'extra'
+        ? `UZATMA ${match.periodIndex + 1}`
+        : `${match.periodIndex + 1}. DEVRE`;
+      els.matchClock.textContent = formatClock(match.periodElapsedMs);
+    }
+
+    const owner = match.context.owner;
+    els.turnTeam.textContent = match.teams[owner].name;
+    els.rollContextLabel.textContent = contextLabel();
+    const actor = currentActor() || pickRestartPlayer(owner);
+    els.activePlayerName.textContent = actor?.name || '—';
+    els.activePlayerMeta.textContent = actor ? `${actor.slot} · ${actor.rating} rating` : '—';
+    els.matchWatchDisplay.textContent = formatStopwatch(match.rollElapsedMs);
+    els.turnCountdown.textContent = Math.max(0, (10000 - match.turnElapsedMs) / 1000).toFixed(1);
+    const aiTurn = isAiSide(owner);
+    els.matchStopButton.disabled = aiTurn || match.paused || match.resolving || !match.running;
+    els.aiHint.classList.toggle('hidden', !aiTurn || match.paused || match.resolving);
+    els.pauseButton.textContent = match.paused ? 'DEVAM ET' : 'DURAKLAT';
+    renderLiveTimeline();
+  }
+
+  function renderLiveTimeline() {
+    if (!match) return;
+    const items = match.events.slice(-6).reverse();
+    els.liveTimeline.innerHTML = items.map(event => `<li><time>${event.minute}’</time><span>${escapeHtml(event.text)}</span></li>`).join('');
+  }
+
+  function eventMinute() {
+    if (!match) return 1;
+    if (match.phase === 'shootout') return 'P';
+    const elapsed = match.phase === 'extra' ? match.periodElapsedMs + match.periodIndex * match.periodDurationsMs[0] : match.totalElapsedMs;
+    return Core.matchMinute(elapsed / 1000, match.regulationSeconds, match.phase === 'extra' ? 'extra' : 'regulation');
+  }
+
+  function addEvent(text, important = false) {
+    if (!match) return;
+    match.events.push({ minute: eventMinute(), text, important, timestamp: Date.now() });
+    if (match.events.length > 120) match.events.shift();
+    renderLiveTimeline();
+  }
+
+  function clearAiTimer() {
+    if (aiTimer) clearTimeout(aiTimer);
+    aiTimer = null;
+  }
+
+  function scheduleAiIfNeeded() {
+    clearAiTimer();
+    if (!match || !match.running || match.paused || match.resolving) return;
+    const side = match.context.owner;
+    if (!isAiSide(side)) return;
+    const delay = 1500 + Math.random() * 2500;
+    aiTimer = setTimeout(() => {
+      if (match && match.running && !match.paused && !match.resolving && match.context.owner === side) stopMatchRoll('ai');
+    }, delay);
+  }
+
+  function startMatchLoop() {
+    cancelAnimationFrame(matchRaf);
+    if (!match) return;
+    match.lastFrame = performance.now();
+    const loop = now => {
+      if (!match) return;
+      const dt = clamp(now - match.lastFrame, 0, 100);
+      match.lastFrame = now;
+      if (match.running && !match.paused && !match.resolving) {
+        match.rollElapsedMs += dt;
+        match.turnElapsedMs += dt;
+        if (match.phase !== 'shootout') {
+          match.periodElapsedMs += dt;
+          match.totalElapsedMs += match.phase === 'regulation' ? dt : 0;
+          match.possessionMs[match.context.owner] += dt;
+        }
+        const digit = digitFromMs(match.rollElapsedMs);
+        if (match.context.type === 'main') mapActivePlayerFromDigit(digit);
+        if (match.turnElapsedMs >= 10000) {
+          handleTurnTimeout();
+        } else if (match.phase !== 'shootout' && match.periodElapsedMs >= match.periodDurationsMs[match.periodIndex]) {
+          endCurrentPeriod();
+        }
+        updateMatchUi();
+      }
+      matchRaf = requestAnimationFrame(loop);
+    };
+    matchRaf = requestAnimationFrame(loop);
+  }
+
+  function resetRoll(owner, context) {
+    if (!match) return;
+    match.activeSide = owner;
+    match.context = { ...context, owner };
+    match.rollElapsedMs = 0;
+    match.turnElapsedMs = 0;
+    match.resolving = false;
+    match.running = true;
+    match.paused = false;
+    if (context.type !== 'main' || !match.activePlayerId[owner]) pickRestartPlayer(owner);
+    updateMatchUi();
+    scheduleAiIfNeeded();
+    saveMatch();
+  }
+
+  function showEventOverlay(title, subtitle, tone = 'red', kicker = '', duration = 900, callback) {
+    clearTimeout(overlayTimer);
+    els.eventOverlay.className = `event-overlay ${tone}`;
+    els.eventOverlay.classList.remove('hidden');
+    els.overlayTitle.textContent = title;
+    els.overlaySubtitle.textContent = subtitle || '';
+    els.overlayKicker.textContent = kicker || '';
+    overlayTimer = setTimeout(() => {
+      els.eventOverlay.classList.add('hidden');
+      if (typeof callback === 'function') callback();
+    }, duration);
+  }
+
+  function transitionTo(owner, context, overlay) {
+    if (!match) return;
+    clearAiTimer();
+    match.running = false;
+    match.resolving = true;
+    const done = () => resetRoll(owner, context);
+    if (overlay) {
+      showEventOverlay(overlay.title, overlay.subtitle, overlay.tone, overlay.kicker, overlay.duration || 900, done);
+    } else {
+      done();
+    }
+  }
+
+  function stopMatchRoll(source) {
+    if (!match || !match.running || match.paused || match.resolving) return;
+    if (source !== 'ai' && isAiSide(match.context.owner)) return;
+    clearAiTimer();
+    beep('click');
+    const digit = digitFromMs(match.rollElapsedMs);
+    if (match.context.type === 'main') mapActivePlayerFromDigit(digit);
+    match.running = false;
+    match.resolving = true;
+    resolveRoll(digit);
+  }
+
+  function resolveRoll(digit) {
+    const type = match.context.type;
+    if (type === 'main') resolveMainEvent(digit);
+    else if (type === 'foulResult') resolveFoulResult(digit);
+    else if (type === 'foulCard') resolveFoulCard(digit);
+    else if (type === 'shot') resolveShot(digit);
+    else if (type === 'shootoutShot') resolveShootoutShot(digit);
+  }
+
+  function resolveMainEvent(digit) {
+    const side = match.context.owner;
+    const other = side === 0 ? 1 : 0;
+    const actor = currentActor() || pickRestartPlayer(side, digit);
+    const event = Core.mainEventForDigit(digit);
+
+    if (event.key === 'goal') {
+      match.scores[side] += 1;
+      addEvent(`${match.teams[side].name}: ${actor?.name || 'Oyuncu'} gol`, true);
+      beep('goal');
+      pickRestartPlayer(other);
+      transitionTo(other, { type: 'main' }, {
+        title: 'GOL!', subtitle: `${actor?.name || match.teams[side].name} ağları buldu`, tone: 'red', kicker: `Rakam ${digit}`, duration: 1250
+      });
+      return;
+    }
+
+    if (event.key === 'pass') {
+      transitionTo(side, { type: 'main' }, {
+        title: 'PAS', subtitle: `${actor?.name || 'Oyuncu'} topu korudu`, tone: 'green', kicker: `Rakam ${digit}`, duration: 480
+      });
+      return;
+    }
+
+    if (event.key === 'throwIn') {
+      addEvent(`${match.teams[other].name} taç kazandı`);
+      pickRestartPlayer(other);
+      transitionTo(other, { type: 'main' }, { title: 'TAÇ', subtitle: `Top ${match.teams[other].name} tarafında`, tone: 'navy', kicker: `Rakam ${digit}`, duration: 700 });
+      return;
+    }
+
+    if (event.key === 'turnover') {
+      addEvent(`${actor?.name || match.teams[side].name} topu kaybetti`);
+      pickRestartPlayer(other);
+      transitionTo(other, { type: 'main' }, { title: 'AUT', subtitle: `Sıra ${match.teams[other].name} takımında`, tone: 'navy', kicker: `Rakam ${digit}`, duration: 700 });
+      return;
+    }
+
+    if (event.key === 'corner') {
+      const outcome = Core.registerCorner(match.teams[side].corners);
+      match.teams[side].corners = outcome.corners;
+      if (outcome.penalty) {
+        addEvent(`${match.teams[side].name}: 3. kornerden penaltı`, true);
+        beep('whistle');
+        transitionTo(side, { type: 'shot', reason: 'penalty' }, { title: 'PENALTI!', subtitle: 'Üç korner, bir beyaz nokta', tone: 'yellow', kicker: '3. KORNER', duration: 1050 });
+      } else {
+        addEvent(`${match.teams[side].name} korner kazandı (${outcome.corners}/3)`);
+        transitionTo(side, { type: 'main' }, { title: 'KORNER', subtitle: `${outcome.corners} / 3`, tone: 'green', kicker: `Rakam ${digit}`, duration: 700 });
+      }
+      return;
+    }
+
+    if (event.key === 'foul') {
+      match.pendingFoul = { foulerSide: side, victimSide: other, foulerId: actor?.id || null, result: null };
+      addEvent(`${actor?.name || match.teams[side].name} faul yaptı`, true);
+      beep('whistle');
+      pickRestartPlayer(other);
+      transitionTo(other, { type: 'foulResult' }, { title: 'FAUL!', subtitle: `${match.teams[other].name} sonuç atışını kullanacak`, tone: 'yellow', kicker: `Rakam ${digit}`, duration: 1000 });
+      return;
+    }
+
+    if (event.key === 'freeKick') {
+      addEvent(`${match.teams[side].name} frikik kazandı`, true);
+      beep('whistle');
+      transitionTo(side, { type: 'shot', reason: 'freeKick' }, { title: 'FRİKİK!', subtitle: 'Tek rakam kurtarış, çift rakam gol', tone: 'yellow', kicker: `Rakam ${digit}`, duration: 950 });
+    }
+  }
+
+  function resolveFoulResult(digit) {
+    const foul = match.pendingFoul;
+    if (!foul) {
+      transitionTo(match.context.owner, { type: 'main' });
+      return;
+    }
+    foul.result = Core.foulResultForDigit(digit);
+    const labels = { freeKick: 'FRİKİK', penalty: 'PENALTI', indirect: 'SERBEST VURUŞ' };
+    addEvent(`Faul sonucu: ${labels[foul.result]}`);
+    if (match.settings.cards) {
+      transitionTo(foul.victimSide, { type: 'foulCard' }, { title: labels[foul.result], subtitle: 'Şimdi kart atışı', tone: foul.result === 'penalty' ? 'yellow' : 'navy', kicker: `Rakam ${digit}`, duration: 850 });
+    } else {
+      continueAfterFoulCard(null, digit);
+    }
+  }
+
+  function markPlayerUnavailable(side, playerId, reason) {
+    const index = match.teams[side].lineup.findIndex(player => player.id === playerId);
+    if (index < 0) return null;
+    const player = match.teams[side].lineup[index];
+    match.teams[side].lineup[index] = { ...player, [reason]: true };
+    return match.teams[side].lineup[index];
+  }
+
+  function resolveFoulCard(digit) {
+    const foul = match.pendingFoul;
+    if (!foul) {
+      transitionTo(match.context.owner, { type: 'main' });
+      return;
+    }
+    const card = Core.cardForDigit(digit);
+    const foulerIndex = match.teams[foul.foulerSide].lineup.findIndex(player => player.id === foul.foulerId);
+    let cardedPlayer = null;
+    if (foulerIndex >= 0) {
+      const before = match.teams[foul.foulerSide].lineup[foulerIndex];
+      const after = Core.applyCard(before, card);
+      match.teams[foul.foulerSide].lineup[foulerIndex] = after;
+      cardedPlayer = after;
+      if (card === 'yellow') {
+        addEvent(`${after.name} sarı kart gördü${after.red ? ' ve ikinci sarıdan atıldı' : ''}`, true);
+      } else if (card === 'red') {
+        addEvent(`${after.name} direkt kırmızı kart gördü`, true);
+      }
+    }
+
+    if (match.settings.injury && Math.random() < .10) {
+      const victims = availableOutfield(foul.victimSide);
+      const injured = randomItem(victims);
+      if (injured) {
+        markPlayerUnavailable(foul.victimSide, injured.id, 'injured');
+        addEvent(`${injured.name} sakatlandı ve oyundan çıktı`, true);
+      }
+    }
+
+    const cardTitle = card === 'yellow' ? (cardedPlayer?.red ? 'KIRMIZI!' : 'SARI KART') : card === 'red' ? 'KIRMIZI!' : 'KART YOK';
+    const tone = card === 'yellow' ? 'yellow' : card === 'red' ? 'red' : 'green';
+    if (card !== 'none') beep('card');
+    continueAfterFoulCard({ title: cardTitle, subtitle: cardedPlayer?.name || 'Hakem devam dedi', tone, kicker: `Rakam ${digit}`, duration: 950 }, digit);
+  }
+
+  function continueAfterFoulCard(cardOverlay) {
+    const foul = match.pendingFoul;
+    if (!foul) {
+      transitionTo(match.context.owner, { type: 'main' }, cardOverlay);
+      return;
+    }
+    const owner = foul.victimSide;
+    const result = foul.result;
+    match.pendingFoul = null;
+    if (result === 'freeKick' || result === 'penalty') {
+      transitionTo(owner, { type: 'shot', reason: result }, cardOverlay || { title: result === 'penalty' ? 'PENALTI' : 'FRİKİK', subtitle: 'Final atışı', tone: 'yellow' });
+    } else {
+      pickRestartPlayer(owner);
+      transitionTo(owner, { type: 'main' }, cardOverlay || { title: 'SERBEST', subtitle: `${match.teams[owner].name} topu kullanıyor`, tone: 'green' });
+    }
+  }
+
+  function resolveShot(digit) {
+    const side = match.context.owner;
+    const other = side === 0 ? 1 : 0;
+    const reason = match.context.reason;
+    const result = Core.shotForDigit(digit);
+    const actor = currentActor() || pickRestartPlayer(side);
+    if (result === 'goal') {
+      match.scores[side] += 1;
+      addEvent(`${match.teams[side].name}: ${reason === 'penalty' ? 'penaltı' : 'frikik'} golü — ${actor?.name || 'Oyuncu'}`, true);
+      beep('goal');
+      pickRestartPlayer(other);
+      transitionTo(other, { type: 'main' }, { title: 'GOL!', subtitle: `${actor?.name || match.teams[side].name} çift rakamı buldu`, tone: 'red', kicker: `Rakam ${digit} · ÇİFT`, duration: 1250 });
+    } else {
+      addEvent(`${reason === 'penalty' ? 'Penaltı' : 'Frikik'} kurtarıldı — ${match.teams[side].name}`);
+      beep('save');
+      pickRestartPlayer(other);
+      transitionTo(other, { type: 'main' }, { title: 'KURTARDI!', subtitle: 'Tek rakam kaleciden yana', tone: 'navy', kicker: `Rakam ${digit} · TEK`, duration: 1050 });
+    }
+  }
+
+  function handleTurnTimeout() {
+    if (!match || match.resolving) return;
+    clearAiTimer();
+    match.running = false;
+    match.resolving = true;
+    const side = match.context.owner;
+    const other = side === 0 ? 1 : 0;
+    const outcome = Core.registerTimeout(match.teams[side].timeouts);
+    match.teams[side].timeouts = outcome.count;
+    addEvent(`${match.teams[side].name}: 10 saniye ihlali (${outcome.count})`, true);
+
+    if (outcome.consequence === 'turnover') {
+      pickRestartPlayer(other);
+      transitionTo(other, { type: 'main' }, { title: 'SÜRE DOLDU', subtitle: 'Top rakibe geçti', tone: 'navy', kicker: `${outcome.count}. İHLAL`, duration: 950 });
+    } else if (outcome.consequence === 'penaltyAgainst') {
+      pickRestartPlayer(other);
+      transitionTo(other, { type: 'shot', reason: 'penalty' }, { title: 'PENALTI!', subtitle: 'Üçüncü vakit ihlali', tone: 'yellow', kicker: '3. İHLAL', duration: 1050 });
+    } else if (outcome.consequence === 'redCard') {
+      const actor = currentActor() || randomItem(availableOutfield(side));
+      if (actor) markPlayerUnavailable(side, actor.id, 'red');
+      addEvent(`${actor?.name || match.teams[side].name} vakit ihlalinden kırmızı kart gördü`, true);
+      beep('card');
+      pickRestartPlayer(other);
+      transitionTo(other, { type: 'main' }, { title: 'KIRMIZI!', subtitle: 'Dördüncü vakit ihlali', tone: 'red', kicker: '4. İHLAL', duration: 1100 });
+    } else {
+      match.scores = Core.forfeitScore(match.scores, side);
+      addEvent(`${match.teams[side].name} hükmen mağlup`, true);
+      showEventOverlay('HÜKMEN!', 'Beşinci vakit ihlali — maç bitti', 'red', '5. İHLAL', 1400, () => finishMatch(other));
+    }
+  }
+
+  function endCurrentPeriod() {
+    if (!match || match.resolving || match.phase === 'shootout') return;
+    clearAiTimer();
+    match.running = false;
+    match.resolving = true;
+    const phase = match.phase;
+    const index = match.periodIndex;
+
+    if (index === 0) {
+      const eyebrow = phase === 'extra' ? 'UZATMA ARASI' : 'DEVRE ARASI';
+      const title = phase === 'extra' ? 'SON 15’' : 'SOYUNMA ODASI';
+      openDialog(eyebrow, title, `${match.scores[0]} — ${match.scores[1]}. Kronometre kısa bir nefes alıyor.`, 'DEVAM ET', () => {
+        match.periodIndex = 1;
+        match.periodElapsedMs = 0;
+        resetRoll(match.context.owner, match.context);
+      });
+      return;
+    }
+
+    if (phase === 'regulation' && match.scores[0] === match.scores[1] && match.settings.extraTime) {
+      const extraTotal = Core.roundExtraTimeSeconds(match.regulationSeconds) * 1000;
+      openDialog('90 DAKİKA BİTTİ', 'UZATMALAR', `${match.scores[0]} — ${match.scores[1]}. Toplam ${Math.round(extraTotal / 1000)} saniyelik uzatma başlıyor.`, 'UZATMAYA BAŞLA', () => {
+        match.phase = 'extra';
+        match.periodIndex = 0;
+        match.periodElapsedMs = 0;
+        match.periodDurationsMs = [extraTotal / 2, extraTotal / 2];
+        resetRoll(match.context.owner, match.context);
+      });
+      return;
+    }
+
+    if (match.scores[0] === match.scores[1] && match.settings.shootout) {
+      startShootout();
+    } else {
+      finishMatch(match.scores[0] === match.scores[1] ? null : (match.scores[0] > match.scores[1] ? 0 : 1));
+    }
+  }
+
+  function openDialog(eyebrow, title, text, buttonText, action) {
+    els.dialogEyebrow.textContent = eyebrow;
+    els.dialogTitle.textContent = title;
+    els.dialogText.textContent = text;
+    els.dialogButton.textContent = buttonText;
+    els.dialogOverlay.classList.remove('hidden');
+    dialogAction = action;
+  }
+
+  function closeDialog() {
+    els.dialogOverlay.classList.add('hidden');
+    const action = dialogAction;
+    dialogAction = null;
+    if (action) action();
+  }
+
+  function startShootout() {
+    clearAiTimer();
+    match.phase = 'shootout';
+    match.shootout = { scores: [0, 0], kicks: [0, 0] };
+    pickRestartPlayer(0);
+    openDialog('BERABERLİK', 'SERİ PENALTI', 'Beşer vuruş. Çift rakam gol, tek rakam kurtarış.', 'İLK VURUŞ', () => {
+      resetRoll(0, { type: 'shootoutShot' });
+    });
+  }
+
+  function shootoutWinner() {
+    const shootout = match.shootout;
+    const [s0, s1] = shootout.scores;
+    const [k0, k1] = shootout.kicks;
+    const remaining0 = Math.max(0, 5 - k0);
+    const remaining1 = Math.max(0, 5 - k1);
+    if (s0 > s1 + remaining1) return 0;
+    if (s1 > s0 + remaining0) return 1;
+    if (k0 >= 5 && k1 >= 5 && k0 === k1 && s0 !== s1) return s0 > s1 ? 0 : 1;
+    return null;
+  }
+
+  function resolveShootoutShot(digit) {
+    const side = match.context.owner;
+    const result = Core.shotForDigit(digit);
+    match.shootout.kicks[side] += 1;
+    if (result === 'goal') match.shootout.scores[side] += 1;
+    addEvent(`${match.teams[side].name} seri penaltı: ${result === 'goal' ? 'GOL' : 'KAÇTI'}`, true);
+    result === 'goal' ? beep('goal') : beep('save');
+
+    const winner = shootoutWinner();
+    if (winner !== null) {
+      showEventOverlay('BİTTİ!', `${match.teams[winner].name} penaltılarla kazandı`, 'red', `${match.shootout.scores[0]} — ${match.shootout.scores[1]}`, 1300, () => finishMatch(winner));
+      return;
+    }
+
+    const next = side === 0 ? 1 : 0;
+    pickRestartPlayer(next);
+    transitionTo(next, { type: 'shootoutShot' }, {
+      title: result === 'goal' ? 'GOL' : 'KURTARDI',
+      subtitle: `Seri: ${match.shootout.scores[0]} — ${match.shootout.scores[1]}`,
+      tone: result === 'goal' ? 'red' : 'navy',
+      kicker: `Rakam ${digit}`,
+      duration: 850
+    });
+  }
+
+  function pauseMatch() {
+    if (!match || match.resolving) return;
+    if (match.paused) {
+      match.paused = false;
+      match.running = true;
+      match.lastFrame = performance.now();
+      scheduleAiIfNeeded();
+    } else {
+      match.paused = true;
+      match.running = false;
+      clearAiTimer();
+    }
+    updateMatchUi();
+    saveMatch();
+  }
+
+  function saveMatch() {
+    if (!match) return;
+    try {
+      const snapshot = JSON.parse(JSON.stringify(match));
+      snapshot.running = false;
+      snapshot.paused = true;
+      snapshot.resolving = false;
+      snapshot.lastFrame = 0;
+      localStorage.setItem(SAVE_KEY, JSON.stringify(snapshot));
+      els.continueButton.classList.remove('hidden');
+    } catch (_) {}
+  }
+
+  function restoreMatch() {
+    try {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) return;
+      match = JSON.parse(raw);
+      match.running = false;
+      match.paused = true;
+      match.resolving = false;
+      match.lastFrame = performance.now();
+      showScreen('match');
+      updateMatchUi();
+      startMatchLoop();
+      openDialog('KAYITLI MAÇ', 'YENİDEN SAHADA', 'Maç duraklatılmış noktadan devam edecek.', 'DEVAM ET', () => {
+        match.paused = false;
+        match.running = true;
+        match.lastFrame = performance.now();
+        scheduleAiIfNeeded();
+        updateMatchUi();
+      });
+    } catch (_) {
+      localStorage.removeItem(SAVE_KEY);
+    }
+  }
+
+  function finishMatch(winnerSide) {
+    clearAiTimer();
+    cancelAnimationFrame(matchRaf);
+    if (!match) return;
+    match.running = false;
+    match.paused = true;
+    match.winnerSide = winnerSide;
+    localStorage.removeItem(SAVE_KEY);
+    els.continueButton.classList.add('hidden');
+
+    els.finalHomeName.textContent = match.teams[0].name;
+    els.finalAwayName.textContent = match.teams[1].name;
+    const shootoutSuffix = match.shootout ? ` (P: ${match.shootout.scores[0]}–${match.shootout.scores[1]})` : '';
+    els.finalScore.textContent = `${match.scores[0]} — ${match.scores[1]}${shootoutSuffix}`;
+    els.winnerText.textContent = winnerSide === null ? 'BERABERE' : `${match.teams[winnerSide].name} KAZANDI`;
+    const possession = Core.possessionPercent(match.possessionMs);
+    els.possessionResult.textContent = `${possession[0]}% — ${possession[1]}%`;
+
+    const goals = match.events.filter(event => event.text.toLocaleLowerCase('tr').includes('gol')).length;
+    const cards = match.events.filter(event => /kart|kırmızı|sarı/i.test(event.text)).length;
+    els.highlightResult.textContent = goals ? `${goals} gol olayı` : cards ? `${cards} kart olayı` : `${match.events.length} kayıtlı olay`;
+    const important = match.events.filter(event => event.important);
+    els.resultTimeline.innerHTML = (important.length ? important : match.events.slice(-12)).map(event => `<li><b>${event.minute}’</b> ${escapeHtml(event.text)}</li>`).join('') || '<li>Maç sakin geçti. Kronometre bile şaşırdı.</li>';
+    showScreen('results');
+  }
+
+  function resetSetup(full = true) {
+    if (full) {
+      setup.mode = null;
+      setup.teams = [null, null];
+    }
+    setup.side = 0;
+    setup.builder = 'random';
+    setup.manualSelected.clear();
+    setup.selectedPeriods = ['1996-2005'];
+    setup.criteria = { nationality: '', league: '' };
+    els.nationalitySelect.value = '';
+    els.leagueSelect.value = '';
+    els.manualSearch.value = '';
+    initializeFilters();
+    renderManualList();
+    switchBuilder('random');
+    renderSetupState();
+  }
+
+  function switchBuilder(builder) {
+    setup.builder = builder;
+    els.builderTabs.forEach(tab => tab.classList.toggle('active', tab.dataset.builder === builder));
+    $$('.builder-panel').forEach(panel => panel.classList.toggle('active', panel.id === `builder-${builder}`));
+    if (builder === 'manual') renderManualList();
+  }
+
+  function handleBack(target) {
+    if (target === 'home') showScreen('home');
+    else if (target === 'mode') showScreen('mode');
+    else if (target === 'squad') showScreen('squad');
+  }
+
+  function bindEvents() {
+    els.startButton.addEventListener('click', () => { ensureAudio(); showScreen('mode'); });
+    els.continueButton.addEventListener('click', restoreMatch);
+    els.homeButton.addEventListener('click', () => {
+      if (match && !match.paused && !match.resolving) pauseMatch();
+      showScreen('home');
+    });
+    els.soundButton.addEventListener('click', () => {
+      muted = !muted;
+      els.soundButton.classList.toggle('muted', muted);
+      els.soundButton.textContent = muted ? '×' : '♪';
+      if (!muted) beep('click');
+    });
+    $$('[data-back]').forEach(button => button.addEventListener('click', () => handleBack(button.dataset.back)));
+
+    els.modeButtons.forEach(button => button.addEventListener('click', () => {
+      setup.mode = button.dataset.mode;
+      setup.teams = [null, null];
+      setup.side = 0;
+      setup.manualSelected.clear();
+      els.shootoutToggle.checked = true;
+      renderSetupState();
+      showScreen('squad');
+    }));
+
+    els.builderTabs.forEach(tab => tab.addEventListener('click', () => switchBuilder(tab.dataset.builder)));
+    els.periodChips.addEventListener('click', event => {
+      const button = event.target.closest('[data-period]');
+      if (!button) return;
+      const id = button.dataset.period;
+      if (setup.selectedPeriods.includes(id)) {
+        if (setup.selectedPeriods.length > 1) setup.selectedPeriods = setup.selectedPeriods.filter(item => item !== id);
+      } else if (setup.selectedPeriods.length < 2) {
+        setup.selectedPeriods.push(id);
+      } else {
+        showEventOverlay('EN FAZLA 2', 'Dönemlerden birini kaldırıp yeniden seç', 'navy', '', 850);
+      }
+      initializeFilters();
+      els.nationalitySelect.value = setup.criteria.nationality;
+      els.leagueSelect.value = setup.criteria.league;
+    });
+    els.nationalitySelect.addEventListener('change', () => { setup.criteria.nationality = els.nationalitySelect.value; });
+    els.leagueSelect.addEventListener('change', () => { setup.criteria.league = els.leagueSelect.value; });
+
+    els.randomBuildButton.addEventListener('click', () => {
+      completeTeam(buildRandomLineup());
+      beep('click');
+    });
+    els.criteriaBuildButton.addEventListener('click', () => {
+      if (!setup.selectedPeriods.length) return;
+      startDraft(buildCriteriaPool());
+    });
+    els.draftStopButton.addEventListener('click', stopDraft);
+
+    els.manualSearch.addEventListener('input', renderManualList);
+    els.manualPlayerList.addEventListener('change', event => {
+      const checkbox = event.target.closest('[data-player-id]');
+      if (!checkbox) return;
+      const id = checkbox.dataset.playerId;
+      if (checkbox.checked) {
+        if (setup.manualSelected.size >= 11) {
+          checkbox.checked = false;
+          showEventOverlay('11 TAMAM', 'Önce bir oyuncuyu çıkar', 'navy', '', 650);
+        } else {
+          setup.manualSelected.add(id);
+        }
+      } else {
+        setup.manualSelected.delete(id);
+      }
+      renderManualList();
+    });
+    els.manualBuildButton.addEventListener('click', () => {
+      const selected = [...setup.manualSelected].map(id => PLAYERS.find(player => player.id === id)).filter(Boolean);
+      if (!selected.some(player => player.position === 'GK')) {
+        showEventOverlay('KALECİ LAZIM', 'Manuel kadroda en az bir kaleci seçmelisin', 'navy', '', 900);
+        return;
+      }
+      completeTeam(assignPlayersToSlots(selected));
+    });
+
+    els.nextSetupButton.addEventListener('click', () => {
+      if (setup.mode === 'coop' && setup.side === 0) {
+        setup.side = 1;
+        setup.manualSelected.clear();
+        els.manualSearch.value = '';
+        renderManualList();
+        renderSetupState();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        showScreen('settings');
+      }
+    });
+
+    els.durationRange.addEventListener('input', () => { els.durationValue.textContent = `${els.durationRange.value} dk`; });
+    els.kickoffButton.addEventListener('click', () => { ensureAudio(); createMatch(); });
+    els.matchStopButton.addEventListener('click', () => stopMatchRoll('human'));
+    els.pauseButton.addEventListener('click', pauseMatch);
+    els.dialogButton.addEventListener('click', closeDialog);
+    els.rematchButton.addEventListener('click', () => {
+      if (!match) return;
+      setup.mode = match.mode;
+      setup.teams = match.teams.map(team => ({ name: team.name, lineup: team.lineup.map(({ yellowCards, red, injured, ...player }) => player) }));
+      showScreen('settings');
+    });
+    els.newGameButton.addEventListener('click', () => {
+      match = null;
+      resetSetup(true);
+      showScreen('mode');
+    });
+  }
+
+  function init() {
+    initializeFilters();
+    renderManualList();
+    renderSetupState();
+    bindEvents();
+    try {
+      if (localStorage.getItem(SAVE_KEY)) els.continueButton.classList.remove('hidden');
+    } catch (_) {}
+    if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    }
+  }
+
+  init();
+})();
+
+</script>
+</body>
+</html>

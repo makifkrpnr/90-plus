@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#13233f">
+  <meta name="description" content="90+ — Kronometreyi durdur, futbol tarihini yeniden yaz. AI, aynı cihaz ve oda koduyla arkadaş modu.">
+  <title>90+ — Retro Futbol Oyunu</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="assets/icon-192.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+  <header class="topbar">
+    <button id="homeButton" class="brand-button" type="button" aria-label="90+ ana menü">
+      <span class="mini-clock">90</span>
+      <span><b>90+</b><br>FUTBOL</span>
+    </button>
+    <div class="topbar-actions">
+      <span id="networkBadge" class="network-badge hidden">ÇEVRİMİÇİ</span>
+      <button id="soundButton" class="icon-button" type="button" aria-label="Sesi aç veya kapat">♪</button>
+    </div>
+  </header>
+
+  <main id="app" class="app-shell">
+    <section id="screen-home" class="screen active" aria-labelledby="home-title">
+      <div class="hero-card halftone-card">
+        <p class="eyebrow">RETRO FUTBOL SİMÜLASYONU</p>
+        <h1 id="home-title">ZAMANI<br><span>DURDUR.</span><br>MAÇI DEĞİŞTİR.</h1>
+        <p class="lead">Bir kronometre, on rakam, doksan dakikalık futbol deliliği. Burada taktik tahtası değil, başparmak konuşur.</p>
+        <div class="hero-clock" aria-hidden="true">
+          <span>00:00</span><small>.0</small>
+        </div>
+        <button id="startButton" class="primary-button jumbo" type="button">OYUNU BAŞLAT</button>
+        <button id="continueButton" class="text-button hidden" type="button">KAYITLI MAÇA DÖN</button>
+      </div>
+      <div class="feature-strip">
+        <span>AI</span><span>AYNI CİHAZ CO-OP</span><span>ODA KODUYLA ARKADAŞ</span><span>OFFLINE PWA</span>
+      </div>
+    </section>
+
+    <section id="screen-mode" class="screen" aria-labelledby="mode-title">
+      <div class="section-heading">
+        <p class="eyebrow">1 / 4</p>
+        <h2 id="mode-title">OYUN MODUNU SEÇ</h2>
+      </div>
+      <div class="mode-grid four-modes">
+        <button class="mode-card" type="button" data-mode="ai">
+          <span class="mode-number">01</span>
+          <strong>YAPAY ZEKAYA KARŞI</strong>
+          <small>Rakip 1,5–4 saniye arasında kronometreyi otomatik durdurur.</small>
+        </button>
+        <button class="mode-card" type="button" data-mode="coop">
+          <span class="mode-number">02</span>
+          <strong>AYNI CİHAZ CO-OP</strong>
+          <small>Telefon el değiştirir, dostluklar sınanır. Klasik.</small>
+        </button>
+        <button class="mode-card friend-card" type="button" data-mode="friend">
+          <span class="mode-number">03</span>
+          <strong>PLAY WITH A FRIEND</strong>
+          <small>Oda oluştur, altı haneli kodu paylaş ve başka cihazdan canlı maç yap.</small>
+        </button>
+        <button class="mode-card locked" type="button" disabled>
+          <span class="mode-number">04</span>
+          <strong>ONLINE LİG</strong>
+          <small>Faz 2 — hesap, sezon, fikstür ve puan tablosuyla gelecek.</small>
+          <em>KİLİTLİ</em>
+        </button>
+      </div>
+      <button class="back-button" data-back="home" type="button">← GERİ</button>
+    </section>
+
+    <section id="screen-online" class="screen" aria-labelledby="online-title">
+      <div class="section-heading">
+        <p class="eyebrow">PLAY WITH A FRIEND</p>
+        <h2 id="online-title">UZAKTAN MAÇ</h2>
+        <p class="subheading">BİR ODA KUR YA DA ARKADAŞININ KODUYLA SAHAYA ÇIK.</p>
+      </div>
+      <div class="online-grid">
+        <article class="online-card host-card">
+          <p class="eyebrow">EV SAHİBİ</p>
+          <h3>ODA OLUŞTUR</h3>
+          <p>Adını yaz, altı haneli kodu arkadaşına gönder. Maç ayarları ve ilk düdük sende.</p>
+          <label>Oyuncu adı
+            <input id="hostNameInput" maxlength="22" value="Ev Sahibi" autocomplete="nickname">
+          </label>
+          <button id="createRoomButton" class="primary-button" type="button">CREATE A ROOM</button>
+        </article>
+        <article class="online-card join-card">
+          <p class="eyebrow">MİSAFİR</p>
+          <h3>KODLA KATIL</h3>
+          <p>Arkadaşının gönderdiği altı haneli oda kodunu gir ve kendi kadronu kur.</p>
+          <label>Oyuncu adı
+            <input id="guestNameInput" maxlength="22" value="Misafir" autocomplete="nickname">
+          </label>
+          <label>Oda kodu
+            <input id="joinCodeInput" class="room-code-input" maxlength="6" placeholder="ABC123" autocomplete="off" inputmode="text">
+          </label>
+          <button id="joinRoomButton" class="primary-button" type="button">JOIN WITH A CODE</button>
+        </article>
+      </div>
+      <p id="onlineStatus" class="online-status">Oda oluşturabilir veya arkadaşının koduyla katılabilirsin.</p>
+      <button class="back-button" data-back="mode" type="button">← GERİ</button>
+    </section>
+
+    <section id="screen-lobby" class="screen" aria-labelledby="lobby-title">
+      <div class="section-heading compact-heading">
+        <p class="eyebrow">90+ ONLINE SOYUNMA ODASI</p>
+        <h2 id="lobby-title">MAÇ LOBİSİ</h2>
+      </div>
+      <div class="room-code-panel">
+        <small>ODA KODU</small>
+        <strong id="lobbyCode">------</strong>
+        <button id="copyCodeButton" class="small-button" type="button">KODU KOPYALA</button>
+      </div>
+      <div class="lobby-versus">
+        <article id="lobbyPlayer0" class="lobby-player-card">
+          <span>EV SAHİBİ · BEKLENİYOR</span><strong>—</strong><small>Kadro hazırlanmadı</small>
+        </article>
+        <b>VS</b>
+        <article id="lobbyPlayer1" class="lobby-player-card">
+          <span>MİSAFİR · BEKLENİYOR</span><strong>—</strong><small>Kadro hazırlanmadı</small>
+        </article>
+      </div>
+      <div id="lobbySettingsSummary" class="lobby-settings-summary"></div>
+      <p id="lobbyMessage" class="online-status">İki oyuncunun hazırlanması bekleniyor.</p>
+      <div class="screen-actions lobby-actions">
+        <button id="leaveRoomButton" class="back-button" type="button">← ODADAN AYRIL</button>
+        <button id="editOnlineSettingsButton" class="secondary-button hidden" type="button">AYARLARI DÜZENLE</button>
+        <button id="startOnlineMatchButton" class="primary-button hidden" type="button">MAÇI BAŞLAT →</button>
+      </div>
+    </section>
+
+    <section id="screen-squad" class="screen" aria-labelledby="squad-title">
+      <div class="section-heading compact-heading">
+        <p class="eyebrow">2 / 4 · KADRO</p>
+        <h2 id="squad-title">TAKIMINI KUR</h2>
+        <p id="setupTeamLabel" class="subheading">TAKIM 1</p>
+      </div>
+
+      <div class="team-name-row">
+        <label>Takım adı
+          <input id="teamNameInput" maxlength="22" value="90+ XI" autocomplete="off">
+        </label>
+        <div id="builtStatus" class="built-status">Henüz kurulmadı</div>
+      </div>
+
+      <div class="segmented" role="tablist" aria-label="Kadro kurma yöntemi">
+        <button class="builder-tab active" data-builder="random" type="button">KARIŞIK</button>
+        <button class="builder-tab" data-builder="criteria" type="button">KRİTER</button>
+        <button class="builder-tab" data-builder="manual" type="button">MANUEL</button>
+      </div>
+
+      <div id="builder-random" class="builder-panel active">
+        <div class="poster-panel red-poster">
+          <span class="poster-number">11</span>
+          <div><h3>TEK TUŞLA KADRO</h3><p>Tüm dönemlerden, pozisyon dengeli rastgele ilk 11.</p></div>
+        </div>
+        <button id="randomBuildButton" class="primary-button" type="button">RASTGELE KADRO OLUŞTUR</button>
+      </div>
+
+      <div id="builder-criteria" class="builder-panel">
+        <div class="form-card">
+          <fieldset>
+            <legend>Dönem — en fazla 2</legend>
+            <div id="periodChips" class="chip-grid"></div>
+          </fieldset>
+          <div class="two-column">
+            <label>Milliyet
+              <select id="nationalitySelect"><option value="">Tümü</option></select>
+            </label>
+            <label>Lig
+              <select id="leagueSelect"><option value="">Tümü</option></select>
+            </label>
+          </div>
+          <p class="form-note">Takım adı yalnızca kozmetiktir; oyuncu havuzunu etkilemez.</p>
+        </div>
+        <button id="criteriaBuildButton" class="primary-button" type="button">27 KİŞİLİK HAVUZU HAZIRLA</button>
+      </div>
+
+      <div id="builder-manual" class="builder-panel">
+        <div class="manual-toolbar">
+          <input id="manualSearch" type="search" placeholder="Oyuncu ara…" autocomplete="off">
+          <span id="manualCount">0 / 11</span>
+        </div>
+        <div id="manualPlayerList" class="manual-list"></div>
+        <button id="manualBuildButton" class="primary-button" type="button" disabled>SEÇİLİ 11'İ ONAYLA</button>
+      </div>
+
+      <div id="squadPreview" class="squad-preview hidden"></div>
+      <div class="screen-actions">
+        <button class="back-button" data-back="mode" type="button">← GERİ</button>
+        <button id="nextSetupButton" class="primary-button hidden" type="button">AYARLARA GEÇ →</button>
+      </div>
+    </section>
+
+    <section id="screen-draft" class="screen" aria-labelledby="draft-title">
+      <div class="section-heading compact-heading">
+        <p class="eyebrow">KRONOMETRE DRAFTI</p>
+        <h2 id="draft-title">ADAYI DURDUR</h2>
+        <p id="draftProgress" class="subheading">1 / 11 · KALECİ</p>
+      </div>
+      <div id="draftCandidates" class="candidate-grid"></div>
+      <div class="draft-watch">
+        <div id="draftWatchDisplay" class="digital-display">00:00.0</div>
+        <p>Son rakam, aday sayısına göre mod alınır.</p>
+        <button id="draftStopButton" class="stop-button" type="button">DURDUR</button>
+      </div>
+    </section>
+
+    <section id="screen-settings" class="screen" aria-labelledby="settings-title">
+      <div class="section-heading">
+        <p class="eyebrow">3 / 4</p>
+        <h2 id="settings-title">MAÇ AYARLARI</h2>
+      </div>
+      <div class="settings-card">
+        <label class="range-row">
+          <span>Maç süresi <b id="durationValue">5 dk</b></span>
+          <input id="durationRange" type="range" min="5" max="10" value="5" step="1">
+        </label>
+        <label class="toggle-row"><span><b>Kart sistemi</b><small>Sarı, ikinci sarı ve kırmızı</small></span><input id="cardsToggle" type="checkbox" checked><i></i></label>
+        <label class="toggle-row"><span><b>Sakatlık riski</b><small>Faul sonrası deneysel %10 kontrol</small></span><input id="injuryToggle" type="checkbox"><i></i></label>
+        <label class="toggle-row"><span><b>Uzatma</b><small>Beraberlikte oranlı 2 mini devre</small></span><input id="extraToggle" type="checkbox" checked><i></i></label>
+        <label class="toggle-row"><span><b>Seri penaltı</b><small>Net kazanan için</small></span><input id="shootoutToggle" type="checkbox" checked><i></i></label>
+        <label>Ses yoğunluğu
+          <select id="soundIntensity">
+            <option value="low">Düşük</option>
+            <option value="medium" selected>Orta</option>
+            <option value="high">Yüksek</option>
+          </select>
+        </label>
+      </div>
+      <div class="screen-actions">
+        <button class="back-button" data-back="squad" type="button">← GERİ</button>
+        <button id="kickoffButton" class="primary-button" type="button">MAÇI BAŞLAT →</button>
+      </div>
+    </section>
+
+    <section id="screen-match" class="screen match-screen" aria-labelledby="match-title">
+      <h2 id="match-title" class="sr-only">Maç ekranı</h2>
+      <div id="remoteMatchBar" class="remote-match-bar hidden">
+        <span>ODA <b id="remoteRoomCode">------</b></span>
+        <span id="remoteConnectionText">BAĞLANIYOR…</span>
+      </div>
+      <div class="scoreboard">
+        <div class="score-team"><span id="homeTeamName">EV SAHİBİ</span><b id="homeScore">0</b></div>
+        <div class="match-meta"><strong id="periodLabel">1. DEVRE</strong><span id="matchClock">00:00</span></div>
+        <div class="score-team away"><b id="awayScore">0</b><span id="awayTeamName">DEPLASMAN</span></div>
+      </div>
+
+      <div class="pitch-panel">
+        <div class="pitch-lines" aria-hidden="true"></div>
+        <div class="turn-banner"><span id="turnTeam">90+ XI</span><b id="rollContextLabel">HÜCUM</b></div>
+        <div class="player-card-mini">
+          <small>TOPLA OYNAYAN</small>
+          <strong id="activePlayerName">—</strong>
+          <span id="activePlayerMeta">—</span>
+        </div>
+        <div id="matchWatchDisplay" class="digital-display match-watch">00:00.0</div>
+        <div class="turn-time"><span>Tur süresi</span><b id="turnCountdown">10.0</b></div>
+        <button id="matchStopButton" class="stop-button match-stop" type="button">DURDUR</button>
+        <p id="aiHint" class="ai-hint hidden">Rakip kronometreyi kolluyor…</p>
+      </div>
+
+      <div class="match-stats-row">
+        <div><small>KORNER</small><b><span id="homeCorners">0</span> — <span id="awayCorners">0</span></b></div>
+        <div><small>VAKİT İHLALİ</small><b><span id="homeTimeouts">0</span> — <span id="awayTimeouts">0</span></b></div>
+        <button id="pauseButton" class="small-button" type="button">DURAKLAT</button>
+      </div>
+      <ol id="liveTimeline" class="live-timeline"></ol>
+    </section>
+
+    <section id="screen-results" class="screen" aria-labelledby="results-title">
+      <div class="results-poster halftone-card">
+        <p class="eyebrow">MAÇ SONU</p>
+        <h2 id="results-title">SON DÜDÜK</h2>
+        <div class="final-score"><span id="finalHomeName">TAKIM 1</span><b id="finalScore">0 — 0</b><span id="finalAwayName">TAKIM 2</span></div>
+        <p id="winnerText" class="winner-text">BERABERE</p>
+      </div>
+      <div class="result-grid">
+        <div class="result-card"><small>TOP SENDE KALMA</small><b id="possessionResult">50% — 50%</b></div>
+        <div class="result-card"><small>ÖNE ÇIKAN</small><b id="highlightResult">—</b></div>
+      </div>
+      <div class="timeline-card">
+        <h3>OLAY ZAMAN ÇİZELGESİ</h3>
+        <ol id="resultTimeline"></ol>
+      </div>
+      <div class="screen-actions">
+        <button id="rematchButton" class="secondary-button" type="button">RÖVANŞ</button>
+        <button id="newGameButton" class="primary-button" type="button">YENİ OYUN</button>
+      </div>
+      <p class="legal">Bu oyun fantasy/eğitim amaçlıdır. Marka ve oyuncu isimleri ilgili sahiplerine aittir; resmi bağlantı yoktur.</p>
+    </section>
+  </main>
+
+  <div id="eventOverlay" class="event-overlay hidden" role="status" aria-live="assertive">
+    <div class="rays"></div>
+    <p id="overlayKicker">00</p>
+    <h2 id="overlayTitle">GOL!</h2>
+    <p id="overlaySubtitle">—</p>
+  </div>
+
+  <div id="dialogOverlay" class="dialog-overlay hidden" role="dialog" aria-modal="true">
+    <div class="dialog-card">
+      <p id="dialogEyebrow" class="eyebrow">DEVRE ARASI</p>
+      <h2 id="dialogTitle">SOYUNMA ODASI</h2>
+      <p id="dialogText">Nefeslen. Kronometre birazdan yeniden akacak.</p>
+      <button id="dialogButton" class="primary-button" type="button">DEVAM ET</button>
+    </div>
+  </div>
+
+  <script src="js/core.js"></script>
+  <script src="js/players.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
