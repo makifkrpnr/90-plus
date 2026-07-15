@@ -76,6 +76,7 @@ function resetRoll(match, owner, context, now) {
   match.resolving = false;
   match.running = true;
   match.paused = false;
+  match.pausedBy = null;
   match.awaitingPeriodStart = false;
   match.awaitingPeriodSide = null;
   match.transition = null;
@@ -89,13 +90,17 @@ function transitionTo(match, owner, context, overlay, now) {
   match.running = false;
   match.resolving = true;
   match.transition = { owner, context };
-  const duration = Math.max(1500, Number(overlay?.duration) || 1900);
+  const title = String(overlay?.title || '');
+  const important = /GOL|KIRMIZI|PENALTI|FAUL|KURTARDI|HÜKMEN|EŞİTLİK|BAŞLAMA|EK SÜRE/i.test(title);
+  const duration = Math.max(important ? 3600 : 2800, Number(overlay?.duration) || 3000);
+  const inferredType = overlay?.type || (/GOL/i.test(title) ? 'goal' : /İKİNCİ SARI/i.test(title) ? 'secondYellow' : /KIRMIZI/i.test(title) ? 'red' : /SARI/i.test(title) ? 'yellow' : /KURTARDI/i.test(title) ? 'save' : /FAUL/i.test(title) ? 'foul' : /PENALTI/i.test(title) ? 'penalty' : /FRİKİK/i.test(title) ? 'freeKick' : /KORNER/i.test(title) ? 'corner' : /TAÇ/i.test(title) ? 'throwIn' : /AUT|TOP KAYBI/i.test(title) ? 'turnover' : '');
   match.overlay = overlay ? {
     id: `${now}-${Math.random().toString(36).slice(2, 7)}`,
     title: overlay.title || '',
     subtitle: overlay.subtitle || '',
     tone: overlay.tone || 'red',
     kicker: overlay.kicker || '',
+    type: inferredType,
     until: now + duration
   } : { id: `${now}`, title: '', subtitle: '', tone: 'navy', kicker: '', until: now };
   match.lastTickAt = now;
@@ -113,28 +118,37 @@ function finishMatch(match, winnerSide) {
 
 function createMatch(teams, settings, now = Date.now()) {
   const totalSeconds = settings.durationMinutes * 60;
-  const match = {
-    version: 3,
+  return {
+    version: 4,
     mode: 'friend',
     teams: teams.map(makeRuntimeTeam),
     settings: { ...settings },
     scores: [0, 0],
     activeSide: 0,
     activePlayerId: [null, null],
-    context: { type: 'playerSelect', owner: 0 },
+    context: { type: 'kickoffRoll', owner: 0 },
     pendingFoul: null,
-    phase: 'regulation',
+    phase: 'kickoff',
+    kickoff: { rolls: [null, null], turn: 0, round: 1, winner: null, readyToStart: false },
+    firstHalfStarter: null,
+    secondHalfStarter: null,
     periodIndex: 0,
     periodElapsedMs: 0,
     periodDurationsMs: [totalSeconds * 500, totalSeconds * 500],
+    regulationPeriodDurationsMs: [totalSeconds * 500, totalSeconds * 500],
     regulationSeconds: totalSeconds,
     totalElapsedMs: 0,
     possessionMs: [0, 0],
     rollElapsedMs: 0,
     turnElapsedMs: 0,
+    delayWasteMs: [0, 0],
+    stoppageMs: 0,
+    stoppageAnnounced: false,
     lastTickAt: now,
     running: true,
     paused: false,
+    pausedBy: null,
+    pauseBudgetsMs: [60000, 60000],
     resolving: false,
     awaitingPeriodStart: false,
     awaitingPeriodSide: null,
@@ -145,7 +159,6 @@ function createMatch(teams, settings, now = Date.now()) {
     transition: null,
     overlay: null
   };
-  return match;
 }
 
 function markPlayerUnavailable(match, side, playerId, reason) {
@@ -153,6 +166,51 @@ function markPlayerUnavailable(match, side, playerId, reason) {
   if (index < 0) return null;
   match.teams[side].lineup[index] = { ...match.teams[side].lineup[index], [reason]: true };
   return match.teams[side].lineup[index];
+}
+
+function resolveKickoffRoll(match, digit, now, automatic = false) {
+  const side = match.context.owner;
+  match.kickoff.rolls[side] = digit;
+  if (match.kickoff.rolls[0] === null || match.kickoff.rolls[1] === null) {
+    const next = side === 0 ? 1 : 0;
+    transitionTo(match, next, { type: 'kickoffRoll' }, {
+      title: String(digit), subtitle: `${match.teams[side].name} başlama atışını tamamladı${automatic ? ' · otomatik' : ''}`,
+      tone: 'navy', kicker: `${match.kickoff.round}. TUR · RAKAM ${digit}`, duration: 2600, type: 'timer'
+    }, now);
+    return;
+  }
+  const [homeDigit, awayDigit] = match.kickoff.rolls;
+  if (homeDigit === awayDigit) {
+    match.kickoff.round += 1;
+    match.kickoff.rolls = [null, null];
+    transitionTo(match, 0, { type: 'kickoffRoll' }, {
+      title: 'EŞİTLİK!', subtitle: `${homeDigit} — ${awayDigit}. İki taraf da yeniden atacak.`, tone: 'yellow',
+      kicker: `${match.kickoff.round}. TUR`, duration: 3200, type: 'timer'
+    }, now);
+    return;
+  }
+  const winner = homeDigit > awayDigit ? 0 : 1;
+  match.kickoff.winner = winner;
+  match.kickoff.readyToStart = true;
+  match.firstHalfStarter = winner;
+  match.secondHalfStarter = winner === 0 ? 1 : 0;
+  transitionTo(match, winner, { type: 'kickoffReady' }, {
+    title: `${homeDigit} — ${awayDigit}`,
+    subtitle: `${match.teams[winner].name} ilk yarıya, ${match.teams[match.secondHalfStarter].name} ikinci yarıya başlayacak.`,
+    tone: 'green', kicker: 'BAŞLAMA HAKKI', duration: 4000, type: 'kickoff'
+  }, now);
+}
+
+function beginAfterKickoff(match, now) {
+  const side = match.firstHalfStarter;
+  match.phase = 'regulation';
+  match.periodIndex = 0;
+  match.periodElapsedMs = 0;
+  match.totalElapsedMs = 0;
+  match.stoppageAnnounced = false;
+  match.stoppageMs = 0;
+  addEvent(match, `${match.teams[side].name} ilk yarıya başladı`, true, { type: 'kickoff', side, title: 'Başlama vuruşu', detail: match.teams[side].name });
+  resetRoll(match, side, { type: 'playerSelect' }, now);
 }
 
 function resolvePlayerSelection(match, digit, now) {
@@ -335,7 +393,8 @@ function resolveShootoutShot(match, digit, now) {
 }
 
 function resolveRoll(match, digit, now) {
-  if (match.context.type === 'playerSelect') resolvePlayerSelection(match, digit, now);
+  if (match.context.type === 'kickoffRoll') resolveKickoffRoll(match, digit, now);
+  else if (match.context.type === 'playerSelect') resolvePlayerSelection(match, digit, now);
   else if (match.context.type === 'main') resolveMainEvent(match, digit, now);
   else if (match.context.type === 'foulResult') resolveFoulResult(match, digit, now);
   else if (match.context.type === 'foulCard') resolveFoulCard(match, digit, now);
@@ -346,7 +405,15 @@ function resolveRoll(match, digit, now) {
 function stopRoll(match, side, digit, now = Date.now()) {
   if (!match || match.phase === 'finished' || !match.running || match.paused || match.resolving) return { ok: false, error: 'Atış şu anda kullanılamıyor.' };
   if (match.context.owner !== side) return { ok: false, error: 'Sıra sende değil.' };
+  if (match.context.type === 'kickoffReady') {
+    beginAfterKickoff(match, now);
+    return { ok: true, digit: 0 };
+  }
   const normalized = Core.normalizeDigit(digit);
+  if (match.phase !== 'kickoff' && !['kickoffRoll', 'kickoffReady'].includes(match.context.type)) {
+    const excess = Math.max(0, Number(match.turnElapsedMs) - 1000);
+    match.delayWasteMs[side] = (Number(match.delayWasteMs[side]) || 0) + excess;
+  }
   match.running = false;
   match.resolving = true;
   resolveRoll(match, normalized, now);
@@ -359,6 +426,7 @@ function handleTurnTimeout(match, now) {
   match.resolving = true;
   const side = match.context.owner;
   const other = side === 0 ? 1 : 0;
+  match.delayWasteMs[side] = (Number(match.delayWasteMs[side]) || 0) + 9000;
   const outcome = Core.registerTimeout(match.teams[side].timeouts);
   match.teams[side].timeouts = outcome.count;
   addEvent(match, `${match.teams[side].name}: 10 saniye ihlali (${outcome.count})`, true, { type: 'timeout', side, title: 'Süre ihlali', detail: `${outcome.count}. ihlal` });
@@ -404,10 +472,15 @@ function preparePeriodStart(match, side, phase, periodIndex, now) {
   match.turnElapsedMs = 0;
   match.running = false;
   match.paused = true;
+  match.pausedBy = null;
   match.resolving = false;
   match.awaitingPeriodStart = true;
   match.awaitingPeriodSide = side;
   match.periodStartKey = `${phase}-${periodIndex}-${now}`;
+  if (phase === 'regulation' && periodIndex === 1) {
+    match.stoppageAnnounced = false;
+    match.stoppageMs = 0;
+  }
   match.transition = null;
   match.overlay = null;
   match.lastTickAt = now;
@@ -429,23 +502,56 @@ function endCurrentPeriod(match, now) {
   const index = match.periodIndex;
 
   if (index === 0) {
-    preparePeriodStart(match, 1, phase, 1, now);
+    const starter = phase === 'regulation' ? (match.secondHalfStarter ?? 1) : ((match.firstHalfStarter ?? 0) === 0 ? 1 : 0);
+    preparePeriodStart(match, starter, phase, 1, now);
     return;
   }
   if (phase === 'regulation' && match.scores[0] === match.scores[1] && match.settings.extraTime) {
     const extraTotal = Core.roundExtraTimeSeconds(match.regulationSeconds) * 1000;
     match.periodDurationsMs = [extraTotal / 2, extraTotal / 2];
-    preparePeriodStart(match, 0, 'extra', 0, now);
+    preparePeriodStart(match, match.firstHalfStarter ?? 0, 'extra', 0, now);
     return;
   }
   if (match.scores[0] === match.scores[1] && match.settings.shootout) startShootout(match, now);
   else finishMatch(match, match.scores[0] === match.scores[1] ? null : (match.scores[0] > match.scores[1] ? 0 : 1));
 }
 
+function currentPeriodTargetMs(match) {
+  const base = Number(match.periodDurationsMs?.[match.periodIndex]) || 0;
+  if (match.phase === 'regulation' && match.periodIndex === 1) return base + (Number(match.stoppageMs) || 0);
+  return base;
+}
+
+function announceStoppage(match, now) {
+  if (match.phase !== 'regulation' || match.periodIndex !== 1 || match.stoppageAnnounced) return false;
+  match.stoppageAnnounced = true;
+  match.stoppageMs = Core.calculateStoppageTimeMs(match.delayWasteMs, match.settings.durationMinutes);
+  if (!match.stoppageMs) return false;
+  const shown = Core.formatAddedTimeMinutes(match.stoppageMs);
+  addEvent(match, `Hakem ${shown} dakika ek süre gösterdi`, true, { type: 'stoppage', title: `+${shown}`, detail: 'Hakemin ek süresi' });
+  transitionTo(match, match.context.owner, { ...match.context }, {
+    title: `+${shown}`, subtitle: `${Math.round(match.stoppageMs / 1000)} saniye ek süre oynanacak`, tone: 'navy',
+    kicker: '90+ HAKEM KARARI', duration: 3600, type: 'stoppage'
+  }, now);
+  return true;
+}
+
 function tickMatch(match, now = Date.now()) {
   if (!match || match.phase === 'finished') return false;
   const dt = clamp(now - (match.lastTickAt || now), 0, 250);
   match.lastTickAt = now;
+
+  if (match.paused && Number.isInteger(match.pausedBy)) {
+    const side = match.pausedBy;
+    match.pauseBudgetsMs[side] = Math.max(0, Number(match.pauseBudgetsMs[side]) - dt);
+    if (match.pauseBudgetsMs[side] <= 0) {
+      match.paused = false;
+      match.running = true;
+      match.pausedBy = null;
+      return true;
+    }
+    return true;
+  }
 
   if (match.resolving) {
     if (match.overlay && now >= match.overlay.until && match.transition) {
@@ -454,35 +560,52 @@ function tickMatch(match, now = Date.now()) {
     }
     return false;
   }
-
-  if (!match.running || match.paused || match.awaitingPeriodStart) return false;
+  if (!match.running || match.awaitingPeriodStart) return false;
 
   match.rollElapsedMs += dt;
-  match.turnElapsedMs += dt;
-  if (match.phase !== 'shootout') {
+  if (match.context.type !== 'kickoffReady') match.turnElapsedMs += dt;
+  if (match.phase === 'regulation' || match.phase === 'extra') {
     match.periodElapsedMs += dt;
-    match.totalElapsedMs += match.phase === 'regulation' ? dt : 0;
+    if (match.phase === 'regulation') match.totalElapsedMs += dt;
     match.possessionMs[match.context.owner] += dt;
   }
 
-
-  if (match.turnElapsedMs >= 10000) {
+  if (match.context.type === 'kickoffRoll' && match.turnElapsedMs >= 10000) {
+    match.running = false;
+    match.resolving = true;
+    resolveKickoffRoll(match, Math.floor(Math.random() * 10), now, true);
+    return true;
+  }
+  if (match.context.type !== 'kickoffReady' && match.turnElapsedMs >= 10000) {
     handleTurnTimeout(match, now);
     return true;
   }
-  if (match.phase !== 'shootout' && match.periodElapsedMs >= match.periodDurationsMs[match.periodIndex]) {
-    endCurrentPeriod(match, now);
+  if ((match.phase === 'regulation' || match.phase === 'extra') && match.periodElapsedMs >= currentPeriodTargetMs(match)) {
+    if (!announceStoppage(match, now)) endCurrentPeriod(match, now);
     return true;
   }
   return false;
 }
 
-function togglePause(match, now = Date.now()) {
-  if (!match || match.phase === 'finished' || match.resolving || match.awaitingPeriodStart) return false;
-  match.paused = !match.paused;
-  match.running = !match.paused;
+function togglePause(match, side, now = Date.now()) {
+  if (!match || match.phase === 'finished' || match.resolving || match.awaitingPeriodStart || match.phase === 'kickoff' || match.context.type === 'kickoffReady') {
+    return { ok: false, error: 'Maç şu anda duraklatılamıyor.' };
+  }
+  if (match.paused) {
+    if (match.pausedBy !== side) return { ok: false, error: 'Molayı yalnızca duraklatan oyuncu bitirebilir.' };
+    match.paused = false;
+    match.running = true;
+    match.pausedBy = null;
+    match.lastTickAt = now;
+    return { ok: true, paused: false };
+  }
+  if (match.context.owner !== side) return { ok: false, error: 'Yalnızca kendi sıranda mola alabilirsin.' };
+  if ((Number(match.pauseBudgetsMs?.[side]) || 0) <= 0) return { ok: false, error: '60 saniyelik mola hakkın tükendi.' };
+  match.paused = true;
+  match.running = false;
+  match.pausedBy = side;
   match.lastTickAt = now;
-  return true;
+  return { ok: true, paused: true };
 }
 
 module.exports = {

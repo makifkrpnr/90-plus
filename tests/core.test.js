@@ -62,3 +62,10 @@ test('mod yöntemi aday seçer', () => {
   assert.equal(Core.chooseByModulo(items, 5), 'c');
   assert.equal(Core.chooseByModulo(items, 8), 'c');
 });
+
+test('gecikme kaynaklı ek süre maç uzunluğuna göre makul biçimde sınırlandırılır', () => {
+  assert.equal(Core.calculateStoppageTimeMs([0, 0], 5), 0);
+  assert.equal(Core.calculateStoppageTimeMs([10000, 10000], 5), 15000);
+  assert.equal(Core.calculateStoppageTimeMs([999999, 999999], 5), 60000);
+  assert.equal(Core.formatAddedTimeMinutes(60000), 1);
+});

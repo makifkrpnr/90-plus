@@ -21,7 +21,11 @@ const MIME = {
   '.svg': 'image/svg+xml',
   '.ico': 'image/x-icon',
   '.md': 'text/markdown; charset=utf-8',
-  '.ttf': 'font/ttf'
+  '.ttf': 'font/ttf',
+  '.mp3': 'audio/mpeg',
+  '.wav': 'audio/wav',
+  '.ogg': 'audio/ogg',
+  '.m4a': 'audio/mp4'
 };
 
 function safeText(value, fallback, max = 24) {
@@ -94,6 +98,8 @@ function lobbyPayload(room) {
     phase: room.phase,
     players: [playerSummary(room.players[0], 0), playerSummary(room.players[1], 1)],
     settings: room.settings,
+    startReady: Array.isArray(room.startReady) ? [...room.startReady] : [false, false],
+    startDeadline: room.startDeadline || null,
     canStart: Boolean(room.players[0]?.team && room.players[1]?.team && room.players[0]?.connected && room.players[1]?.connected && room.phase === 'lobby'),
     createdAt: room.createdAt
   };
@@ -125,6 +131,37 @@ function currentRoom(socket) {
 
 function isHost(socket) {
   return socket.data.side === 0;
+}
+
+function clearStartTimer(room) {
+  if (room?.startTimer) clearTimeout(room.startTimer);
+  if (room) room.startTimer = null;
+}
+
+function canPrepareMatch(room) {
+  return Boolean(room?.players?.[0]?.team && room?.players?.[1]?.team && room.players[0].connected && room.players[1].connected);
+}
+
+function beginRoomMatch(io, room) {
+  if (!room || !canPrepareMatch(room)) return false;
+  clearStartTimer(room);
+  room.startReady = [false, false];
+  room.startDeadline = null;
+  room.match = Engine.createMatch([room.players[0].team, room.players[1].team], room.settings, Date.now());
+  room.phase = 'match';
+  touch(room);
+  io.to(room.code).emit('match:start', { match: room.match, serverNow: Date.now() });
+  emitLobby(io, room);
+  return true;
+}
+
+function scheduleBriefDeadline(io, room) {
+  clearStartTimer(room);
+  room.startDeadline = Date.now() + 30000;
+  room.startTimer = setTimeout(() => {
+    if (room.phase === 'brief') beginRoomMatch(io, room);
+  }, 30050);
+  room.startTimer.unref?.();
 }
 
 const server = http.createServer((req, res) => {
@@ -176,6 +213,9 @@ io.on('connection', socket => {
       players: [null, null],
       settings: validateSettings(null),
       match: null,
+      startReady: [false, false],
+      startDeadline: null,
+      startTimer: null,
       lastBroadcastAt: 0
     };
     rooms.set(code, room);
@@ -228,18 +268,37 @@ io.on('connection', socket => {
     emitLobby(io, room);
   });
 
-  socket.on('room:start', (_payload, ack = () => {}) => {
+  const openBrief = (ack = () => {}) => {
     const room = currentRoom(socket);
-    if (!room || !isHost(socket)) return ack({ ok: false, error: 'Maçı yalnızca oda sahibi başlatabilir.' });
-    if (room.phase !== 'lobby') return ack({ ok: false, error: 'Maç zaten başladı.' });
-    if (!room.players[0]?.team || !room.players[1]?.team) return ack({ ok: false, error: 'İki takım da hazır olmalı.' });
-    if (!room.players[0]?.connected || !room.players[1]?.connected) return ack({ ok: false, error: 'İki oyuncu da bağlı olmalı.' });
-    room.match = Engine.createMatch([room.players[0].team, room.players[1].team], room.settings, Date.now());
-    room.phase = 'match';
+    if (!room || !isHost(socket)) return ack({ ok: false, error: 'Kural ekranını yalnızca oda sahibi açabilir.' });
+    if (room.phase !== 'lobby') return ack({ ok: false, error: 'Oda artık lobi aşamasında değil.' });
+    if (!canPrepareMatch(room)) return ack({ ok: false, error: 'İki takım hazır ve iki oyuncu bağlı olmalı.' });
+    room.phase = 'brief';
+    room.startReady = [false, false];
+    room.startDeadline = null;
+    clearStartTimer(room);
     touch(room);
-    ack({ ok: true });
-    io.to(room.code).emit('match:start', { match: room.match, serverNow: Date.now() });
+    const lobby = lobbyPayload(room);
+    ack({ ok: true, lobby });
+    io.to(room.code).emit('room:brief', { lobby });
     emitLobby(io, room);
+  };
+
+  socket.on('room:openBrief', (_payload, ack = () => {}) => openBrief(ack));
+  socket.on('room:start', (_payload, ack = () => {}) => openBrief(ack));
+
+  socket.on('room:readyStart', (_payload, ack = () => {}) => {
+    const room = currentRoom(socket);
+    if (!room || room.phase !== 'brief') return ack({ ok: false, error: 'Kural brifingi açık değil.' });
+    if (!canPrepareMatch(room)) return ack({ ok: false, error: 'İki oyuncu da bağlı ve kadrolar hazır olmalı.' });
+    const side = socket.data.side;
+    room.startReady[side] = true;
+    if (!room.startDeadline) scheduleBriefDeadline(io, room);
+    touch(room);
+    const lobby = lobbyPayload(room);
+    ack({ ok: true, lobby });
+    emitLobby(io, room);
+    if (room.startReady[0] && room.startReady[1]) beginRoomMatch(io, room);
   });
 
   socket.on('match:stop', (payload, ack = () => {}) => {
@@ -264,35 +323,47 @@ io.on('connection', socket => {
 
   socket.on('match:pause', (_payload, ack = () => {}) => {
     const room = currentRoom(socket);
-    if (!room?.match || !isHost(socket)) return ack({ ok: false, error: 'Maçı yalnızca oda sahibi duraklatabilir.' });
-    const changed = Engine.togglePause(room.match, Date.now());
-    if (!changed) return ack({ ok: false, error: 'Maç şu anda duraklatılamıyor.' });
+    if (!room?.match || room.phase !== 'match') return ack({ ok: false, error: 'Aktif maç bulunamadı.' });
+    const result = Engine.togglePause(room.match, socket.data.side, Date.now());
+    if (!result.ok) return ack(result);
     touch(room);
-    ack({ ok: true, paused: room.match.paused });
+    ack(result);
     io.to(room.code).emit('match:state', { match: room.match, serverNow: Date.now() });
   });
 
   socket.on('room:rematch', (_payload, ack = () => {}) => {
     const room = currentRoom(socket);
-    if (!room || !isHost(socket)) return ack({ ok: false, error: 'Rövanşı yalnızca oda sahibi başlatabilir.' });
+    if (!room || !isHost(socket)) return ack({ ok: false, error: 'Rövanş brifingini yalnızca oda sahibi açabilir.' });
     if (!room.match || room.match.phase !== 'finished') return ack({ ok: false, error: 'Önce mevcut maç bitmeli.' });
-    room.match = Engine.createMatch([room.players[0].team, room.players[1].team], room.settings, Date.now());
-    room.phase = 'match';
+    room.match = null;
+    room.phase = 'brief';
+    room.startReady = [false, false];
+    room.startDeadline = null;
+    clearStartTimer(room);
     touch(room);
-    ack({ ok: true });
-    io.to(room.code).emit('match:start', { match: room.match, serverNow: Date.now() });
+    const lobby = lobbyPayload(room);
+    ack({ ok: true, lobby });
+    io.to(room.code).emit('room:brief', { lobby });
+    emitLobby(io, room);
   });
 
   socket.on('room:leave', () => {
     const room = currentRoom(socket);
     if (!room) return;
     const side = socket.data.side;
-    if (room.phase === 'lobby') {
+    if (room.phase === 'lobby' || room.phase === 'brief') {
       if (side === 0) {
         io.to(room.code).emit('room:closed', { reason: 'Oda sahibi ayrıldı.' });
+        clearStartTimer(room);
         rooms.delete(room.code);
       } else {
         room.players[1] = null;
+        if (room.phase === 'brief') {
+          clearStartTimer(room);
+          room.phase = 'lobby';
+          room.startReady = [false, false];
+          room.startDeadline = null;
+        }
         socket.leave(room.code);
         emitLobby(io, room);
       }
@@ -336,7 +407,7 @@ setInterval(() => {
   for (const [code, room] of rooms.entries()) {
     const nobodyConnected = room.players.every(player => !player?.connected);
     const ttl = nobodyConnected ? 10 * 60 * 1000 : 6 * 60 * 60 * 1000;
-    if (now - room.updatedAt > ttl) rooms.delete(code);
+    if (now - room.updatedAt > ttl) { clearStartTimer(room); rooms.delete(code); }
   }
 }, 60 * 1000).unref();
 

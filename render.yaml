@@ -4,7 +4,7 @@ services:
     runtime: node
     plan: free
     region: frankfurt
-    buildCommand: npm install --registry=https://registry.npmjs.org/ --package-lock=false --include=prod && npm ls socket.io
+    buildCommand: npm install --omit=dev --no-package-lock --registry=https://registry.npmjs.org/ && npm ls socket.io
     startCommand: npm start
     healthCheckPath: /health
     autoDeployTrigger: commit

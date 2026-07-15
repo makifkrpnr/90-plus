@@ -85,6 +85,22 @@
     return Math.max(30, Math.round(raw / 30) * 30);
   }
 
+  function calculateStoppageTimeMs(delayWasteMs, durationMinutes) {
+    const totalWaste = Array.isArray(delayWasteMs)
+      ? delayWasteMs.reduce((sum, value) => sum + Math.max(0, Number(value) || 0), 0)
+      : Math.max(0, Number(delayWasteMs) || 0);
+    const duration = Math.max(1, Math.min(10, Number(durationMinutes) || 5));
+    const cap = duration * 12000; // 5 dakikalık maç için en fazla 60 sn.
+    const estimated = totalWaste * 0.72;
+    if (estimated < 5000) return 0;
+    return Math.min(cap, Math.max(5000, Math.round(estimated / 5000) * 5000));
+  }
+
+  function formatAddedTimeMinutes(stoppageMs) {
+    const seconds = Math.max(0, Number(stoppageMs) || 0) / 1000;
+    return seconds ? Math.max(1, Math.round(seconds / 60)) : 0;
+  }
+
   function matchMinute(elapsedSeconds, regulationSeconds, periodType) {
     const elapsed = Math.max(0, Number(elapsedSeconds) || 0);
     const regulation = Math.max(1, Number(regulationSeconds) || 1);
@@ -126,6 +142,8 @@
     registerTimeout,
     applyCard,
     roundExtraTimeSeconds,
+    calculateStoppageTimeMs,
+    formatAddedTimeMinutes,
     matchMinute,
     possessionPercent,
     forfeitScore,

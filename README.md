@@ -1,33 +1,38 @@
-# 90+ — v3 Maç Merkezi
+# 90+ — v4 Stadyum Sürümü
 
-Tarayıcıda çalışan, mobil öncelikli retro kronometre futbol oyunu.
+Mobil öncelikli, tarayıcıda çalışan retro kronometre futbol oyunu. Oyuncu önce kronometreyle futbolcuyu, ikinci atışta maç olayını belirler. Yapay zekâ, aynı cihazda iki kişi ve oda koduyla uzaktan arkadaş maçı desteklenir.
 
 ## Oyun modları
 
-- Yapay zekaya karşı
-- Aynı cihazda iki oyuncu
-- Oda koduyla uzaktan arkadaş maçı (Socket.IO)
-- Çevrimdışı PWA desteği (online arkadaş modu hariç)
+- **Yapay zekâya karşı:** tamamen istemci tarafında oynanır.
+- **Aynı cihaz:** iki oyuncu telefonu sırayla kullanır.
+- **Arkadaşınla oyna:** Socket.IO üzerinden oda oluşturma ve altı haneli kodla katılma.
+- **PWA:** çevrimdışı AI/aynı cihaz desteği ve ana ekrana ekleme.
 
-## v3 yenilikleri
+## v4’ün başlıca yenilikleri
 
-- Yeni iki aşamalı oynanış: **önce oyuncu seçimi, sonra olay atışı**
-- Pas sonrası aynı takım için yeniden oyuncu seçimi
-- İlk devreyi Takım 1, ikinci devreyi Takım 2 başlatır
-- Devre arası manuel “İkinci Devreyi Başlat” düğmesi
-- Uzaktan maçta düğmeyi yalnız başlama hakkı olan oyuncu kullanabilir
-- Okunabilir, uzun olay animasyonları
-- Mobilde sabit skor alanı ve sabit alt maç çubuğu
-- Büyük devre, dakika ve skor tipografisi
-- Sırası gelen takımın skor alanında işaretlenmesi
-- Maç sırasında açılabilir kadro ekranı
-- Oyuncu bazında gol, sarı kart, direkt kırmızı ve ikinci sarıdan kırmızı işaretleri
-- Retro/SofaScore esintili maç sonu zaman çizelgesi
-- Açık ve koyu tema
-- Tamamen Türkçe arayüz
-- “Nasıl Oynanır?” sayfası
-- 1–10 dakika arasında maç süresi
-- Oyuncu havuzu 101’den **174 oyuncuya** çıkarıldı
+- Oyuncu havuzu **472 futbolcuya** çıkarıldı.
+- Kriter bazlı kadroda dönem, milliyet ve lig filtreleri birlikte ve katı biçimde uygulanır.
+- Aday seçimi ekranında kronometre rakamının `rakam mod aday sayısı` yöntemiyle kimi seçtiği açıklanır.
+- Mobilde aday kartları görünür kalırken kronometreye erişilebilir.
+- Doğru saha ölçülerini temsil eden dikey futbol sahası çizimi eklendi.
+- Sabit mobil üst başlık, sabit alt eylem çubuğu ve maç içi sabit bilgi paneli eklendi.
+- Açık/koyu tema kontrastları yenilendi.
+- Zarif iki aşamalı maç butonu: **Oyuncuyu Seç → Olayı Belirle**.
+- Korner artık fiziksel olarak kullanılmaz; sayaç artar, üçüncü korner otomatik penaltıya dönüşür.
+- Atışlarda harcanan gecikmeye ve maç süresine göre makul **90+ ek süre** hesaplanır.
+- Ayarlardan sonra kurallar ve 0–9 olay tablosunun bulunduğu maç brifingi açılır.
+- Brifing sayfasına maç sırasında yeniden bakılabilir.
+- Online maçta ilk hazır olan oyuncu 30 saniyelik başlangıç sayacını başlatır; ikinci oyuncu onaylamazsa maç ekranı otomatik açılır.
+- Maç doğrudan başlamaz: iki taraf cezasız 10 saniyelik kronometre atışı yapar; yüksek rakam ilk yarıya, diğer taraf ikinci yarıya başlar. Eşitlikte atış tekrarlanır.
+- Online maçta her oyuncunun, yalnız kendi sırasında kullanabildiği toplam **60 saniyelik mola hakkı** vardır.
+- Mola süresi parça parça kullanılabilir ve rakipte saydam bilgilendirme perdesi görünür.
+- Tarayıcı/PWA geri tuşu uygulama içi ekran geçmişinde çalışır.
+- Toplam **67 isteğe bağlı ses yolu** hazırdır. Dosya varsa çalınır, yoksa oyun hata vermeden sessiz devam eder.
+
+## Oyuncu veri politikası
+
+Oyuncu listesi elle düzenlenen açık bir veri havuzudur. Kullanıcının açıkça çıkarılmasını istediği isimler kimlik tabanlı engel listesinde tutulur. Hukuki veya siyasi ilişki konusunda otomatik çıkarım yapılmaz; yeni bir dışlama gerekiyorsa açıkça listeye eklenir.
 
 ## Yerelde çalıştırma
 
@@ -38,7 +43,7 @@ npm install
 npm start
 ```
 
-Ardından:
+Tarayıcı:
 
 ```text
 http://localhost:8080
@@ -50,31 +55,37 @@ Sağlık kontrolü:
 http://localhost:8080/health
 ```
 
-## Render
-
-Projede `render.yaml` hazırdır. GitHub reposunu Render Blueprint olarak bağlayabilirsin.
-
-Build komutu:
+Oyun motoru testleri:
 
 ```bash
-npm install --registry=https://registry.npmjs.org/ --package-lock=false --include=prod && npm ls socket.io
+npm test
 ```
 
-Start komutu:
+Ses dosyası kontrolü:
 
 ```bash
-npm start
+npm run audio:check
 ```
 
-## Nippo font kurulumu
+## Ses dosyaları
 
-Arayüz Nippo font yollarına hazırdır. Kendi font dosyalarını GitHub reposunda şu klasöre ekle:
+Sesleri tam dosya adlarıyla şu kökün altına yerleştir:
+
+```text
+assets/audio/
+```
+
+Tam liste için `SES-DOSYA-LISTESI.md` dosyasına bak. Menü ve stadyum ambiyansı dahil bütün sesler isteğe bağlıdır.
+
+## Nippo fontu
+
+CSS, kullanıcının kendi Nippo font dosyalarını şu klasörden yüklemeye hazırdır:
 
 ```text
 assets/fonts/
 ```
 
-Dosya adları:
+Beklenen dosya adları:
 
 ```text
 Nippo-Regular.ttf
@@ -84,12 +95,8 @@ Nippo-Bold.ttf
 Nippo-Extralight.ttf
 ```
 
-Fontlar eklenmezse oyun sistem yazı tipiyle çalışmaya devam eder.
+Font dosyaları pakete eklenmemiştir. Eklenmezse güvenli sistem fontları kullanılır.
 
-## Testler
+## Render
 
-```bash
-npm test
-```
-
-Testler; iki aşamalı atış, gol, pas sonrası oyuncu seçimi, korner penaltısı, süre ihlali ve ikinci devre başlangıç yetkisini kapsar.
+Projede `render.yaml` hazırdır. Ayrıntılı kurulum için `RENDER-KURULUM.md`, mevcut projeyi güncellemek için `GUNCELLEME-KURULUM.md` dosyasını kullan.
