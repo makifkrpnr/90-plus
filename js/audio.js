@@ -1,114 +1,56 @@
 (function (root) {
   'use strict';
-
   const BASE = 'assets/audio/';
   const manifest = {
-    'ambience.menu': 'ambience/menu-loop.mp3', 'ambience.stadium': 'ambience/stadium-loop.mp3',
-    'whistle.kickoff': 'whistle/kickoff.mp3', 'whistle.secondHalf': 'whistle/second-half.mp3',
-    'whistle.foul': 'whistle/foul.mp3', 'whistle.penalty': 'whistle/penalty.mp3',
-    'whistle.halftime': 'whistle/halftime.mp3', 'whistle.fulltime': 'whistle/fulltime.mp3',
-    'whistle.freeKick': 'whistle/free-kick.mp3',
-    'timer.start': 'timer/start-click.mp3', 'timer.stop': 'timer/stop-click.mp3',
-    'timer.tick': 'timer/tick.mp3', 'timer.warning': 'timer/warning.mp3', 'timer.timeout': 'timer/timeout.mp3',
-    'ball.playerSelect': 'ball/player-select.mp3', 'ball.pass1': 'ball/pass-01.mp3',
-    'ball.pass2': 'ball/pass-02.mp3', 'ball.pass3': 'ball/pass-03.mp3', 'ball.shot': 'ball/shot.mp3',
-    'ball.net': 'ball/net.mp3', 'ball.save': 'ball/save.mp3', 'ball.post': 'ball/post.mp3',
-    'ball.tackle': 'ball/tackle.mp3', 'ball.throwIn': 'ball/throw-in.mp3', 'ball.goalKick': 'ball/goal-kick.mp3',
-    'ball.turnover': 'ball/turnover.mp3', 'ball.corner': 'ball/corner-kick.mp3',
-    'crowd.goal': 'crowd/goal-cheer.mp3', 'crowd.winningGoal': 'crowd/winning-goal-cheer.mp3',
-    'crowd.bigCheer': 'crowd/big-cheer.mp3', 'crowd.applause': 'crowd/applause.mp3',
-    'crowd.boo': 'crowd/boo.mp3', 'crowd.protest': 'crowd/protest.mp3',
-    'crowd.disappointment': 'crowd/disappointment.mp3', 'crowd.gasp': 'crowd/gasp.mp3',
-    'crowd.tenseHush': 'crowd/tense-hush.mp3', 'crowd.draw': 'crowd/draw-applause.mp3',
-    'crowd.defeat': 'crowd/defeat-murmur.mp3', 'crowd.goalHorn': 'crowd/goal-horn.mp3',
-    'crowd.goalAfterglow': 'crowd/goal-afterglow.mp3',
-    'cards.yellow': 'cards/yellow.mp3', 'cards.red': 'cards/red.mp3',
-    'cards.secondYellow': 'cards/second-yellow.mp3', 'cards.none': 'cards/no-card.mp3',
-    'setPiece.penaltyRunup': 'set-piece/penalty-run-up.mp3', 'setPiece.freeKickWall': 'set-piece/free-kick-wall.mp3',
-    'setPiece.penaltyGoal': 'set-piece/penalty-goal.mp3', 'setPiece.penaltySave': 'set-piece/penalty-save.mp3',
-    'setPiece.penaltyMiss': 'set-piece/penalty-miss.mp3',
-    'violation.first': 'violation/first-warning.mp3', 'violation.penalty': 'violation/penalty-awarded.mp3',
-    'violation.red': 'violation/red-card.mp3', 'violation.forfeit': 'violation/forfeit.mp3',
-    'online.roomCreated': 'online/room-created.mp3', 'online.roomJoined': 'online/room-joined.mp3',
-    'online.opponentReady': 'online/opponent-ready.mp3', 'online.yourTurn': 'online/your-turn.mp3',
-    'online.connectionLost': 'online/connection-lost.mp3', 'online.reconnected': 'online/reconnected.mp3',
-    'ui.select': 'ui/select.mp3', 'ui.confirm': 'ui/confirm.mp3', 'ui.back': 'ui/back.mp3', 'ui.invalid': 'ui/invalid.mp3',
-    'matchEnd.victory': 'match-end/victory.mp3', 'matchEnd.draw': 'match-end/draw.mp3',
-    'matchEnd.defeat': 'match-end/defeat.mp3', 'matchEnd.shootoutVictory': 'match-end/shootout-victory.mp3'
+    'ambience.menu':'ambience/menu-loop.mp3','ambience.stadium':'ambience/stadium-loop.mp3',
+    'whistle.kickoff':'whistle/kickoff.mp3','whistle.secondHalf':'whistle/second-half.mp3','whistle.foul':'whistle/foul.mp3','whistle.penalty':'whistle/penalty.mp3','whistle.halftime':'whistle/halftime.mp3','whistle.fulltime':'whistle/fulltime.mp3','whistle.freeKick':'whistle/free-kick.mp3',
+    'timer.start':'timer/start-click.mp3','timer.stop':'timer/stop-click.mp3','timer.tick':'timer/tick.mp3','timer.warning':'timer/warning.mp3','timer.timeout':'timer/timeout.mp3',
+    'ball.playerSelect':'ball/player-select.mp3','ball.pass1':'ball/pass-01.mp3','ball.pass2':'ball/pass-02.mp3','ball.pass3':'ball/pass-03.mp3','ball.shot':'ball/shot.mp3','ball.net':'ball/net.mp3','ball.save':'ball/save.mp3','ball.post':'ball/post.mp3','ball.tackle':'ball/tackle.mp3','ball.throwIn':'ball/throw-in.mp3','ball.goalKick':'ball/goal-kick.mp3','ball.turnover':'ball/turnover.mp3','ball.corner':'ball/corner-kick.mp3',
+    'crowd.goal':'crowd/goal-cheer.mp3','crowd.winningGoal':'crowd/winning-goal-cheer.mp3','crowd.bigCheer':'crowd/big-cheer.mp3','crowd.applause':'crowd/applause.mp3','crowd.boo':'crowd/boo.mp3','crowd.protest':'crowd/protest.mp3','crowd.disappointment':'crowd/disappointment.mp3','crowd.gasp':'crowd/gasp.mp3','crowd.tenseHush':'crowd/tense-hush.mp3','crowd.draw':'crowd/draw-applause.mp3','crowd.defeat':'crowd/defeat-murmur.mp3','crowd.goalHorn':'crowd/goal-horn.mp3','crowd.goalAfterglow':'crowd/goal-afterglow.mp3',
+    'cards.yellow':'cards/yellow.mp3','cards.red':'cards/red.mp3','cards.secondYellow':'cards/second-yellow.mp3','cards.none':'cards/no-card.mp3',
+    'setPiece.penaltyRunup':'set-piece/penalty-run-up.mp3','setPiece.freeKickWall':'set-piece/free-kick-wall.mp3','setPiece.penaltyGoal':'set-piece/penalty-goal.mp3','setPiece.penaltySave':'set-piece/penalty-save.mp3','setPiece.penaltyMiss':'set-piece/penalty-miss.mp3',
+    'violation.first':'violation/first-warning.mp3','violation.penalty':'violation/penalty-awarded.mp3','violation.red':'violation/red-card.mp3','violation.forfeit':'violation/forfeit.mp3',
+    'online.roomCreated':'online/room-created.mp3','online.roomJoined':'online/room-joined.mp3','online.opponentReady':'online/opponent-ready.mp3','online.yourTurn':'online/your-turn.mp3','online.connectionLost':'online/connection-lost.mp3','online.reconnected':'online/reconnected.mp3',
+    'ui.select':'ui/select.mp3','ui.confirm':'ui/confirm.mp3','ui.back':'ui/back.mp3','ui.invalid':'ui/invalid.mp3',
+    'matchEnd.victory':'match-end/victory.mp3','matchEnd.draw':'match-end/draw.mp3','matchEnd.defeat':'match-end/defeat.mp3','matchEnd.shootoutVictory':'match-end/shootout-victory.mp3'
   };
 
   const missing = new Set();
-  const channels = new Map();
-  const ambienceBuffers = new Map();
-  let ctx = null;
-  let unlocked = false;
-  let masterMuted = false;
-  let ambienceKey = null;
-  let ambienceSource = null;
-  let ambienceGain = null;
-  let ambienceDuckTimer = null;
-  let settings = {
-    menuMusic: true,
-    stadiumAmbience: true,
-    sfx: true,
-    menuVolume: 0.55,
-    stadiumVolume: 0.5,
-    sfxVolume: 0.75,
-    intensity: 'medium'
-  };
+  const oneShots = new Map();
+  const buffers = new Map();
+  let ctx = null, unlocked = false, masterMuted = false;
+  let ambienceKey = null, ambienceSource = null, ambienceGain = null, restoreTimer = null;
+  let settings = { menuMusic:true, stadiumAmbience:true, eventSounds:true };
+  let lastEventAt = 0;
 
-  const clamp = (value, min = 0, max = 1) => Math.max(min, Math.min(max, Number(value) || 0));
-  const categoryFor = key => String(key).split('.')[0];
-  const pathFor = key => manifest[key] ? `${BASE}${manifest[key]}` : null;
-  const intensityScale = () => settings.intensity === 'low' ? .72 : settings.intensity === 'high' ? 1 : .9;
-
-  function ensureContext() {
+  const pathFor = key => manifest[key] ? BASE + manifest[key] : null;
+  const ensureContext = () => {
     if (ctx) return ctx;
-    const AudioContextCtor = root.AudioContext || root.webkitAudioContext;
-    if (!AudioContextCtor) return null;
-    ctx = new AudioContextCtor();
+    const Ctor = root.AudioContext || root.webkitAudioContext;
+    if (!Ctor) return null;
+    ctx = new Ctor({ latencyHint:'interactive' });
     return ctx;
-  }
-
-  function ambienceAllowed(key) {
-    if (masterMuted) return false;
-    if (key === 'ambience.menu') return settings.menuMusic;
-    if (key === 'ambience.stadium') return settings.stadiumAmbience;
-    return true;
-  }
-
-  function ambienceVolumeFor(key) {
-    if (key === 'ambience.menu') return clamp(settings.menuVolume);
-    return clamp(settings.stadiumVolume);
-  }
+  };
+  const ambienceAllowed = key => !masterMuted && ((key === 'ambience.menu' && settings.menuMusic) || (key === 'ambience.stadium' && settings.stadiumAmbience));
 
   async function loadBuffer(key) {
-    if (ambienceBuffers.has(key)) return ambienceBuffers.get(key);
-    const audioCtx = ensureContext();
-    const src = pathFor(key);
-    if (!audioCtx || !src || missing.has(key)) return null;
+    if (buffers.has(key)) return buffers.get(key);
+    if (missing.has(key)) return null;
+    const audioCtx = ensureContext(), src = pathFor(key);
+    if (!audioCtx || !src) return null;
     try {
-      const response = await fetch(src, { cache: 'force-cache' });
+      const response = await fetch(src, { cache:'force-cache' });
       if (!response.ok) throw new Error(String(response.status));
       const buffer = await audioCtx.decodeAudioData(await response.arrayBuffer());
-      ambienceBuffers.set(key, buffer);
+      buffers.set(key, buffer);
       return buffer;
-    } catch (_) {
-      missing.add(key);
-      return null;
-    }
+    } catch (_) { missing.add(key); return null; }
   }
 
   function stopAmbience() {
-    if (ambienceSource) {
-      try { ambienceSource.stop(); } catch (_) {}
-      try { ambienceSource.disconnect(); } catch (_) {}
-    }
-    if (ambienceGain) {
-      try { ambienceGain.disconnect(); } catch (_) {}
-    }
-    ambienceSource = null;
-    ambienceGain = null;
+    try { ambienceSource?.stop(); } catch (_) {}
+    try { ambienceSource?.disconnect(); ambienceGain?.disconnect(); } catch (_) {}
+    ambienceSource = null; ambienceGain = null;
   }
 
   async function startAmbience() {
@@ -116,150 +58,107 @@
     if (!unlocked || !ambienceKey || !ambienceAllowed(ambienceKey)) return false;
     const audioCtx = ensureContext();
     if (!audioCtx) return false;
-    if (audioCtx.state === 'suspended') {
-      try { await audioCtx.resume(); } catch (_) {}
-    }
+    try { if (audioCtx.state === 'suspended') await audioCtx.resume(); } catch (_) {}
     const buffer = await loadBuffer(ambienceKey);
-    if (!buffer || ambienceKey === null) return false;
+    if (!buffer || !ambienceAllowed(ambienceKey)) return false;
     const source = audioCtx.createBufferSource();
     const gain = audioCtx.createGain();
-    source.buffer = buffer;
-    source.loop = true;
-    gain.gain.value = ambienceVolumeFor(ambienceKey);
-    source.connect(gain).connect(audioCtx.destination);
-    source.start(0);
-    ambienceSource = source;
-    ambienceGain = gain;
+    source.buffer = buffer; source.loop = true; gain.gain.value = ambienceKey === 'ambience.menu' ? .22 : .18;
+    source.connect(gain).connect(audioCtx.destination); source.start();
+    ambienceSource = source; ambienceGain = gain;
     return true;
   }
 
   function unlock() {
     unlocked = true;
     const audioCtx = ensureContext();
-    if (audioCtx?.state === 'suspended') audioCtx.resume().catch(() => {});
-    startAmbience().catch(() => {});
+    if (audioCtx?.state === 'suspended') audioCtx.resume().catch(()=>{});
+    startAmbience().catch(()=>{});
   }
-
-  function tryAutoplay() {
-    unlocked = true;
-    const audioCtx = ensureContext();
-    if (!audioCtx) return Promise.resolve(false);
-    return audioCtx.resume().then(() => startAmbience()).catch(() => {
-      unlocked = false;
-      return false;
-    });
-  }
-
-  function oneShotVolume(category, multiplier) {
-    const categoryScale = category === 'ui' ? .65 : 1;
-    return clamp(settings.sfxVolume * intensityScale() * categoryScale * Number(multiplier ?? 1));
-  }
+  function tryAutoplay() { unlocked = true; return startAmbience().catch(()=>false); }
 
   function makeAudio(key) {
     const src = pathFor(key);
     if (!src || missing.has(key)) return null;
     const audio = new Audio(src);
-    audio.preload = 'metadata';
-    audio.playsInline = true;
-    audio.disableRemotePlayback = true;
-    audio.addEventListener('error', () => missing.add(key), { once: true });
+    audio.preload = 'metadata'; audio.playsInline = true; audio.disableRemotePlayback = true;
+    audio.addEventListener('error', () => missing.add(key), { once:true });
     return audio;
   }
 
-  async function play(key, options = {}) {
-    if (masterMuted || !settings.sfx || !unlocked || missing.has(key)) return false;
-    const audio = makeAudio(key);
-    if (!audio) return false;
-    const category = categoryFor(key);
-    audio.volume = oneShotVolume(category, options.volume);
-    audio.playbackRate = Number(options.rate || 1);
-    const channel = options.channel || category;
-    if (options.replace && channels.get(channel)) {
-      try { channels.get(channel).pause(); channels.get(channel).currentTime = 0; } catch (_) {}
+  function stop(channel='event') {
+    const audio = oneShots.get(channel);
+    if (!audio) return;
+    try { audio.pause(); audio.currentTime = 0; } catch (_) {}
+    oneShots.delete(channel);
+  }
+
+  async function play(key, options={}) {
+    if (masterMuted || !unlocked || missing.has(key)) return false;
+    const category = String(key).split('.')[0];
+    if (category !== 'ui' && !settings.eventSounds) return false;
+    const channel = category === 'ui' ? 'ui' : 'event';
+    if (channel === 'event') {
+      const now = performance.now();
+      if (!options.force && now - lastEventAt < 180) return false;
+      lastEventAt = now;
     }
-    channels.set(channel, audio);
-    audio.addEventListener('ended', () => { if (channels.get(channel) === audio) channels.delete(channel); }, { once: true });
+    if (options.replace !== false || channel === 'event') stop(channel);
+    if (channel === 'event') duckAmbience(.08, Math.max(900, Number(options.duckMs) || 1700));
+    const audio = makeAudio(key); if (!audio) return false;
+    audio.volume = category === 'ui' ? .32 : .68;
+    oneShots.set(channel, audio);
+    audio.addEventListener('ended', () => { if (oneShots.get(channel) === audio) oneShots.delete(channel); }, { once:true });
     try { await audio.play(); return true; } catch (_) { return false; }
   }
 
-  function playRandom(keys, options = {}) {
-    const available = keys.filter(key => manifest[key] && !missing.has(key));
-    if (!available.length) return Promise.resolve(false);
-    return play(available[Math.floor(Math.random() * available.length)], options);
+  async function playFirst(keys, options={}) {
+    for (const key of keys || []) {
+      if (!manifest[key] || missing.has(key)) continue;
+      const ok = await play(key, options);
+      if (ok) return true;
+    }
+    return false;
   }
-
-  function stop(channel) {
-    const audio = channels.get(channel);
-    if (!audio) return;
-    try { audio.pause(); audio.currentTime = 0; } catch (_) {}
-    channels.delete(channel);
+  function playRandom(keys, options={}) {
+    const usable=(keys||[]).filter(key=>manifest[key]&&!missing.has(key));
+    return usable.length ? play(usable[Math.floor(Math.random()*usable.length)], options) : Promise.resolve(false);
   }
 
   function setAmbience(key) {
-    if (ambienceKey === key) {
-      if (ambienceGain) ambienceGain.gain.value = ambienceAllowed(key) ? ambienceVolumeFor(key) : 0;
-      return;
-    }
     ambienceKey = key || null;
-    startAmbience().catch(() => {});
+    startAmbience().catch(()=>{});
   }
-
-  function duckAmbience(level = .18, duration = 1800) {
+  function duckAmbience(_level=.08, duration=1800) {
     if (!ambienceGain || !ctx) return;
-    const normal = ambienceAllowed(ambienceKey) ? ambienceVolumeFor(ambienceKey) : 0;
+    const normal = ambienceKey === 'ambience.menu' ? .22 : .18;
     const now = ctx.currentTime;
-    ambienceGain.gain.cancelScheduledValues(now);
-    ambienceGain.gain.setTargetAtTime(Math.min(normal, clamp(level)), now, .04);
-    clearTimeout(ambienceDuckTimer);
-    ambienceDuckTimer = setTimeout(() => {
-      if (!ambienceGain || !ctx) return;
-      ambienceGain.gain.setTargetAtTime(normal, ctx.currentTime, .12);
-    }, duration);
+    ambienceGain.gain.cancelScheduledValues(now); ambienceGain.gain.setTargetAtTime(.035, now, .05);
+    clearTimeout(restoreTimer); restoreTimer=setTimeout(()=>{ if(ambienceGain&&ctx) ambienceGain.gain.setTargetAtTime(ambienceAllowed(ambienceKey)?normal:0,ctx.currentTime,.18); }, duration);
   }
-
   function setMuted(value) {
-    masterMuted = Boolean(value);
-    if (masterMuted) {
-      channels.forEach(audio => { try { audio.pause(); } catch (_) {} });
-      channels.clear();
-      if (ambienceGain) ambienceGain.gain.value = 0;
-    } else {
-      if (ambienceGain) ambienceGain.gain.value = ambienceAllowed(ambienceKey) ? ambienceVolumeFor(ambienceKey) : 0;
-      else startAmbience().catch(() => {});
-    }
+    masterMuted=Boolean(value);
+    if(masterMuted){ oneShots.forEach((_,key)=>stop(key)); if(ambienceGain) ambienceGain.gain.value=0; }
+    else startAmbience().catch(()=>{});
   }
-
-  function setIntensity(value) {
-    settings.intensity = ['low', 'medium', 'high'].includes(value) ? value : 'medium';
-  }
-
-  function configure(next = {}) {
-    settings = {
-      ...settings,
-      ...next,
+  function configure(next={}) {
+    settings={
       menuMusic: next.menuMusic !== undefined ? Boolean(next.menuMusic) : settings.menuMusic,
       stadiumAmbience: next.stadiumAmbience !== undefined ? Boolean(next.stadiumAmbience) : settings.stadiumAmbience,
-      sfx: next.sfx !== undefined ? Boolean(next.sfx) : settings.sfx,
-      menuVolume: next.menuVolume !== undefined ? clamp(next.menuVolume) : settings.menuVolume,
-      stadiumVolume: next.stadiumVolume !== undefined ? clamp(next.stadiumVolume) : settings.stadiumVolume,
-      sfxVolume: next.sfxVolume !== undefined ? clamp(next.sfxVolume) : settings.sfxVolume,
-      intensity: ['low','medium','high'].includes(next.intensity) ? next.intensity : settings.intensity
+      eventSounds: next.eventSounds !== undefined ? Boolean(next.eventSounds) : (next.sfx !== undefined ? Boolean(next.sfx) : settings.eventSounds)
     };
-    if (ambienceGain) ambienceGain.gain.value = ambienceAllowed(ambienceKey) ? ambienceVolumeFor(ambienceKey) : 0;
-    if (!ambienceGain && unlocked) startAmbience().catch(() => {});
+    if (!ambienceAllowed(ambienceKey)) stopAmbience(); else startAmbience().catch(()=>{});
   }
-
-  function has(key) { return Boolean(manifest[key]) && !missing.has(key); }
+  function stopAll() { [...oneShots.keys()].forEach(stop); stopAmbience(); }
+  function has(key){ return Boolean(manifest[key])&&!missing.has(key); }
+  function setIntensity() {}
 
   try {
     if ('mediaSession' in navigator) {
-      navigator.mediaSession.metadata = null;
-      navigator.mediaSession.playbackState = 'none';
-      ['play','pause','seekbackward','seekforward','seekto','previoustrack','nexttrack'].forEach(action => {
-        try { navigator.mediaSession.setActionHandler(action, null); } catch (_) {}
-      });
+      navigator.mediaSession.metadata=null; navigator.mediaSession.playbackState='none';
+      ['play','pause','seekbackward','seekforward','seekto','previoustrack','nexttrack'].forEach(action=>{ try{navigator.mediaSession.setActionHandler(action,null);}catch(_){}});
     }
   } catch (_) {}
 
-  root.GameAudio = Object.freeze({ manifest, unlock, tryAutoplay, play, playRandom, stop, setAmbience, duckAmbience, setMuted, setIntensity, configure, has, pathFor });
+  root.GameAudio=Object.freeze({manifest,unlock,tryAutoplay,play,playFirst,playRandom,stop,stopAll,setAmbience,duckAmbience,setMuted,setIntensity,configure,has,pathFor});
 })(typeof window !== 'undefined' ? window : globalThis);

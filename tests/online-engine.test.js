@@ -29,3 +29,43 @@ test('her oyuncu yalnız kendi sırasında toplam 60 saniyelik mola kullanır',(
 test('gecikmeler ikinci yarı sonunda hesaplanan ek süre üretir',()=>{const m=Engine.createMatch([team('A','a'),team('B','b')],settings,1000);completeKickoff(m);m.phase='regulation';m.periodIndex=1;m.periodElapsedMs=m.periodDurationsMs[1]-1;m.delayWasteMs=[10000,10000];m.stoppageAnnounced=false;m.lastTickAt=20000;Engine.tickMatch(m,20010);assert.equal(m.stoppageAnnounced,true);assert.ok(m.stoppageMs>=5000);});
 
 test('ikinci ayakta toplam skor üstünlüğü uzatmasız kazandırır',()=>{const series={type:'twoLeg',leg:2,aggregateBase:[1,2]};const m=Engine.createMatch([team('B','b'),team('A','a')],settings,1000,series);completeKickoff(m);m.phase='regulation';m.periodIndex=1;m.scores=[0,0];m.periodElapsedMs=m.periodDurationsMs[1]-1;m.lastTickAt=5000;Engine.tickMatch(m,5010);assert.equal(m.phase,'finished');assert.equal(m.winnerSide,1);});
+
+test('pas veren oyuncuya sonraki açık oyun golünde asist yazılır',()=>{
+  const m=Engine.createMatch([team('A','a'),team('B','b')],settings,1000);
+  const side=completeKickoff(m);
+  selectPlayer(m,side,1,2000);
+  const passerId=m.activePlayerId[side];
+  Engine.stopRoll(m,side,1,8000); // pas
+  settle(m,8000);
+  selectPlayer(m,side,2,14000);
+  const scorerId=m.activePlayerId[side];
+  Engine.stopRoll(m,side,0,20000); // direkt gol
+  const passer=m.teams[side].lineup.find(p=>p.id===passerId);
+  const scorer=m.teams[side].lineup.find(p=>p.id===scorerId);
+  if(passerId!==scorerId) assert.equal(passer.assists,1);
+  assert.equal(scorer.goals,1);
+});
+
+test('duran top golünde önceki pas asist sayılmaz',()=>{
+  const m=Engine.createMatch([team('A','a'),team('B','b')],settings,1000);
+  const side=completeKickoff(m);
+  selectPlayer(m,side,1,2000);
+  const passerId=m.activePlayerId[side];
+  Engine.stopRoll(m,side,1,8000);
+  settle(m,8000);
+  selectPlayer(m,side,2,14000);
+  Engine.stopRoll(m,side,8,20000); // frikik
+  settle(m,20000);
+  Engine.stopRoll(m,side,2,26000); // çift, gol
+  assert.equal(m.teams[side].lineup.find(p=>p.id===passerId).assists,0);
+});
+
+test('online başlama düdüğü 10 saniye içinde basılmazsa cezasız otomatik başlar',()=>{
+  const m=Engine.createMatch([team('A','a'),team('B','b')],settings,1000);
+  m.lastTickAt=1000;
+  for(let t=1250;t<=11250;t+=250)Engine.tickMatch(m,t);
+  assert.equal(m.phase,'regulation');
+  assert.equal(m.context.type,'playerSelect');
+  assert.deepEqual(m.teams.map(x=>x.timeouts),[0,0]);
+  assert.deepEqual(m.delayWasteMs,[0,0]);
+});

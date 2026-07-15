@@ -1,34 +1,85 @@
-# 90+ v5 — Test Raporu
+# 90+ v6 — Test Raporu
 
 ## Otomatik testler
 
-`npm test` sonucu: **24/24 geçti.**
+Komut:
 
-Kapsam: olay tablosu, şut alt atışı, ayrıntılı frikik/penaltı sonucu, iki pas kilidi, üçüncü korner penaltısı, kartlar, ihlaller, ek süre, yazı tura, devre başlangıçları, online mola ve iki ayaklı toplam skor.
+```bash
+npm test
+```
 
-## Veri ve statik kontroller
+Sonuç: **37 test geçti, 0 test başarısız.**
 
-- 2.121 benzersiz futbolcu; yinelenen ID yok.
-- Kullanıcının açıkça dışlanmasını istediği isim havuzda yok.
-- 67 opsiyonel ses yolu tanımlı.
-- HTML'de yinelenen `id` yok.
-- `app.js`, `core.js`, `audio.js`, `players.js`, `server.js` ve online motor sözdizimi doğrulandı.
+Doğrulanan başlıklar:
 
-## Mobil tarayıcı testi
+- Ana olay cetveli ve `7 = Şut`
+- Şut alt atışı
+- İki pas sınırı
+- Üçüncü kornerden penaltı
+- Faul ve kart alt tabloları
+- İkinci sarıdan kırmızı
+- 10 saniye ihlal kademeleri
+- Maç süresine göre ek süre sınırı
+- İki ayaklı toplam skor
+- Gol ve asist zinciri
+- Duran top golünde hatalı asist yazılmaması
+- Yazı tura / otomatik başlama zaman aşımı
+- İki ayrı 60 saniyelik mola bütçesi
+- İkinci devre başlangıç yetkisi
+- 2.264 benzersiz oyuncu
+- Açık dışlama listesinin uygulanması
+- Katı dönem, milliyet, lig, mevki ve puan filtreleri
+- Kullanılmış oyuncunun adaylara yeniden girmemesi
+- Otomatik mevki yerleşimi
+- Klasik kupa, Dünya Kupası ve 4 kişilik kupa fikstürleri
 
-412×915 görünümde şu akış çalıştırıldı:
+## Sözdizimi ve statik kontroller
 
-`Ana Menü → AI/Co-op → Kadro → Ayarlar → Brifing → Yazı Tura → Maç`
+Aşağıdaki dosyalar `node --check` ile doğrulandı:
 
-Doğrulananlar:
+- `server.js`
+- `server/online-engine.js`
+- `js/app.js`
+- `js/audio.js`
+- `js/core.js`
+- `js/player-store.js`
+- `js/modules/*.js`
+- `sw.js`
 
-- Sabit header ve alt işlem çubukları
-- Kaydırmasız mobil maç kokpiti
-- Doğru dikey saha çizgileri
-- Mola perdesinde Olaylar/Kurallar/Kadrolar/Devam Et
-- Moladan devam etme
-- Transfer Düellosu onay penceresi ve eğitim kartı
-- Yazı tura sonrası doğru ilk/ikinci yarı başlangıcı
-- Açık/koyu tema temel kontrastları
+Oyuncu verisi kontrolü:
 
-Tam Socket.IO iki cihaz testi bu çalışma ortamında npm indirmesi zaman aşımına uğradığı için yeniden koşturulamadı. Sunucu/online motor testleri geçti; Render yapılandırması Socket.IO'yu resmi npm deposundan kurar.
+```text
+version: 6
+oyuncu: 2264
+benzersiz ID: 2264
+Hakan Şükür eşleşmesi: 0
+```
+
+Eski `js/players.js`, tek dosyalı HTML ve `.DS_Store` bulunmadığı doğrulandı.
+
+## Socket.IO entegrasyon testi
+
+Yerel gerçek sunucu ve altı Socket.IO istemcisiyle doğrulandı:
+
+- Oda kodu anında oluşturuldu.
+- İkinci oyuncu kodla katıldı.
+- Aynı takım rengi sunucu tarafından reddedildi.
+- Farklı renkli iki kadro kabul edildi.
+- Dört kişilik oda dört bağlantıyı kabul etti.
+- Oda yöneticisinin rastgele kadro ayarı dört benzersiz kadroyu hazırladı.
+
+## Sağlık kontrolü
+
+Yerel `/health` cevabı başarıyla alındı:
+
+```json
+{"ok":true,"rooms":0}
+```
+
+## Ses kontrolü
+
+`npm run audio:check` 67 isteğe bağlı yolu tarar. Test paketinde ses dosyası yoksa `0/67` göstermesi hata değildir; mevcut dosyalar isimleri doğruysa otomatik kullanılır.
+
+## Görsel test notu
+
+Bu çalışma ortamındaki Chromium yerel siteyi ekran görüntüsüyle açarken kurum politikası nedeniyle takıldı. Bu nedenle son piksel ve gerçek cihaz görsel kontrolü kullanıcı cihazında yapılmalıdır. Kod tarafında responsive CSS, sabit mobil header/footer ve ekran kimlikleri statik olarak kontrol edildi; otomatik motor ve ağ testleri bundan bağımsız olarak geçti.
