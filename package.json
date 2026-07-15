@@ -1,8 +1,8 @@
 {
   "name": "90-plus-football-game",
-  "version": "4.0.0",
+  "version": "5.0.0",
   "private": true,
-  "description": "90+ Stadium Edition — mobil öncelikli retro kronometre futbol oyunu, AI, aynı cihaz ve oda kodlu çevrim içi maç",
+  "description": "90+ v5 Mobil Arena — 2.000+ futbolcu, şut alt atışı, Transfer Düellosu, online mola ve iki ayaklı rövanş",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

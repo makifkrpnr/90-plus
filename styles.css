@@ -886,3 +886,169 @@ html[data-theme="dark"] .candidate-card.predicted { color: #fff7e8; }
 html[data-theme="dark"] .draft-explainer,
 html[data-theme="dark"] .brief-summary,
 html[data-theme="dark"] .rule-panel { border-color: #f2ead7; }
+
+/* =========================================================
+   90+ v5 — Mobil kokpit, takım renkleri ve transfer düellosu
+   ========================================================= */
+.score-team {
+  --team-color: var(--red);
+  position: relative;
+  border: 2px solid color-mix(in srgb, var(--team-color) 72%, var(--navy));
+  background: color-mix(in srgb, var(--team-color) 10%, var(--surface));
+  box-shadow: inset 0 -5px 0 color-mix(in srgb, var(--team-color) 80%, transparent);
+}
+.score-team::before {
+  content: ""; position: absolute; inset: 0 auto 0 0; width: 6px;
+  background: var(--team-color);
+}
+.score-team.away::before { inset: 0 0 0 auto; }
+.score-team.active-turn {
+  background: color-mix(in srgb, var(--team-color) 20%, var(--surface));
+  box-shadow: 0 0 0 2px var(--team-color), 0 0 24px color-mix(in srgb, var(--team-color) 68%, transparent), inset 0 -5px 0 var(--team-color);
+  animation: teamGlow 1.2s ease-in-out infinite alternate;
+}
+.score-team.active-turn .turn-mark { color: var(--team-color); }
+@keyframes teamGlow { to { filter: brightness(1.13); box-shadow: 0 0 0 3px var(--team-color), 0 0 34px color-mix(in srgb, var(--team-color) 76%, transparent), inset 0 -5px 0 var(--team-color); } }
+
+/* Ana başlık satır aralığı */
+.hero-card h1 { line-height: .96; letter-spacing: -.02em; }
+
+/* Düello */
+.duel-poster { display: flex; align-items: center; gap: 18px; }
+.duel-request-panel { margin-top: 16px; padding: 16px; border: 3px solid var(--navy); border-radius: 18px; background: var(--surface); }
+.duel-response-buttons, .rematch-options, .pause-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.coin-stage { display: grid; place-items: center; gap: 24px; min-height: 430px; }
+.duel-coin { position: relative; width: 180px; aspect-ratio: 1; transform-style: preserve-3d; border: 8px double var(--navy); border-radius: 50%; background: radial-gradient(circle at 35% 30%, #f8db78, #c88c22 68%, #7c4c13); box-shadow: 0 18px 30px rgba(0,0,0,.28), inset 0 0 0 8px rgba(255,255,255,.22); color: var(--navy); }
+.duel-coin span, .duel-coin b { position: absolute; inset: 0; display: grid; place-items: center; backface-visibility: hidden; font: 900 46px/1 Nippo, Impact, sans-serif; }
+.duel-coin b { transform: rotateY(180deg); font-size: 64px; }
+.duel-coin.flipping { animation: coinFlip 1.3s cubic-bezier(.18,.72,.24,1) both; }
+@keyframes coinFlip { 0% { transform: rotateY(0) translateY(0); } 45% { transform: rotateY(900deg) translateY(-100px) scale(1.08); } 100% { transform: rotateY(1800deg) translateY(0); } }
+.duel-stage { padding-bottom: 100px; }
+.duel-turn-card { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; padding: 14px 16px; border: 3px solid var(--navy); border-radius: 16px; background: var(--surface); box-shadow: 5px 5px 0 var(--navy); }
+.duel-turn-card small, .duel-turn-card span { color: var(--text-soft); font-size: 10px; font-weight: 900; letter-spacing: .08em; }
+.duel-turn-card strong { color: var(--red); font-size: clamp(18px, 4vw, 28px); }
+.duel-choice-grid, .duel-player-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 10px; }
+.duel-choice, .duel-player-card { min-height: 78px; padding: 12px; border: 3px solid var(--navy); border-radius: 14px; background: var(--surface-raised); color: var(--text-main); box-shadow: 4px 4px 0 var(--navy); text-align: left; cursor: pointer; }
+.duel-choice:disabled, .duel-player-card:disabled { opacity: .52; cursor: wait; }
+.duel-player-card { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px; }
+.duel-player-card > span { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: var(--red); color: white; font-weight: 900; }
+.duel-player-card strong { overflow-wrap: anywhere; }
+.duel-player-card small { grid-column: 2; color: var(--text-soft); }
+.duel-player-card > b { grid-row: 1 / span 2; grid-column: 3; color: var(--red); font-size: 24px; }
+.duel-selected-summary { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+.duel-selected-summary span { padding: 7px 10px; border-radius: 999px; background: var(--navy); color: white; font-size: 10px; }
+.duel-pitches { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 18px; }
+.mini-formation-pitch { position: relative; min-height: 400px; border: 3px solid rgba(255,255,255,.75); border-radius: 16px; background: repeating-linear-gradient(0deg,#28633f 0 44px,#2e7048 44px 88px); box-shadow: inset 0 0 0 8px #1b4d31; overflow: hidden; }
+.mini-formation-pitch::before { content:""; position:absolute; inset:8px; border:2px solid rgba(255,255,255,.72); background: linear-gradient(transparent 49.6%,rgba(255,255,255,.72) 49.6% 50.4%,transparent 50.4%); }
+.formation-token { position: absolute; z-index: 2; width: 88px; transform: translate(-50%,-50%); padding: 5px; border: 2px solid white; border-radius: 10px; background: var(--navy); color: white; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,.3); }
+.formation-token b, .formation-token span, .formation-token small { display:block; }
+.formation-token b { color: var(--yellow); font-size: 9px; } .formation-token span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:9px; } .formation-token small { font-size:8px; }
+.duel-complete-card { grid-column:1/-1; padding:20px; border:3px solid var(--green); border-radius:16px; background:color-mix(in srgb,var(--green) 12%,var(--surface)); font-weight:900; text-align:center; }
+
+.pause-actions { margin-top: 18px; }
+.pause-actions > button { flex: 1 1 120px; }
+.events-modal { width: min(94vw, 700px); }
+.overlay-timeline { max-height: 65dvh; overflow-y: auto; padding-right: 6px; }
+.rematch-card { width: min(94vw, 600px); }
+
+@media (max-width: 720px) {
+  body.match-active { overflow: hidden; }
+  .app-shell { padding: calc(var(--topbar-height-v4) + 8px) 8px calc(var(--action-dock-height) + 16px); }
+  .screen.active:not(.match-screen) { min-height: calc(100dvh - var(--topbar-height-v4)); }
+  .screen-actions { display:flex; gap:8px; align-items:center; min-height:70px; z-index:120; }
+  .screen-actions .primary-button, .screen-actions .secondary-button { min-height:48px; padding:10px 12px; font-size:12px; }
+
+  /* Maç ekranı bir uygulama kokpiti gibi tek görünümde kalır */
+  .match-screen.active {
+    position: fixed; z-index: 30;
+    inset: var(--topbar-height-v4) 0 var(--match-dock-height-v4);
+    display: block; padding: 0 6px; overflow: hidden;
+    background: var(--cream);
+  }
+  .match-sticky-head { position:absolute; z-index:55; inset:0 6px auto; margin:0; }
+  .remote-match-bar { min-height:22px; padding:3px 8px; font-size:8px; }
+  .scoreboard { min-height:86px; padding:6px 4px; border-radius:0 0 15px 15px; }
+  .score-team { min-width:0; padding:6px 3px; border-radius:10px; }
+  .score-team > span:not(.turn-mark) { max-width:76px; font-size:10px; line-height:1.12; overflow-wrap:anywhere; }
+  .score-team > b { font-size:38px; }
+  .turn-mark { font-size:12px; }
+  .match-meta strong { font-size:10px; line-height:1.1; }
+  .match-meta > span { font-size:27px; }
+  .added-time { font-size:9px; max-width:110px; line-height:1.1; }
+
+  .pitch-panel {
+    position:absolute; inset:86px 6px 0;
+    min-height:0; height:auto; margin:0; padding:18px 10px 12px;
+    display:grid; grid-template-rows:auto auto auto minmax(68px,auto) auto auto minmax(72px,auto) auto;
+    align-content:center; justify-items:center; gap:5px;
+    border-radius:16px 16px 0 0; overflow:hidden;
+  }
+  .remote-match-bar:not(.hidden) + .scoreboard ~ * {}
+  .match-screen:has(.remote-match-bar:not(.hidden)) .pitch-panel { inset-block-start:108px; }
+  .pitch-geometry { inset:10px; opacity:.72; }
+  .turn-banner { width:min(92%,430px); padding:6px 10px; font-size:10px; border-radius:10px; }
+  .turn-banner span { max-width:55%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .roll-instruction { width:min(94%,440px); margin:0; padding:7px 10px; font-size:11px; line-height:1.25; border-radius:10px; }
+  .kickoff-score-card { width:min(92%,430px); padding:5px 9px; border-width:2px; box-shadow:3px 3px 0 var(--navy); }
+  .kickoff-score-card b { font-size:17px; } .kickoff-score-card small,.kickoff-score-card em { font-size:7px; }
+  .player-card-mini { width:min(92%,440px); min-height:68px; padding:8px 10px; border-radius:12px; }
+  .player-card-mini small { font-size:8px; } .player-card-mini strong { font-size:clamp(20px,7vw,31px); line-height:1; } .player-card-mini span { font-size:9px; }
+  .match-watch { margin:0; padding:5px 10px; font-size:clamp(26px,9vw,42px); border-width:3px; }
+  .turn-time { margin:0; font-size:9px; } .turn-time b { font-size:17px; }
+  .match-stop { width:min(88%,380px); min-height:72px; margin:0; border-radius:18px; }
+  .elegant-stop small { font-size:8px; } .elegant-stop strong { font-size:22px; }
+  .ai-hint { margin:0; font-size:9px; }
+  #liveTimeline { display:none; }
+
+  .match-bottom-dock {
+    position:fixed; z-index:125; inset:auto 0 0; width:100%; min-height:var(--match-dock-height-v4);
+    grid-template-columns:46px 46px repeat(4,minmax(46px,1fr)); gap:3px;
+    padding:5px 5px calc(5px + env(safe-area-inset-bottom)); border-radius:15px 15px 0 0;
+    transform:none; box-shadow:0 -8px 26px rgba(0,0,0,.28); backdrop-filter:blur(16px);
+  }
+  .match-bottom-dock > div { min-width:0; padding:3px 1px; }
+  .match-bottom-dock small { font-size:6px; } .match-bottom-dock b { font-size:10px; }
+  .dock-button { min-width:0; min-height:48px; padding:4px 2px; border-radius:8px; font-size:7px; overflow-wrap:anywhere; }
+  #pauseBudgetMini { font-size:6px; }
+
+  .pause-overlay { z-index:180; align-items:end; padding:10px 10px calc(var(--match-dock-height-v4) + 8px); }
+  .pause-overlay > div { padding:16px 12px; border-radius:18px; }
+  .pause-overlay h2 { font-size:28px; } .pause-overlay b { font-size:30px; }
+  .pause-actions { display:grid; grid-template-columns:repeat(2,1fr); }
+  .pause-actions > button { min-height:44px; padding:8px; font-size:10px; }
+  .dialog-overlay { z-index:230; padding:8px; }
+  .rules-modal, .squads-modal, .dialog-card { max-height:calc(100dvh - 24px); border-radius:17px; }
+  .event-overlay { z-index:210; padding:20px 12px calc(var(--match-dock-height-v4) + 18px); }
+  .event-overlay h2 { font-size:clamp(42px,14vw,82px); }
+  .event-overlay p { max-width:94vw; font-size:15px; line-height:1.35; }
+
+  .duel-choice-grid, .duel-player-cards { grid-template-columns:1fr 1fr; gap:7px; }
+  .duel-choice { min-height:62px; padding:8px; font-size:10px; }
+  .duel-player-card { grid-template-columns:34px 1fr auto; padding:8px; }
+  .duel-player-card strong { font-size:11px; } .duel-player-card small { font-size:8px; } .duel-player-card > b { font-size:18px; }
+  .duel-pitches { grid-template-columns:1fr; }
+  .mini-formation-pitch { min-height:330px; }
+  .formation-token { width:70px; }
+  .coin-stage { min-height:calc(100dvh - 220px); }
+  .duel-coin { width:145px; }
+}
+
+html[data-theme="dark"] .match-screen.active { background:#091426; }
+html[data-theme="dark"] .score-team { background:color-mix(in srgb,var(--team-color) 13%,#101f36); }
+html[data-theme="dark"] .score-team.active-turn { background:color-mix(in srgb,var(--team-color) 27%,#101f36); }
+
+/* v5 son okunabilirlik ve düello brifingi */
+.hero-card h1 { line-height: 1.035; }
+.duel-brief-card { margin: 0 0 18px; padding: 16px 18px; border: 3px solid var(--navy); border-radius: 16px; background: var(--surface); box-shadow: 5px 5px 0 var(--red); }
+.duel-brief-card > b { color: var(--red); letter-spacing: .1em; }
+.duel-brief-card ol { margin: 10px 0 0; padding-left: 20px; color: var(--text-soft); line-height: 1.55; }
+.dialog-actions { display: flex; gap: 10px; justify-content: center; margin-top: 18px; }
+.dialog-actions > button { flex: 1; }
+.timeline-event { border-inline-start: 6px solid var(--event-color, var(--navy)); }
+.timeline-event.home { border-inline: 1px solid var(--line); border-inline-end: 6px solid var(--event-color, var(--red)); }
+.timeline-icon { background: var(--event-color, var(--navy)); }
+@media (max-width: 720px) {
+  .hero-card h1 { font-size: clamp(51px, 15.5vw, 70px); line-height: 1.04; }
+  .duel-brief-card { padding: 12px; font-size: 11px; }
+  .dialog-actions { flex-direction: column-reverse; }
+}

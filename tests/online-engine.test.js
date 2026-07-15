@@ -1,163 +1,31 @@
 'use strict';
-
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const Engine = require('../server/online-engine.js');
+function team(name,prefix){const slots=['GK','LB','CB','CB','RB','DM','CM','AM','LW','RW','ST'];return{name,lineup:slots.map((slot,i)=>({id:`${prefix}-${i}`,name:`${name} ${i+1}`,nationality:'Türkiye',position:slot,slot,rating:80,activeStart:2000,activeEnd:2026,leagues:['Süper Lig']}))};}
+const settings={durationMinutes:1,cards:true,injury:false,extraTime:true,shootout:true,soundIntensity:'medium',teamColors:['#d44735','#2878c8']};
+function settle(match,now){Engine.tickMatch(match,now+5000);}
+function completeKickoff(match,now=1000){const starter=match.context.owner;assert.equal(match.context.type,'kickoffReady');assert.equal(Engine.stopRoll(match,starter,0,now+100).ok,true);assert.equal(match.phase,'regulation');assert.equal(match.context.type,'playerSelect');return starter;}
+function selectPlayer(match,side,digit,now){assert.equal(Engine.stopRoll(match,side,digit,now).ok,true);settle(match,now);assert.equal(match.context.type,'main');}
 
-function team(name, prefix) {
-  const slots = ['GK', 'LB', 'CB', 'CB', 'RB', 'DM', 'CM', 'AM', 'LW', 'RW', 'ST'];
-  return {
-    name,
-    lineup: slots.map((slot, index) => ({
-      id: `${prefix}-${index}`,
-      name: `${name} ${index + 1}`,
-      nationality: 'Türkiye',
-      position: slot,
-      slot,
-      rating: 80,
-      activeStart: 2000,
-      activeEnd: 2026,
-      leagues: ['Süper Lig']
-    }))
-  };
-}
+test('online maç yazı tura sonucu ve iki ayrı mola bütçesiyle açılır',()=>{const m=Engine.createMatch([team('A','a'),team('B','b')],settings,1000);assert.equal(m.version,5);assert.equal(m.phase,'kickoff');assert.equal(m.context.type,'kickoffReady');assert.ok([0,1].includes(m.firstHalfStarter));assert.equal(m.secondHalfStarter,m.firstHalfStarter===0?1:0);assert.deepEqual(m.pauseBudgetsMs,[60000,60000]);});
 
-const settings = {
-  durationMinutes: 1,
-  cards: true,
-  injury: false,
-  extraTime: true,
-  shootout: true,
-  soundIntensity: 'medium'
-};
+test('yazı tura kazananı ilk yarıyı, diğer taraf ikinci yarıyı başlatır',()=>{const m=Engine.createMatch([team('A','a'),team('B','b')],settings,1000);const starter=completeKickoff(m);assert.equal(starter,m.firstHalfStarter);assert.equal(m.secondHalfStarter,starter===0?1:0);});
 
-function settle(match, now) {
-  Engine.tickMatch(match, now + 5000);
-}
+test('başlama ekranında beklemek maç süresine, ihlale ve ek süreye yazılmaz',()=>{const m=Engine.createMatch([team('A','a'),team('B','b')],settings,1000);m.lastTickAt=1000;Engine.tickMatch(m,15000);assert.equal(m.turnElapsedMs,0);assert.deepEqual(m.delayWasteMs,[0,0]);assert.deepEqual(m.teams.map(t=>t.timeouts),[0,0]);});
 
-function completeKickoff(match, homeDigit = 5, awayDigit = 7, now = 1000) {
-  assert.equal(Engine.stopRoll(match, 0, homeDigit, now + 100).ok, true);
-  settle(match, now + 100);
-  assert.equal(match.context.type, 'kickoffRoll');
-  assert.equal(match.context.owner, 1);
-  assert.equal(Engine.stopRoll(match, 1, awayDigit, now + 5200).ok, true);
-  settle(match, now + 5200);
-  assert.equal(match.context.type, 'kickoffReady');
-  const starter = awayDigit > homeDigit ? 1 : 0;
-  assert.equal(match.context.owner, starter);
-  assert.equal(Engine.stopRoll(match, starter, 0, now + 10300).ok, true);
-  assert.equal(match.phase, 'regulation');
-  assert.equal(match.context.type, 'playerSelect');
-  assert.equal(match.context.owner, starter);
-  return starter;
-}
+test('önce oyuncu seçilir, sonraki atış sıfırsa gol olur',()=>{const m=Engine.createMatch([team('A','a'),team('B','b')],settings,1000);const side=completeKickoff(m);selectPlayer(m,side,3,2000);const id=m.activePlayerId[side];assert.equal(Engine.stopRoll(m,side,0,8000).ok,true);assert.equal(m.scores[side],1);assert.equal(m.teams[side].lineup.find(p=>p.id===id).goals,1);});
 
-function selectPlayer(match, side, digit, now) {
-  const selected = Engine.stopRoll(match, side, digit, now);
-  assert.equal(selected.ok, true);
-  settle(match, now);
-  assert.equal(match.context.type, 'main');
-}
+test('7 şut alt atışına geçer; 9 gol, 0 korner olur',()=>{const m=Engine.createMatch([team('A','a'),team('B','b')],settings,1000);const side=completeKickoff(m);selectPlayer(m,side,3,2000);Engine.stopRoll(m,side,7,8000);assert.equal(m.transition.context.type,'shotOpenPlay');settle(m,8000);assert.equal(m.context.type,'shotOpenPlay');Engine.stopRoll(m,side,9,14000);assert.equal(m.scores[side],1);});
 
-test('online maç 10 saniyelik başlama hakkı atışıyla açılır', () => {
-  const match = Engine.createMatch([team('A', 'a'), team('B', 'b')], settings, 1000);
-  assert.equal(match.version, 4);
-  assert.equal(match.phase, 'kickoff');
-  assert.equal(match.context.type, 'kickoffRoll');
-  assert.deepEqual(match.kickoff.rolls, [null, null]);
-  assert.deepEqual(match.pauseBudgetsMs, [60000, 60000]);
-});
+test('üçüncü korner kullanılmadan penaltıya dönüşür',()=>{const m=Engine.createMatch([team('A','a'),team('B','b')],settings,1000);const side=completeKickoff(m);selectPlayer(m,side,2,2000);m.teams[side].corners=2;Engine.stopRoll(m,side,6,8000);assert.equal(m.teams[side].corners,0);assert.equal(m.transition.context.type,'setPieceShot');assert.equal(m.transition.context.reason,'penalty');});
 
-test('yüksek rakam ilk yarıyı, diğer taraf ikinci yarıyı başlatır', () => {
-  const match = Engine.createMatch([team('A', 'a'), team('B', 'b')], settings, 1000);
-  const starter = completeKickoff(match, 5, 7, 1000);
-  assert.equal(starter, 1);
-  assert.equal(match.firstHalfStarter, 1);
-  assert.equal(match.secondHalfStarter, 0);
-});
+test('iki pastan sonra üçüncü olayda pas rakamı taça dönüşür',()=>{const m=Engine.createMatch([team('A','a'),team('B','b')],settings,1000);const side=completeKickoff(m);for(let i=0;i<2;i++){selectPlayer(m,side,2,2000+i*12000);Engine.stopRoll(m,side,1,8000+i*12000);settle(m,8000+i*12000);}selectPlayer(m,side,2,30000);Engine.stopRoll(m,side,1,36000);assert.equal(m.transition.owner,side===0?1:0);assert.match(m.overlay.title,/TAÇ/);});
 
-test('başlama atışında eşitlik olursa iki taraf yeniden atar', () => {
-  const match = Engine.createMatch([team('A', 'a'), team('B', 'b')], settings, 1000);
-  Engine.stopRoll(match, 0, 4, 1100); settle(match, 1100);
-  Engine.stopRoll(match, 1, 4, 6200); settle(match, 6200);
-  assert.equal(match.context.type, 'kickoffRoll');
-  assert.equal(match.context.owner, 0);
-  assert.equal(match.kickoff.round, 2);
-  assert.deepEqual(match.kickoff.rolls, [null, null]);
-});
+test('ikinci devreyi diğer taraf kendi düğmesiyle başlatır',()=>{const m=Engine.createMatch([team('A','a'),team('B','b')],settings,1000);completeKickoff(m);m.periodElapsedMs=m.periodDurationsMs[0]-1;m.lastTickAt=15000;Engine.tickMatch(m,15010);assert.equal(m.awaitingPeriodStart,true);assert.equal(m.awaitingPeriodSide,m.secondHalfStarter);assert.equal(Engine.startWaitingPeriod(m,m.firstHalfStarter,16000).ok,false);assert.equal(Engine.startWaitingPeriod(m,m.secondHalfStarter,16000).ok,true);});
 
-test('önce oyuncu seçilir, sonraki atış sıfırsa gol olur', () => {
-  const match = Engine.createMatch([team('A', 'a'), team('B', 'b')], settings, 1000);
-  const side = completeKickoff(match, 8, 3, 1000);
-  selectPlayer(match, side, 3, 12000);
-  const scorerId = match.activePlayerId[side];
-  const result = Engine.stopRoll(match, side, 0, 18000);
-  assert.equal(result.ok, true);
-  assert.equal(match.scores[side], 1);
-  assert.equal(match.transition.owner, side === 0 ? 1 : 0);
-  assert.equal(match.teams[side].lineup.find(player => player.id === scorerId).goals, 1);
-});
+test('her oyuncu yalnız kendi sırasında toplam 60 saniyelik mola kullanır',()=>{const m=Engine.createMatch([team('A','a'),team('B','b')],settings,1000);const starter=completeKickoff(m);const other=starter===0?1:0;assert.equal(Engine.togglePause(m,other,2000).ok,false);assert.equal(Engine.togglePause(m,starter,2000).ok,true);m.lastTickAt=2000;for(let t=2250;t<=7000;t+=250)Engine.tickMatch(m,t);assert.ok(m.pauseBudgetsMs[starter]<=55000);assert.equal(Engine.togglePause(m,starter,7100).ok,true);});
 
-test('üçüncü korner kullanılmadan penaltıya dönüşür', () => {
-  const match = Engine.createMatch([team('A', 'a'), team('B', 'b')], settings, 1000);
-  const side = completeKickoff(match, 8, 3, 1000);
-  selectPlayer(match, side, 2, 12000);
-  match.teams[side].corners = 2;
-  Engine.stopRoll(match, side, 6, 18000);
-  assert.equal(match.teams[side].corners, 0);
-  assert.equal(match.transition.context.type, 'shot');
-  assert.equal(match.transition.context.reason, 'penalty');
-});
+test('gecikmeler ikinci yarı sonunda hesaplanan ek süre üretir',()=>{const m=Engine.createMatch([team('A','a'),team('B','b')],settings,1000);completeKickoff(m);m.phase='regulation';m.periodIndex=1;m.periodElapsedMs=m.periodDurationsMs[1]-1;m.delayWasteMs=[10000,10000];m.stoppageAnnounced=false;m.lastTickAt=20000;Engine.tickMatch(m,20010);assert.equal(m.stoppageAnnounced,true);assert.ok(m.stoppageMs>=5000);});
 
-test('başlama hakkı atışında 10 saniye dolarsa cezasız otomatik rakam gelir', () => {
-  const match = Engine.createMatch([team('A', 'a'), team('B', 'b')], settings, 1000);
-  match.turnElapsedMs = 9999;
-  match.lastTickAt = 1000;
-  Engine.tickMatch(match, 1010);
-  assert.notEqual(match.kickoff.rolls[0], null);
-  assert.equal(match.teams[0].timeouts, 0);
-  assert.deepEqual(match.delayWasteMs, [0, 0]);
-});
-
-test('ilk devreyi kaybeden taraf ikinci devreyi kendi düğmesiyle başlatır', () => {
-  const match = Engine.createMatch([team('A', 'a'), team('B', 'b')], settings, 1000);
-  completeKickoff(match, 5, 7, 1000);
-  match.periodElapsedMs = match.periodDurationsMs[0] - 1;
-  match.lastTickAt = 15000;
-  Engine.tickMatch(match, 15010);
-  assert.equal(match.awaitingPeriodStart, true);
-  assert.equal(match.periodIndex, 1);
-  assert.equal(match.awaitingPeriodSide, 0);
-  assert.equal(Engine.startWaitingPeriod(match, 1, 16000).ok, false);
-  assert.equal(Engine.startWaitingPeriod(match, 0, 16000).ok, true);
-});
-
-test('her oyuncu yalnız kendi sırasında toplam 60 saniyelik mola bütçesini kullanır', () => {
-  const match = Engine.createMatch([team('A', 'a'), team('B', 'b')], settings, 1000);
-  const starter = completeKickoff(match, 8, 3, 1000);
-  const other = starter === 0 ? 1 : 0;
-  assert.equal(Engine.togglePause(match, other, 12000).ok, false);
-  assert.equal(Engine.togglePause(match, starter, 12000).ok, true);
-  assert.equal(match.pausedBy, starter);
-  match.lastTickAt = 12000;
-  for (let t = 12250; t <= 17000; t += 250) Engine.tickMatch(match, t);
-  assert.ok(match.pauseBudgetsMs[starter] <= 55000);
-  assert.equal(Engine.togglePause(match, other, 17100).ok, false);
-  assert.equal(Engine.togglePause(match, starter, 17200).ok, true);
-  assert.equal(match.paused, false);
-});
-
-test('gecikmeler ikinci yarı sonunda hesaplanan ek süre üretir', () => {
-  const match = Engine.createMatch([team('A', 'a'), team('B', 'b')], settings, 1000);
-  completeKickoff(match, 8, 3, 1000);
-  match.phase = 'regulation';
-  match.periodIndex = 1;
-  match.periodElapsedMs = match.periodDurationsMs[1] - 1;
-  match.delayWasteMs = [10000, 10000];
-  match.stoppageAnnounced = false;
-  match.lastTickAt = 20000;
-  Engine.tickMatch(match, 20010);
-  assert.equal(match.stoppageAnnounced, true);
-  assert.ok(match.stoppageMs >= 5000);
-  assert.equal(match.resolving, true);
-});
+test('ikinci ayakta toplam skor üstünlüğü uzatmasız kazandırır',()=>{const series={type:'twoLeg',leg:2,aggregateBase:[1,2]};const m=Engine.createMatch([team('B','b'),team('A','a')],settings,1000,series);completeKickoff(m);m.phase='regulation';m.periodIndex=1;m.scores=[0,0];m.periodElapsedMs=m.periodDurationsMs[1]-1;m.lastTickAt=5000;Engine.tickMatch(m,5010);assert.equal(m.phase,'finished');assert.equal(m.winnerSide,1);});

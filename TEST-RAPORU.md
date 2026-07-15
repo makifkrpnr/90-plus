@@ -1,59 +1,34 @@
-# 90+ v4 — Test Raporu
+# 90+ v5 — Test Raporu
 
-## Otomatik oyun motoru testleri
+## Otomatik testler
 
-Komut:
+`npm test` sonucu: **24/24 geçti.**
 
-```bash
-npm test
-```
+Kapsam: olay tablosu, şut alt atışı, ayrıntılı frikik/penaltı sonucu, iki pas kilidi, üçüncü korner penaltısı, kartlar, ihlaller, ek süre, yazı tura, devre başlangıçları, online mola ve iki ayaklı toplam skor.
 
-Sonuç: **19/19 test geçti.**
+## Veri ve statik kontroller
 
-Kapsanan başlıklar:
+- 2.121 benzersiz futbolcu; yinelenen ID yok.
+- Kullanıcının açıkça dışlanmasını istediği isim havuzda yok.
+- 67 opsiyonel ses yolu tanımlı.
+- HTML'de yinelenen `id` yok.
+- `app.js`, `core.js`, `audio.js`, `players.js`, `server.js` ve online motor sözdizimi doğrulandı.
 
-- 0–9 ana olay tablosu
-- Üçüncü kornerin kullanılmadan penaltıya dönüşmesi
-- Faul sonucu ve bağımsız kart alt atışları
-- Tek/çift kurtarış-gol kuralı
-- İkinci sarıdan kırmızı
-- Beş kademeli 10 saniye ihlal sistemi
-- Uzatma ve gecikmeye bağlı ek süre sınırları
-- Hükmen skor
-- Aday seçiminde mod yöntemi
-- Online başlama hakkı kronometresi
-- Eşitlikte yeniden başlama atışı
-- Başlama atışında cezasız otomatik rakam
-- Önce oyuncu, sonra olay akışı
-- İlk ve ikinci yarı başlangıç yetkileri
-- Her oyuncu için ayrı ve kümülatif 60 saniyelik mola bütçesi
+## Mobil tarayıcı testi
 
-## Statik kontroller
+412×915 görünümde şu akış çalıştırıldı:
 
-- `js/*.js`, `server/*.js`, `server.js` ve `sw.js` dosyaları `node --check` ile doğrulandı.
-- HTML içinde 149 benzersiz `id` bulundu; yinelenen `id` yok.
-- Yerel script, stil, manifest ve ikon bağlantıları mevcut.
-- Oyuncu havuzu: 472 benzersiz futbolcu, 54 milliyet, 52 lig.
-- Ses manifesti: 67 isteğe bağlı dosya yolu.
-- Pakette `package-lock.json`, `node_modules` veya font dosyası bulunmuyor.
+`Ana Menü → AI/Co-op → Kadro → Ayarlar → Brifing → Yazı Tura → Maç`
 
-## Mobil arayüz kontrolü
+Doğrulananlar:
 
-390×844 mobil görünümde şu akış tarayıcı motoruyla çalıştırıldı:
+- Sabit header ve alt işlem çubukları
+- Kaydırmasız mobil maç kokpiti
+- Doğru dikey saha çizgileri
+- Mola perdesinde Olaylar/Kurallar/Kadrolar/Devam Et
+- Moladan devam etme
+- Transfer Düellosu onay penceresi ve eğitim kartı
+- Yazı tura sonrası doğru ilk/ikinci yarı başlangıcı
+- Açık/koyu tema temel kontrastları
 
-```text
-Ana Menü → AI → Karışık Kadro → Ayarlar → Maç Brifingi → Başlama Atışı
-```
-
-Kontrol edilenler:
-
-- Sabit mobil üst başlık
-- Sabit alt eylem çubuğu
-- Dikey saha çizgileri
-- Açık ve koyu tema kontrastı
-- Başlama hakkı kartı ve kronometre
-- Oyuncu seçimi → olay atışı akışı
-
-## Çevrim içi test notu
-
-Sunucu ve çevrim içi motorun sözdizimi ile 9 çevrim içi/motor senaryosu yerelde test edildi. Bu çalışma ortamında npm kayıt deposuna ağ erişimi olmadığı için Socket.IO paketinin sıfırdan indirilmesini gerektiren tam iki-tarayıcılı uçtan uca test yeniden çalıştırılamadı. `package.json` ve `render.yaml`, Render’ın resmî npm deposundan `socket.io@4.8.1` kuracağı şekilde hazırlanmıştır.
+Tam Socket.IO iki cihaz testi bu çalışma ortamında npm indirmesi zaman aşımına uğradığı için yeniden koşturulamadı. Sunucu/online motor testleri geçti; Render yapılandırması Socket.IO'yu resmi npm deposundan kurar.

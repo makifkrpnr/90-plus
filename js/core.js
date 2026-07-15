@@ -13,9 +13,20 @@
     4: { key: 'foul', label: 'FAUL', keepsPossession: false },
     5: { key: 'pass', label: 'PAS', keepsPossession: true },
     6: { key: 'corner', label: 'KORNER', keepsPossession: true },
-    7: { key: 'pass', label: 'PAS', keepsPossession: true },
+    7: { key: 'shot', label: 'ŞUT', keepsPossession: true },
     8: { key: 'freeKick', label: 'FRİKİK', keepsPossession: true },
     9: { key: 'turnover', label: 'AUT / TOP KAYBI', keepsPossession: false }
+  });
+
+  const PASS_LOCK_EVENTS = Object.freeze({
+    1: { key: 'throwIn', label: 'TAÇ', keepsPossession: false },
+    2: { key: 'turnover', label: 'AUT / TOP KAYBI', keepsPossession: false },
+    5: { key: 'throwIn', label: 'TAÇ', keepsPossession: false }
+  });
+
+  const SHOT_OUTCOMES = Object.freeze({
+    0: 'corner', 1: 'saved', 2: 'post', 3: 'wide', 4: 'saved',
+    5: 'post', 6: 'wide', 7: 'saved', 8: 'post', 9: 'goal'
   });
 
   function normalizeDigit(value) {
@@ -24,8 +35,14 @@
     return Math.abs(parsed) % 10;
   }
 
-  function mainEventForDigit(digit) {
-    return MAIN_EVENTS[normalizeDigit(digit)];
+  function mainEventForDigit(digit, consecutivePasses = 0) {
+    const d = normalizeDigit(digit);
+    if (Number(consecutivePasses) >= 2 && PASS_LOCK_EVENTS[d]) return PASS_LOCK_EVENTS[d];
+    return MAIN_EVENTS[d];
+  }
+
+  function eventTable(consecutivePasses = 0) {
+    return Array.from({ length: 10 }, (_, digit) => ({ digit, ...mainEventForDigit(digit, consecutivePasses) }));
   }
 
   function foulResultForDigit(digit) {
@@ -43,7 +60,15 @@
   }
 
   function shotForDigit(digit) {
-    return normalizeDigit(digit) % 2 === 0 ? 'goal' : 'saved';
+    return SHOT_OUTCOMES[normalizeDigit(digit)];
+  }
+
+  function setPieceOutcomeForDigit(digit) {
+    const d = normalizeDigit(digit);
+    if (d % 2 === 0) return 'goal';
+    if (d === 1 || d === 7) return 'saved';
+    if (d === 3) return 'post';
+    return 'wide';
   }
 
   function registerCorner(currentCorners) {
@@ -54,24 +79,12 @@
 
   function registerTimeout(currentCount) {
     const count = Math.max(0, Number(currentCount) || 0) + 1;
-    const results = {
-      1: 'turnover',
-      2: 'turnover',
-      3: 'penaltyAgainst',
-      4: 'redCard',
-      5: 'forfeit'
-    };
+    const results = { 1: 'turnover', 2: 'turnover', 3: 'penaltyAgainst', 4: 'redCard', 5: 'forfeit' };
     return { count, consequence: results[Math.min(count, 5)] };
   }
 
   function applyCard(player, card) {
-    const next = {
-      ...player,
-      yellowCards: Number(player.yellowCards) || 0,
-      red: Boolean(player.red),
-      injured: Boolean(player.injured)
-    };
-
+    const next = { ...player, yellowCards: Number(player.yellowCards) || 0, red: Boolean(player.red), injured: Boolean(player.injured) };
     if (card === 'yellow' && !next.red) {
       next.yellowCards += 1;
       if (next.yellowCards >= 2) next.red = true;
@@ -90,7 +103,7 @@
       ? delayWasteMs.reduce((sum, value) => sum + Math.max(0, Number(value) || 0), 0)
       : Math.max(0, Number(delayWasteMs) || 0);
     const duration = Math.max(1, Math.min(10, Number(durationMinutes) || 5));
-    const cap = duration * 12000; // 5 dakikalık maç için en fazla 60 sn.
+    const cap = duration * 12000;
     const estimated = totalWaste * 0.72;
     if (estimated < 5000) return 0;
     return Math.min(cap, Math.max(5000, Math.round(estimated / 5000) * 5000));
@@ -104,9 +117,7 @@
   function matchMinute(elapsedSeconds, regulationSeconds, periodType) {
     const elapsed = Math.max(0, Number(elapsedSeconds) || 0);
     const regulation = Math.max(1, Number(regulationSeconds) || 1);
-    if (periodType === 'extra') {
-      return Math.min(120, 90 + Math.round((elapsed / Math.max(1, roundExtraTimeSeconds(regulation))) * 30));
-    }
+    if (periodType === 'extra') return Math.min(120, 90 + Math.round((elapsed / Math.max(1, roundExtraTimeSeconds(regulation))) * 30));
     return Math.min(90, Math.max(1, Math.round((elapsed / regulation) * 90)));
   }
 
@@ -131,22 +142,16 @@
     return items[normalizeDigit(digit) % items.length];
   }
 
+  function aggregateWinner(firstLeg, secondLeg) {
+    const a = (Number(firstLeg?.[0]) || 0) + (Number(secondLeg?.[0]) || 0);
+    const b = (Number(firstLeg?.[1]) || 0) + (Number(secondLeg?.[1]) || 0);
+    return { aggregate: [a, b], winner: a === b ? null : (a > b ? 0 : 1) };
+  }
+
   return Object.freeze({
-    MAIN_EVENTS,
-    normalizeDigit,
-    mainEventForDigit,
-    foulResultForDigit,
-    cardForDigit,
-    shotForDigit,
-    registerCorner,
-    registerTimeout,
-    applyCard,
-    roundExtraTimeSeconds,
-    calculateStoppageTimeMs,
-    formatAddedTimeMinutes,
-    matchMinute,
-    possessionPercent,
-    forfeitScore,
-    chooseByModulo
+    MAIN_EVENTS, PASS_LOCK_EVENTS, SHOT_OUTCOMES, normalizeDigit, mainEventForDigit, eventTable,
+    foulResultForDigit, cardForDigit, shotForDigit, setPieceOutcomeForDigit, registerCorner,
+    registerTimeout, applyCard, roundExtraTimeSeconds, calculateStoppageTimeMs,
+    formatAddedTimeMinutes, matchMinute, possessionPercent, forfeitScore, chooseByModulo, aggregateWinner
   });
 });

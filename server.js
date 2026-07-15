@@ -6,6 +6,10 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const { Server } = require('socket.io');
 const Engine = require('./server/online-engine.js');
+const PlayerData = require('./js/players.js');
+const ALL_PLAYERS = PlayerData.players;
+const SLOTS = ['GK','LB','CB','CB','RB','DM','CM','AM','LW','RW','ST'];
+const DUEL_KEYS = ['period','nationality','league','rating','style'];
 
 const PORT = Number(process.env.PORT) || 8080;
 const ROOT = __dirname;
@@ -70,13 +74,16 @@ function validateTeam(raw) {
 }
 
 function validateSettings(raw) {
+  const colors = Array.isArray(raw?.teamColors) ? raw.teamColors.slice(0,2).map(value => /^#[0-9a-f]{6}$/i.test(String(value)) ? String(value) : null) : [];
   return {
-    durationMinutes: Math.max(1, Math.min(10, Number(raw?.durationMinutes) || 5)),
-    cards: raw?.cards !== false,
-    injury: Boolean(raw?.injury),
-    extraTime: raw?.extraTime !== false,
-    shootout: raw?.shootout !== false,
-    soundIntensity: ['low', 'medium', 'high'].includes(raw?.soundIntensity) ? raw.soundIntensity : 'medium'
+    durationMinutes: Math.max(1, Math.min(10, Number(raw?.durationMinutes) || 5)), cards: raw?.cards !== false,
+    injury: Boolean(raw?.injury), extraTime: raw?.extraTime !== false, shootout: raw?.shootout !== false,
+    menuMusic: raw?.menuMusic !== false, menuVolume: Math.max(0,Math.min(1,Number(raw?.menuVolume) || .55)),
+    stadiumAmbience: raw?.stadiumAmbience !== false, stadiumVolume: Math.max(0,Math.min(1,Number(raw?.stadiumVolume) || .5)),
+    sfx: raw?.sfx !== false, sfxVolume: Math.max(0,Math.min(1,Number(raw?.sfxVolume) || .75)),
+    soundIntensity: ['low','medium','high'].includes(raw?.soundIntensity) ? raw.soundIntensity : 'medium',
+    vibration: raw?.vibration !== false, eventDuration: ['normal','long','extra'].includes(raw?.eventDuration) ? raw.eventDuration : 'long',
+    teamColors: [colors[0] || '#d44735', colors[1] || '#2878c8']
   };
 }
 
@@ -101,7 +108,9 @@ function lobbyPayload(room) {
     startReady: Array.isArray(room.startReady) ? [...room.startReady] : [false, false],
     startDeadline: room.startDeadline || null,
     canStart: Boolean(room.players[0]?.team && room.players[1]?.team && room.players[0]?.connected && room.players[1]?.connected && room.phase === 'lobby'),
-    createdAt: room.createdAt
+    createdAt: room.createdAt,
+    duel: room.duel ? JSON.parse(JSON.stringify(room.duel)) : null,
+    rematchRequest: room.rematchRequest || null
   };
 }
 
@@ -142,12 +151,22 @@ function canPrepareMatch(room) {
   return Boolean(room?.players?.[0]?.team && room?.players?.[1]?.team && room.players[0].connected && room.players[1].connected);
 }
 
+function swapRoomSides(io, room) {
+  const first = room.players[0]; room.players[0] = room.players[1]; room.players[1] = first;
+  room.players.forEach((player, side) => {
+    if (!player?.socketId) return;
+    const client = io.sockets.sockets.get(player.socketId);
+    if (client) { client.data.side = side; client.emit('room:side', { side }); }
+  });
+}
+
 function beginRoomMatch(io, room) {
   if (!room || !canPrepareMatch(room)) return false;
   clearStartTimer(room);
   room.startReady = [false, false];
   room.startDeadline = null;
-  room.match = Engine.createMatch([room.players[0].team, room.players[1].team], room.settings, Date.now());
+  room.match = Engine.createMatch([room.players[0].team, room.players[1].team], room.settings, Date.now(), room.pendingSeries || null);
+  room.pendingSeries = null;
   room.phase = 'match';
   touch(room);
   io.to(room.code).emit('match:start', { match: room.match, serverNow: Date.now() });
@@ -162,6 +181,46 @@ function scheduleBriefDeadline(io, room) {
     if (room.phase === 'brief') beginRoomMatch(io, room);
   }, 30050);
   room.startTimer.unref?.();
+}
+
+
+function positionScore(slot, player) {
+  if (slot === player.position) return 10;
+  const groups = { GK:['GK'], LB:['LB','RB','CB'], RB:['RB','LB','CB'], CB:['CB','LB','RB','DM'], DM:['DM','CM','CB'], CM:['CM','DM','AM'], AM:['AM','CM','LW','RW'], LW:['LW','RW','AM','ST'], RW:['RW','LW','AM','ST'], ST:['ST','LW','RW','AM'] };
+  const index = (groups[slot] || []).indexOf(player.position);
+  return index < 0 ? 0 : Math.max(1, 7-index*2);
+}
+function shuffle(items) { const a=[...items]; for(let i=a.length-1;i>0;i--){const j=crypto.randomInt(i+1);[a[i],a[j]]=[a[j],a[i]];} return a; }
+function duelPool(selections={}) {
+  return ALL_PLAYERS.filter(player => {
+    if (selections.period && selections.period !== 'all') {
+      const [a,b] = selections.period.split('-').map(Number);
+      if (!(player.activeStart <= b && player.activeEnd >= a)) return false;
+    }
+    if (selections.nationality && selections.nationality !== 'all' && player.nationality !== selections.nationality) return false;
+    if (selections.league && selections.league !== 'all' && !(player.leagues || []).includes(selections.league)) return false;
+    if (selections.rating && selections.rating !== 'all') { const [a,b]=selections.rating.split('-').map(Number); if (player.rating<a || player.rating>b) return false; }
+    return true;
+  });
+}
+function nextDuelCandidates(duel) {
+  const side=duel.turn, slot=SLOTS[duel.picks[side].length], used=new Set(duel.picks.flat().map(p=>p.id));
+  let pool=duelPool(duel.selections).filter(p=>!used.has(p.id));
+  if (duel.selections.style==='legends') pool.sort((a,b)=>b.rating-a.rating);
+  else if (duel.selections.style==='modern') pool.sort((a,b)=>b.activeEnd-a.activeEnd || b.rating-a.rating);
+  else if (duel.selections.style==='surprise') pool=shuffle(pool).sort((a,b)=>a.rating-b.rating);
+  else pool=shuffle(pool);
+  const compatible=pool.filter(p=>positionScore(slot,p)>0).sort((a,b)=>positionScore(slot,b)-positionScore(slot,a)||b.rating-a.rating);
+  const combined=[...compatible,...pool.filter(p=>!compatible.includes(p))];
+  const unique=[]; const ids=new Set(); for(const p of combined){if(!ids.has(p.id)){ids.add(p.id);unique.push(p);} if(unique.length===3)break;}
+  return unique;
+}
+function safeDuelChoice(key, value) {
+  const text=safeText(value,'all',40);
+  if (key==='period' && text!=='all' && !/^\d{4}-\d{4}$/.test(text)) return null;
+  if (key==='rating' && text!=='all' && !/^\d{2}-\d{2}$/.test(text)) return null;
+  if (key==='style' && !['balanced','legends','modern','surprise'].includes(text)) return null;
+  return text;
 }
 
 const server = http.createServer((req, res) => {
@@ -216,7 +275,8 @@ io.on('connection', socket => {
       startReady: [false, false],
       startDeadline: null,
       startTimer: null,
-      lastBroadcastAt: 0
+      lastBroadcastAt: 0,
+      duel: null, rematchRequest: null, seriesHistory: null
     };
     rooms.set(code, room);
     attachPlayer(socket, room, 0, { token, name, team: null, connected: true, socketId: socket.id });
@@ -256,6 +316,56 @@ io.on('connection', socket => {
     touch(room);
     ack({ ok: true, lobby: lobbyPayload(room) });
     emitLobby(io, room);
+  });
+
+  socket.on('room:duelRequest', (_payload, ack = () => {}) => {
+    const room = currentRoom(socket);
+    if (!room || room.phase !== 'lobby' || !room.players[0]?.connected || !room.players[1]?.connected) return ack({ ok:false, error:'İki oyuncu da lobide ve bağlı olmalı.' });
+    room.duel = { status:'pending', phase:'request', requestedBy:socket.data.side, winner:null, turn:null, criteriaIndex:0, selections:{}, picks:[[],[]], candidates:[] };
+    touch(room); ack({ok:true,duel:room.duel}); io.to(room.code).emit('room:duel', room.duel); emitLobby(io,room);
+  });
+
+  socket.on('room:duelRespond', (payload, ack = () => {}) => {
+    const room=currentRoom(socket), duel=room?.duel;
+    if (!room || !duel || duel.status!=='pending' || socket.data.side===duel.requestedBy) return ack({ok:false,error:'Bekleyen geçerli bir düello isteği yok.'});
+    if (!payload?.accept) { room.duel=null; touch(room); ack({ok:true,rejected:true}); io.to(room.code).emit('room:duel', null); emitLobby(io,room); return; }
+    duel.status='accepted'; duel.phase='coin'; touch(room); ack({ok:true,duel}); io.to(room.code).emit('room:duel',duel); emitLobby(io,room);
+  });
+
+  socket.on('duel:flip', (_payload, ack = () => {}) => {
+    const room=currentRoom(socket), duel=room?.duel;
+    if (!duel || duel.phase!=='coin') return ack({ok:false,error:'Yazı tura aşaması açık değil.'});
+    if (socket.data.side!==duel.requestedBy) return ack({ok:false,error:'Yazı turayı düelloyu öneren oyuncu atmalı.'});
+    duel.winner=crypto.randomInt(2); duel.turn=duel.winner; duel.phase='criteria'; duel.criteriaIndex=0;
+    touch(room); ack({ok:true,duel}); io.to(room.code).emit('room:duel',duel); emitLobby(io,room);
+  });
+
+  socket.on('duel:criterion', (payload, ack = () => {}) => {
+    const room=currentRoom(socket), duel=room?.duel;
+    if (!duel || duel.phase!=='criteria' || socket.data.side!==duel.turn) return ack({ok:false,error:'Kriter sırası sende değil.'});
+    const key=DUEL_KEYS[duel.criteriaIndex]; const value=safeDuelChoice(key,payload?.value);
+    if (!value) return ack({ok:false,error:'Geçersiz kriter.'});
+    duel.selections[key]=value; duel.criteriaIndex+=1;
+    if (duel.criteriaIndex>=DUEL_KEYS.length) {
+      let pool=duelPool(duel.selections);
+      if (pool.length<22 || !pool.some(p=>p.position==='GK')) duel.selections={period:'all',nationality:'all',league:'all',rating:'all',style:duel.selections.style||'balanced'};
+      duel.phase='picks'; duel.turn=duel.winner; duel.candidates=nextDuelCandidates(duel);
+    } else duel.turn=duel.turn===0?1:0;
+    touch(room); ack({ok:true,duel}); io.to(room.code).emit('room:duel',duel); emitLobby(io,room);
+  });
+
+  socket.on('duel:pick', (payload, ack = () => {}) => {
+    const room=currentRoom(socket), duel=room?.duel;
+    if (!duel || duel.phase!=='picks' || socket.data.side!==duel.turn) return ack({ok:false,error:'Transfer sırası sende değil.'});
+    const player=duel.candidates.find(p=>p.id===payload?.playerId); if(!player) return ack({ok:false,error:'Bu futbolcu mevcut üç aday arasında değil.'});
+    const side=duel.turn, slot=SLOTS[duel.picks[side].length]; duel.picks[side].push({...player,slot});
+    if (duel.picks[0].length===11 && duel.picks[1].length===11) {
+      duel.phase='done'; duel.candidates=[];
+      room.players[0].team={name:`${room.players[0].name} XI`,lineup:duel.picks[0]}; room.players[1].team={name:`${room.players[1].name} XI`,lineup:duel.picks[1]};
+    } else {
+      duel.turn=side===0?1:0; if(duel.picks[duel.turn].length>=11)duel.turn=side; duel.candidates=nextDuelCandidates(duel);
+    }
+    touch(room); ack({ok:true,duel,lobby:lobbyPayload(room)}); io.to(room.code).emit('room:duel',duel); emitLobby(io,room);
   });
 
   socket.on('room:updateSettings', (payload, ack = () => {}) => {
@@ -331,20 +441,28 @@ io.on('connection', socket => {
     io.to(room.code).emit('match:state', { match: room.match, serverNow: Date.now() });
   });
 
-  socket.on('room:rematch', (_payload, ack = () => {}) => {
-    const room = currentRoom(socket);
-    if (!room || !isHost(socket)) return ack({ ok: false, error: 'Rövanş brifingini yalnızca oda sahibi açabilir.' });
-    if (!room.match || room.match.phase !== 'finished') return ack({ ok: false, error: 'Önce mevcut maç bitmeli.' });
-    room.match = null;
-    room.phase = 'brief';
-    room.startReady = [false, false];
-    room.startDeadline = null;
-    clearStartTimer(room);
-    touch(room);
-    const lobby = lobbyPayload(room);
-    ack({ ok: true, lobby });
-    io.to(room.code).emit('room:brief', { lobby });
-    emitLobby(io, room);
+  socket.on('room:rematchRequest', (payload, ack = () => {}) => {
+    const room=currentRoom(socket);
+    if(!room?.match || room.match.phase!=='finished') return ack({ok:false,error:'Önce mevcut maç bitmeli.'});
+    const winner=room.match.winnerSide;
+    if(Number.isInteger(winner) && socket.data.side===winner) return ack({ok:false,error:'Rövanş isteğini yalnız mağlup oyuncu gönderebilir.'});
+    const type=payload?.type==='secondLeg'?'secondLeg':'simple';
+    room.rematchRequest={from:socket.data.side,type,firstLegScores:[...room.match.scores],firstTeams:[room.players[0].team.name,room.players[1].team.name]};
+    touch(room); ack({ok:true,request:room.rematchRequest}); io.to(room.code).emit('room:rematchRequest',room.rematchRequest); emitLobby(io,room);
+  });
+
+  socket.on('room:rematchRespond', (payload, ack = () => {}) => {
+    const room=currentRoom(socket), request=room?.rematchRequest;
+    if(!room || !request || request.from===socket.data.side) return ack({ok:false,error:'Yanıtlanacak rövanş isteği yok.'});
+    if(!payload?.accept){room.rematchRequest=null;touch(room);ack({ok:true,rejected:true});io.to(room.code).emit('room:rematchResult',{accepted:false});emitLobby(io,room);return;}
+    const oldMatch=room.match;
+    room.rematchRequest=null; clearStartTimer(room); room.startReady=[false,false]; room.startDeadline=null;
+    if(request.type==='secondLeg'){
+      swapRoomSides(io,room);
+      room.pendingSeries={type:'twoLeg',leg:2,firstLegScores:[...request.firstLegScores],aggregateBase:[request.firstLegScores[1],request.firstLegScores[0]],firstTeams:[...request.firstTeams]};
+    } else room.pendingSeries=null;
+    room.match=null; room.phase='brief'; touch(room);
+    const lobby=lobbyPayload(room); ack({ok:true,lobby}); io.to(room.code).emit('room:rematchResult',{accepted:true,type:request.type,lobby}); io.to(room.code).emit('room:brief',{lobby}); emitLobby(io,room);
   });
 
   socket.on('room:leave', () => {
