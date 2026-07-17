@@ -3,12 +3,9 @@
 
   const Core = window.GameCore;
   const Audio = window.GameAudio;
-  let PLAYERS = [];
-  const AppSettings = window.AppSettings;
-  const UIShell = window.UIShell;
-  const TournamentCore = window.TournamentCore;
-  const SAVE_KEY = '90-plus-save-v6';
-  const SETTINGS_KEY = '90-plus-match-settings-v6';
+  const PLAYERS = window.KRONOMETRE_PLAYERS || [];
+  const SAVE_KEY = '90-plus-save-v5';
+  const SETTINGS_KEY = '90-plus-settings-v5';
   const THEME_KEY = '90-plus-theme';
   const ONLINE_TOKEN_KEY = '90-plus-online-token';
   const SLOTS = ['GK', 'LB', 'CB', 'CB', 'RB', 'DM', 'CM', 'AM', 'LW', 'RW', 'ST'];
@@ -39,15 +36,12 @@
   const els = {
     screens: $$('.screen'),
     homeButton: $('#homeButton'),
-    settingsButton: $('#settingsButton'),
     themeButton: $('#themeButton'),
     soundButton: $('#soundButton'),
     startButton: $('#startButton'),
     howToButton: $('#howToButton'),
     continueButton: $('#continueButton'),
     modeButtons: $$('.mode-card[data-mode]'),
-    competitionCards: $$('.competition-card[data-competition]'),
-    roomTypeOptions: $$('.room-type-option[data-room-type]'),
     networkBadge: $('#networkBadge'),
     hostNameInput: $('#hostNameInput'),
     guestNameInput: $('#guestNameInput'),
@@ -59,23 +53,23 @@
     copyCodeButton: $('#copyCodeButton'),
     lobbyPlayer0: $('#lobbyPlayer0'),
     lobbyPlayer1: $('#lobbyPlayer1'),
-    lobbyPlayer2: $('#lobbyPlayer2'),
-    lobbyPlayer3: $('#lobbyPlayer3'),
-    lobbyPlayersGrid: $('#lobbyPlayersGrid'),
     lobbySettingsSummary: $('#lobbySettingsSummary'),
     lobbyMessage: $('#lobbyMessage'),
     leaveRoomButton: $('#leaveRoomButton'),
-    lobbyBuildSquadButton: $('#lobbyBuildSquadButton'),
     editOnlineSettingsButton: $('#editOnlineSettingsButton'),
     startOnlineMatchButton: $('#startOnlineMatchButton'),
+    lobbySquadButton: $('#lobbySquadButton'),
+    roomTypeButtons: $$('[data-room-type]'),
+    quadPanel: $('#quadPanel'), quadPlayers: $('#quadPlayers'), quadAdminControls: $('#quadAdminControls'),
+    quadEliminationSelect: $('#quadEliminationSelect'), quadDurationRange: $('#quadDurationRange'), quadDurationValue: $('#quadDurationValue'),
+    quadRandomButton: $('#quadRandomButton'), quadDuelButton: $('#quadDuelButton'), quadStartButton: $('#quadStartButton'), quadStatus: $('#quadStatus'),
+    lobbyVersus: $('.lobby-versus'),
     remoteMatchBar: $('#remoteMatchBar'),
     remoteRoomCode: $('#remoteRoomCode'),
     remoteConnectionText: $('#remoteConnectionText'),
-    builderTabs: $$('.builder-tab'),
+    builderTabs: $$('#screen-squad .builder-tab'),
     setupTeamLabel: $('#setupTeamLabel'),
     teamNameInput: $('#teamNameInput'),
-    teamColorPalette: $('#teamColorPalette'),
-    teamColorHint: $('#teamColorHint'),
     builtStatus: $('#builtStatus'),
     periodChips: $('#periodChips'),
     nationalitySelect: $('#nationalitySelect'),
@@ -99,7 +93,8 @@
     duelPickTurnName: $('#duelPickTurnName'), duelPickProgress: $('#duelPickProgress'), duelPickCandidates: $('#duelPickCandidates'),
     duelTeam0Name: $('#duelTeam0Name'), duelTeam1Name: $('#duelTeam1Name'), duelPitch0: $('#duelPitch0'), duelPitch1: $('#duelPitch1'),
     duelCancelButton: $('#duelCancelButton'), duelFinishButton: $('#duelFinishButton'),
-    duelWatchDisplay: $('#duelWatchDisplay'), duelStopButton: $('#duelStopButton'), duelWatchHint: $('#duelWatchHint'),
+    duelPeriodConfirm: $('#duelPeriodConfirm'), duelWatchBlock: $('#duelWatchBlock'),
+    duelWatchDisplay: $('#duelWatchDisplay'), duelDigitMap: $('#duelDigitMap'), duelStopButton: $('#duelStopButton'),
     draftProgress: $('#draftProgress'),
     draftCandidates: $('#draftCandidates'),
     draftWatchDisplay: $('#draftWatchDisplay'),
@@ -112,9 +107,10 @@
     injuryToggle: $('#injuryToggle'),
     extraToggle: $('#extraToggle'),
     shootoutToggle: $('#shootoutToggle'),
-    openAppSettingsButton: $('#openAppSettingsButton'), saveGlobalSettingsButton: $('#saveGlobalSettingsButton'),
-    globalMenuMusicToggle: $('#globalMenuMusicToggle'), globalStadiumToggle: $('#globalStadiumToggle'), globalEventSoundsToggle: $('#globalEventSoundsToggle'),
-    globalVibrationToggle: $('#globalVibrationToggle'), globalReducedMotionToggle: $('#globalReducedMotionToggle'), globalEventDurationSelect: $('#globalEventDurationSelect'),
+    prefsButton: $('#prefsButton'),
+    prefMusicToggle: $('#prefMusicToggle'), prefAmbienceToggle: $('#prefAmbienceToggle'), prefSfxToggle: $('#prefSfxToggle'),
+    prefVibrationToggle: $('#prefVibrationToggle'), prefEventDurationSelect: $('#prefEventDurationSelect'),
+    teamColorPicker: $('#teamColorPicker'),
     kickoffButton: $('#kickoffButton'),
     briefSettingsSummary: $('#briefSettingsSummary'),
     briefBackButton: $('#briefBackButton'),
@@ -130,14 +126,11 @@
     awayScore: $('#awayScore'),
     periodLabel: $('#periodLabel'),
     matchClock: $('#matchClock'),
-    matchDurationLabel: $('#matchDurationLabel'),
-    aggregateScoreLabel: $('#aggregateScoreLabel'),
     addedTimeLabel: $('#addedTimeLabel'),
-    kickoffScoreCard: $('#kickoffScoreCard'),
-    kickoffHomeDigit: $('#kickoffHomeDigit'),
-    kickoffAwayDigit: $('#kickoffAwayDigit'),
+    scoreboard: $('#scoreboard'),
+    matchMinuteLabel: $('#matchMinuteLabel'),
+    matchLengthLabel: $('#matchLengthLabel'),
     turnTeam: $('#turnTeam'),
-    rollInstruction: $('#rollInstruction'),
     activePlayerCaption: $('#activePlayerCaption'),
     rollContextLabel: $('#rollContextLabel'),
     activePlayerName: $('#activePlayerName'),
@@ -189,25 +182,20 @@
     resultTimeline: $('#resultTimeline'),
     rematchButton: $('#rematchButton'), rematchOverlay: $('#rematchOverlay'), simpleRematchButton: $('#simpleRematchButton'), twoLegRematchButton: $('#twoLegRematchButton'), closeRematchButton: $('#closeRematchButton'),
     newGameButton: $('#newGameButton'),
-    tournamentDurationRange: $('#tournamentDurationRange'), tournamentDurationValue: $('#tournamentDurationValue'), tournamentKindSummary: $('#tournamentKindSummary'),
-    tournamentLegOptions: $$('.tournament-leg-option'), tournamentSquadOptions: $$('.tournament-squad-option'), fourSquadMethod: $('#fourSquadMethod'), confirmTournamentButton: $('#confirmTournamentButton'),
-    tournamentBracket: $('#tournamentBracket'), tournamentStageText: $('#tournamentStageText'), tournamentLiveMessage: $('#tournamentLiveMessage'), tournamentNextButton: $('#tournamentNextButton'), tournamentHomeButton: $('#tournamentHomeButton'),
-    podiumStage: $('#podiumStage'), tournamentStats: $('#tournamentStats'), finishTournamentButton: $('#finishTournamentButton'),
+    tournamentPlayButton: $('#tournamentPlayButton'), tournamentQuitButton: $('#tournamentQuitButton'), tournamentContinueButton: $('#tournamentContinueButton'),
     appToast: $('#appToast')
   };
 
   const setup = {
     mode: null,
+    system: 'single',
     builder: 'random',
     side: 0,
     teams: [null, null],
+    teamColors: [null, null],
     selectedPeriods: ['1996-2005'],
     manualSelected: new Set(),
-    criteria: { nationality: '', league: '', position: '', rating: '' },
-    competition: 'single',
-    roomType: 'single',
-    selectedColors: ['#d44735', '#2878c8'],
-    tournamentOptions: { legs: 1, durationMinutes: 3, squadMethod: 'random' }
+    criteria: { nationality: '', league: '', position: '', rating: '' }
   };
 
   let draft = null;
@@ -232,12 +220,7 @@
   let readyTicker = null;
   let lastAudioEventId = null;
   let duel = null;
-  let duelWatchRaf = null;
-  let duelCoinTimer = null;
-  let localTournament = null;
-  let localDuelPairs = null;
-  let localDuelPairIndex = 0;
-  let localDuelUsedIds = new Set();
+  let pendingSecondLeg = null;
   const TEAM_COLORS = [
     { id: 'red', label: 'Kırmızı', value: '#d44735' }, { id: 'navy', label: 'Lacivert', value: '#172842' },
     { id: 'blue', label: 'Mavi', value: '#2878c8' }, { id: 'sky', label: 'Gökyüzü', value: '#5aa8d8' },
@@ -255,218 +238,45 @@
     name: '',
     lobby: null,
     joining: false,
-    startReady: [false, false, false, false],
+    startReady: [false, false],
     startDeadline: null,
-    roomType: 'single',
+    roomType: 'duo',
+    matchId: null,
     matchSide: null,
-    tournament: null,
-    fixtureId: null
+    quadView: false
   };
+
+  function isQuadRoom() {
+    return online.lobby?.mode === 'quad';
+  }
+
+  function myMatchSide() {
+    return Number.isInteger(online.matchSide) ? online.matchSide : online.side;
+  }
 
   function isFriendMode() {
     return setup.mode === 'friend' || match?.mode === 'friend';
   }
 
-
-  function updateCompetitionScreen() {
-    const ai = setup.mode === 'ai';
-    const multiplayer = setup.mode === 'coop';
-    els.competitionCards.forEach(card => {
-      card.classList.toggle('hidden', card.classList.contains('ai-only') ? !ai : card.classList.contains('multiplayer-only') ? !multiplayer : false);
-    });
-  }
-
-  function selectCompetition(type) {
-    setup.competition = type;
-    if (['classicUcl','worldCup','fourCup'].includes(type)) {
-      els.tournamentKindSummary.innerHTML = `<b>${type === 'worldCup' ? 'DÜNYA KUPASI' : type === 'classicUcl' ? 'KLASİK ŞAMPİYONLAR KUPASI' : '4 KİŞİLİK KUPA'}</b><small>${type === 'fourCup' ? 'İki yarı final, final ve üçüncülük maçı.' : 'Grup atmosferi ve eleme turları.'}</small>`;
-      els.fourSquadMethod.classList.toggle('hidden', type !== 'fourCup');
-      showScreen('tournament-config');
-      return;
-    }
-    setup.teams = [null, null]; setup.side = 0; setup.manualSelected.clear();
-    renderSetupState(); showScreen('squad');
-  }
-
-  function tournamentTeamLabel(index) { return localTournament?.teams?.[index]?.name || `Takım ${index + 1}`; }
-
-  function renderTournamentBracket() {
-    if (!localTournament || !els.tournamentBracket) return;
-    const stageText = localTournament.stage === 'finished' ? 'TURNUVA TAMAMLANDI' : localTournament.stage === 'groups' ? 'GRUP AŞAMASI' : localTournament.stage === 'semifinals' ? 'YARI FİNALLER' : localTournament.stage === 'finals' ? 'FİNAL GECESİ' : 'ELEME TURLARI';
-    els.tournamentStageText.textContent = stageText;
-    const groupHtml = localTournament.stage === 'groups' ? (localTournament.groups || []).map(group => {
-      const rows = TournamentCore.sortedTable(group);
-      return `<article class="group-table"><h3>GRUP ${escapeHtml(group.name)}</h3><div class="group-row heading"><span>TAKIM</span><b>O</b><b>AV</b><b>P</b></div>${rows.map((row,index)=>`<div class="group-row${index<2?' qualified':''}"><span>${escapeHtml(tournamentTeamLabel(row.team))}</span><b>${row.played}</b><b>${row.gd}</b><b>${row.pts}</b></div>`).join('')}</article>`;
-    }).join('') : '';
-    const relevant = (localTournament.fixtures || []).filter(fixture => localTournament.stage === 'groups' ? fixture.group : !fixture.group);
-    const fixtureHtml = relevant.map(f => {
-      const score = Array.isArray(f.scores) && f.scores.length ? (Array.isArray(f.scores[0]) ? f.scores.map(item=>item.join('–')).join(' / ') : f.scores.join('–')) : '—';
-      const leg = Number(f.legs) === 2 ? ` · ${f.leg || 1}. AYAK` : '';
-      return `<article class="bracket-fixture ${f.status}"><small>${escapeHtml(f.round)}${leg}</small><div><span>${escapeHtml(tournamentTeamLabel(f.home))}</span><b>${escapeHtml(score)}</b><span>${escapeHtml(tournamentTeamLabel(f.away))}</span></div><em>${f.status === 'finished' ? `${escapeHtml(tournamentTeamLabel(f.winner))} tur atladı` : f.status === 'live' ? 'CANLI' : 'BEKLİYOR'}</em></article>`;
-    }).join('');
-    els.tournamentBracket.innerHTML = groupHtml ? `<div class="group-tables">${groupHtml}</div><div class="fixture-list">${fixtureHtml}</div>` : fixtureHtml || '<div class="empty-state">Fikstür hazırlanıyor.</div>';
-    const next = (localTournament.fixtures || []).find(f => f.status === 'pending');
-    els.tournamentNextButton.classList.toggle('hidden', !next || localTournament.stage === 'finished');
-    if (next) els.tournamentNextButton.textContent = localTournament.stage === 'groups' ? 'SIRADAKİ GRUP MAÇI →' : `${String(next.round).toLocaleUpperCase('tr')} →`;
-  }
-
-  function simulateScore() {
-    let a=Math.floor(Math.random()*4),b=Math.floor(Math.random()*4);
-    if(a===b && Math.random()>.45) a+=1;
-    return [a,b];
-  }
-
-  function buildTournamentTeams(count) {
-    const teams=[setup.teams[0]];
-    const used=new Set(setup.teams[0]?.lineup?.map(p=>p.id)||[]);
-    while(teams.length<count){
-      const lineup=buildRandomLineup(PLAYERS.filter(p=>!used.has(p.id)));
-      lineup.forEach(p=>used.add(p.id));
-      teams.push({name:`Retro Kulüp ${teams.length}`,color:TEAM_COLORS[teams.length%TEAM_COLORS.length].value,lineup});
-    }
-    return teams;
-  }
-
-  function initializeLocalTournament() {
-    if (setup.competition === 'fourCup') localTournament=TournamentCore.createKnockout4(setup.teams.slice(0,4),setup.tournamentOptions);
-    else localTournament=TournamentCore.createGroupTournament(setup.competition,buildTournamentTeams(setup.competition==='worldCup'?16:8),setup.tournamentOptions);
-    renderTournamentBracket(); showScreen('tournament');
-  }
-
-  function nextRoundName(current,count) {
-    if (current === 'Çeyrek final') return 'Yarı final';
-    if (current === 'Yarı final') return 'Final';
-    if (count === 8) return 'Çeyrek final';
-    if (count === 4) return 'Yarı final';
-    return 'Final';
-  }
-
-  function addKnockoutRound(winners, round) {
-    for(let i=0;i<winners.length;i+=2){
-      localTournament.fixtures.push({id:`ko-${round}-${i/2}-${Date.now().toString(36)}`,round,home:winners[i],away:winners[i+1],status:'pending',scores:[],winner:null,legs:localTournament.options?.legs===2&&round!=='3.lük'?2:1,leg:1,aggregate:[0,0]});
-    }
-  }
-
-  function advanceGenericTournament(fixture,result) {
-    if (fixture.group) {
-      fixture.status='finished';fixture.scores=[...result.scores];fixture.winner=result.scores[0]===result.scores[1]?null:result.winner;
-      TournamentCore.applyGroupResult(localTournament,fixture,result.scores);
-      if(localTournament.fixtures.filter(item=>item.group).every(item=>item.status==='finished')) TournamentCore.buildKnockout(localTournament);
-      return;
-    }
-    const legs=Number(fixture.legs)||1;
-    if(legs===2 && Number(fixture.leg||1)===1){
-      fixture.aggregate=[...result.scores];fixture.scores=[[...result.scores]];fixture.leg=2;fixture.status='pending';fixture.winner=null;return;
-    }
-    if(legs===2){
-      fixture.scores.push([...result.scores]);fixture.aggregate=[(fixture.aggregate?.[0]||0)+result.scores[0],(fixture.aggregate?.[1]||0)+result.scores[1]];
-    }else{fixture.scores=[...result.scores];fixture.aggregate=[...result.scores];}
-    fixture.status='finished';fixture.winner=result.winner;
-    const roundFixtures=localTournament.fixtures.filter(item=>item.round===fixture.round&&!item.group);
-    if(!roundFixtures.every(item=>item.status==='finished'))return;
-    if(fixture.round==='Final'||fixture.round==='3.lük'){
-      const final=localTournament.fixtures.find(item=>item.round==='Final');
-      const third=localTournament.fixtures.find(item=>item.round==='3.lük');
-      if(!final||final.status!=='finished'||(third&&third.status!=='finished'))return;
-      localTournament.podium={champion:final.winner,runnerUp:final.winner===final.home?final.away:final.home,third:third?.winner??null};localTournament.stage='finished';return;
-    }
-    const winners=roundFixtures.map(item=>item.winner);
-    if(winners.length===2){
-      const losers=roundFixtures.map(item=>item.winner===item.home?item.away:item.home);
-      addKnockoutRound(winners,'Final');
-      if(localTournament.type==='worldCup'||localTournament.type==='knockout4') addKnockoutRound(losers,'3.lük');
-      localTournament.stage='finals';
-    }else{
-      addKnockoutRound(winners,nextRoundName(fixture.round,winners.length));localTournament.stage=winners.length===4?'semifinals':'knockout';
-    }
-  }
-
-  function simulateTournamentFixture(fixture) {
-    let scores=simulateScore();
-    if(fixture.group){advanceGenericTournament(fixture,{scores,winner:scores[0]>scores[1]?fixture.home:scores[1]>scores[0]?fixture.away:null});return;}
-    if(Number(fixture.legs)===2&&Number(fixture.leg||1)===2){
-      const aggregate=[(fixture.aggregate?.[0]||0)+scores[0],(fixture.aggregate?.[1]||0)+scores[1]];
-      if(aggregate[0]===aggregate[1])scores[0]+=1;
-    }else if(Number(fixture.legs)!==2&&scores[0]===scores[1])scores[0]+=1;
-    const winner=scores[0]>scores[1]?fixture.home:fixture.away;
-    advanceGenericTournament(fixture,{scores,winner});
-  }
-
-  function openNextTournamentMatch() {
-    if (!localTournament) return;
-    let guard=0;
-    while(guard++<80){
-      const next=localTournament.fixtures.find(f=>f.status==='pending');
-      if(!next){
-        if(localTournament.stage==='finished')renderTournamentResults();
-        else renderTournamentBracket();
-        return;
-      }
-      if(next.home!==0&&next.away!==0){simulateTournamentFixture(next);continue;}
-      next.status='live';
-      const reversed=Number(next.legs)===2&&Number(next.leg||1)===2;
-      const homeIndex=reversed?next.away:next.home,awayIndex=reversed?next.home:next.away;
-      const home=localTournament.teams[homeIndex],away=localTournament.teams[awayIndex];
-      setup.teams=[home,away];setup.side=0;setup.tournamentFixtureId=next.id;setup.tournamentLegReversed=reversed;
-      applySettingsToUi({durationMinutes:setup.tournamentOptions.durationMinutes,cards:true,extraTime:reversed||Number(next.legs)!==2,shootout:reversed||Number(next.legs)!==2,teamColors:[home.color,away.color]});
-      showBrief();return;
-    }
-  }
-
-  function onlineSeatName(seat) {
-    const player = online.lobby?.players?.[seat];
-    return player?.teamName || player?.name || `Oyuncu ${Number(seat) + 1}`;
-  }
-
-  function renderOnlineTournament() {
-    const tournament = online.tournament;
-    if (!tournament || !els.tournamentBracket) return;
-    const stageLabels = { semifinals:'YARI FİNALLER', finals:'FİNAL GECESİ', finished:'TURNUVA TAMAMLANDI' };
-    els.tournamentStageText.textContent = stageLabels[tournament.stage] || '4 KİŞİLİK KUPA';
-    els.tournamentBracket.innerHTML = (tournament.fixtures || []).map(fixture => {
-      const [home, away] = fixture.seats || [];
-      const live = fixture.status === 'live';
-      return `<article class="bracket-fixture ${escapeHtml(fixture.status || 'pending')}"><small>${escapeHtml(fixture.round || 'MAÇ')}</small><div><span>${escapeHtml(onlineSeatName(home))}</span><b>${Array.isArray(fixture.scores) ? fixture.scores.join('–') : '—'}</b><span>${escapeHtml(onlineSeatName(away))}</span></div><em>${live ? 'CANLI · AYNI ANDA' : fixture.status === 'finished' ? `${escapeHtml(onlineSeatName(fixture.winnerSeat))} kazandı` : 'BEKLİYOR'}</em></article>`;
-    }).join('');
-    els.tournamentLiveMessage.textContent = tournament.stage === 'semifinals'
-      ? 'İki yarı final aynı anda oynanıyor. Kendi eşleşmen açıldığında maç ekranına geçeceksin.'
-      : tournament.stage === 'finals'
-        ? 'Final ve üçüncülük maçı aynı anda oynanıyor.'
-        : 'Turnuva tamamlandı.';
-    els.tournamentNextButton.classList.add('hidden');
-    els.tournamentHomeButton.textContent = 'LOBİYE DÖN';
-    if (currentScreenName !== 'match' && tournament.stage !== 'finished') showScreen('tournament');
-  }
-
-  function renderOnlineTournamentResults(players = []) {
-    const tournament = online.tournament;
-    if (!tournament?.podium) return;
-    const label = seat => players?.[seat]?.teamName || players?.[seat]?.name || onlineSeatName(seat);
-    const podium = tournament.podium;
-    els.podiumStage.innerHTML = `<div class="podium second"><small>2.</small><b>${escapeHtml(label(podium.runnerUp))}</b></div><div class="podium first"><small>ŞAMPİYON</small><b>${escapeHtml(label(podium.champion))}</b><span>🏆</span></div><div class="podium third"><small>3.</small><b>${escapeHtml(label(podium.third))}</b></div>`;
-    const goals = Object.entries(tournament.stats?.goals || {}).sort((a,b)=>b[1]-a[1]);
-    const assists = Object.entries(tournament.stats?.assists || {}).sort((a,b)=>b[1]-a[1]);
-    const cards = Object.entries(tournament.stats?.cards || {}).sort((a,b)=>b[1]-a[1]);
-    els.tournamentStats.innerHTML = `<article><small>GOL KRALI</small><b>${escapeHtml(goals[0]?.[0] || '—')}</b><span>${goals[0]?.[1] || 0} gol</span></article><article><small>ASİST KRALI</small><b>${escapeHtml(assists[0]?.[0] || '—')}</b><span>${assists[0]?.[1] || 0} asist</span></article><article><small>KART İSTATİSTİĞİ</small><b>${escapeHtml(cards[0]?.[0] || '—')}</b><span>${cards[0]?.[1] || 0} kart</span></article><article><small>TAMAMLANAN MAÇ</small><b>${(tournament.fixtures || []).filter(f=>f.status==='finished').length}</b><span>4 maçlık kupa</span></article>`;
-    showScreen('tournament-results');
-  }
-
-  function renderTournamentResults() {
-    if (!localTournament?.podium) return;
-    const p=localTournament.podium;
-    els.podiumStage.innerHTML=`<div class="podium second"><small>2.</small><b>${escapeHtml(tournamentTeamLabel(p.runnerUp))}</b></div><div class="podium first"><small>ŞAMPİYON</small><b>${escapeHtml(tournamentTeamLabel(p.champion))}</b><span>🏆</span></div>${p.third!==null&&p.third!==undefined?`<div class="podium third"><small>3.</small><b>${escapeHtml(tournamentTeamLabel(p.third))}</b></div>`:''}`;
-    const scorer=Object.entries(localTournament.stats?.goals||{}).sort((a,b)=>b[1]-a[1])[0];
-    const assister=Object.entries(localTournament.stats?.assists||{}).sort((a,b)=>b[1]-a[1])[0];
-    const carded=Object.entries(localTournament.stats?.cards||{}).sort((a,b)=>b[1]-a[1])[0];
-    els.tournamentStats.innerHTML=`<article><small>GOL KRALI</small><b>${scorer?escapeHtml(scorer[0]):'—'}</b><span>${scorer?scorer[1]:0} gol</span></article><article><small>ASİST KRALI</small><b>${assister?escapeHtml(assister[0]):'—'}</b><span>${assister?assister[1]:0} asist</span></article><article><small>KART İSTATİSTİĞİ</small><b>${carded?escapeHtml(carded[0]):'—'}</b><span>${carded?carded[1]:0} kart</span></article><article><small>TOPLAM MAÇ</small><b>${(localTournament.fixtures||[]).filter(f=>f.status==='finished').length}</b><span>tamamlandı</span></article>`;
-    showScreen('tournament-results');
+  function isDuelParticipant() {
+    if (!duel || setup.mode !== 'friend') return false;
+    return Array.isArray(duel.sides) ? duel.sides.includes(online.side) : (online.side === 0 || online.side === 1);
   }
 
   function showScreen(name, options = {}) {
     const target = document.querySelector(`#screen-${name}`) ? name : 'home';
+    const previous = currentScreenName;
+    // Düello grace: katılımcı düello ekranından ayrılırsa sunucuya bildir (10 sn kuralı)
+    if (previous === 'duel' && target !== 'duel' && setup.mode === 'friend' && duel && duel.status !== 'pending' && duel.phase !== 'done' && isDuelParticipant()) {
+      online.socket?.emit('duel:stepOut');
+    }
+    if (target === 'duel' && previous !== 'duel' && setup.mode === 'friend' && duel?.paused && duel.pausedBy === online.side) {
+      online.socket?.emit('duel:stepBack');
+    }
+    if (previous === 'results' && target !== 'results') Audio?.stop('match-end');
     els.screens.forEach(screen => screen.classList.toggle('active', screen.id === `screen-${target}`));
+    document.body.classList.toggle('match-active', target === 'match');
     currentScreenName = target;
-    UIShell?.activateScreen?.(target);
     Audio?.setAmbience(target === 'match' ? 'ambience.stadium' : 'ambience.menu');
     if (target !== 'match') {
       els.pauseOverlay?.classList.add('hidden');
@@ -474,6 +284,9 @@
       els.eventsOverlay?.classList.add('hidden');
       els.rulesOverlay?.classList.add('hidden');
       els.squadsOverlay?.classList.add('hidden');
+      if (target !== 'duel') { $('#coinOverlay')?.classList.add('hidden'); clearTimeout(coinFlipTimer); }
+      $('#playerCardOverlay')?.classList.add('hidden');
+      clearTimeout(playerCardTimer);
     }
     if (!options.preserveScroll) window.scrollTo({ top: 0, behavior: 'auto' });
     if (navigationReady && !options.fromPop) {
@@ -509,54 +322,117 @@
     return Math.floor(Math.max(0, ms || 0) / 10) % 10;
   }
 
-  function currentAudioSettings() {
-    const source = AppSettings?.get?.() || {};
-    return { menuMusic: source.menuMusic !== false, stadiumAmbience: source.stadiumAmbience !== false, eventSounds: source.eventSounds !== false };
+  const PREFS_KEY = '90-plus-prefs-v5';
+  let prefs = { music: true, ambience: true, sfx: true, vibration: true, eventDuration: 'long' };
+
+  function loadPrefs() {
+    try {
+      const stored = JSON.parse(localStorage.getItem(PREFS_KEY) || '{}');
+      prefs = {
+        music: stored.music !== false,
+        ambience: stored.ambience !== false,
+        sfx: stored.sfx !== false,
+        vibration: stored.vibration !== false,
+        eventDuration: ['normal','long','extra'].includes(stored.eventDuration) ? stored.eventDuration : 'long'
+      };
+    } catch (_) {}
+    applyPrefsToUi();
+    Audio?.configure(prefs);
+  }
+
+  function savePrefs() {
+    try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); } catch (_) {}
+    Audio?.configure(prefs);
+  }
+
+  function applyPrefsToUi() {
+    if (els.prefMusicToggle) els.prefMusicToggle.checked = prefs.music;
+    if (els.prefAmbienceToggle) els.prefAmbienceToggle.checked = prefs.ambience;
+    if (els.prefSfxToggle) els.prefSfxToggle.checked = prefs.sfx;
+    if (els.prefVibrationToggle) els.prefVibrationToggle.checked = prefs.vibration;
+    if (els.prefEventDurationSelect) els.prefEventDurationSelect.value = prefs.eventDuration;
   }
 
   function ensureAudio() {
-    Audio?.configure(currentAudioSettings());
+    Audio?.configure(prefs);
     Audio?.unlock();
     Audio?.setMuted(muted);
   }
 
-  function soundGain() { return 1; }
-
   function beep(kind) {
     if (muted) return;
     ensureAudio();
-    const map = {
-      click: 'ui.select',
-      whistle: 'whistle.foul',
-      goal: 'crowd.goal',
-      card: 'cards.yellow',
-      save: 'ball.save'
-    };
-    Audio?.play(map[kind] || 'ui.select', { volume: soundGain(), replace: kind === 'click', channel: kind === 'click' ? 'ui' : 'event' });
+    const map = { click: 'ui.select', whistle: 'whistle.foul', goal: 'crowd.goal', card: 'cards.yellow', save: 'ball.save' };
+    Audio?.play(map[kind] || 'ui.select', { channel: kind === 'click' ? 'ui' : 'event' });
+  }
+
+  function audioChannelFor(key) {
+    const category = String(key).split('.')[0];
+    if (category === 'crowd') return 'crowd';
+    if (category === 'whistle' || category === 'violation') return 'whistle';
+    if (category === 'ui' || category === 'timer') return 'ui';
+    return 'event';
   }
 
   function playAudioCue(cue, options = {}) {
     if (muted || !Audio) return;
     ensureAudio();
-    if (Array.isArray(cue)) Audio.playFirst(cue, { ...options, replace: true, channel: options.channel || 'event' });
-    else if (cue) Audio.play(cue, { ...options, replace: true, channel: options.channel || 'event' });
+    const keys = Array.isArray(cue) ? cue : cue ? [cue] : [];
+    keys.forEach((key, index) => {
+      const target = { channel: audioChannelFor(key), ...options };
+      if (index === 0) Audio.play(key, target);
+      else setTimeout(() => Audio.play(key, target), index * Number(options.stagger || 140));
+    });
+  }
+
+  // Katmanlı olay sahneleri (ses-sistemi.md): top + düdük + tribün ayrı
+  // kanallarda üst üste binebilir; aynı kanalda yeni ses eskisini keser.
+  // Her giriş: [sesKey, gecikmeMs, göreceliSes]
+  const EVENT_SOUND_SCENES = {
+    goal:        [['ball.shot', 0], ['ball.net', 140], ['crowd.goal', 260], ['crowd.goalHorn', 900, 0.5]],
+    player:      [['ball.playerSelect', 0]],
+    foul:        [['ball.tackle', 0], ['whistle.foul', 160], ['crowd.protest', 420, 0.55]],
+    corner:      [['ball.corner', 0], ['crowd.applause', 240, 0.5]],
+    throwin:     [['ball.throwIn', 0]],
+    turnover:    [['ball.turnover', 0], ['crowd.disappointment', 260, 0.4]],
+    shot:        [['ball.shot', 0], ['crowd.gasp', 160, 0.6]],
+    save:        [['ball.shot', 0], ['ball.save', 180], ['crowd.bigCheer', 340]],
+    post:        [['ball.shot', 0], ['ball.post', 180], ['crowd.disappointment', 380]],
+    wide:        [['ball.shot', 0], ['crowd.disappointment', 280]],
+    indirect:    [['whistle.freeKick', 0]],
+    yellow:      [['whistle.foul', 0, 0.7], ['cards.yellow', 180], ['crowd.boo', 420, 0.45]],
+    secondyellow:[['cards.secondYellow', 0], ['crowd.boo', 320, 0.65]],
+    timeout:     [['timer.timeout', 0]],
+    penalty:     [['whistle.penalty', 0], ['crowd.gasp', 220, 0.7]],
+    freekick:    [['whistle.freeKick', 0], ['crowd.tenseHush', 260, 0.4]],
+    penaltyGoal: [['setPiece.penaltyGoal', 0], ['crowd.goal', 200]],
+    penaltySave: [['setPiece.penaltySave', 0], ['crowd.bigCheer', 260]],
+    penaltyMiss: [['setPiece.penaltyMiss', 0], ['crowd.disappointment', 240]]
+  };
+
+  function playEventScene(scene) {
+    scene.forEach(([key, delay, volume]) => {
+      const fire = () => Audio.play(key, { channel: audioChannelFor(key), volume: volume ?? 1 });
+      if (delay) setTimeout(fire, delay); else fire();
+    });
   }
 
   function playMatchEventAudio(type, detail = '') {
     const normalized = String(type || '').toLowerCase();
-    const prefs = AppSettings?.get?.() || {};
-    if (prefs.vibration !== false && navigator.vibrate && ['goal','yellow','red','secondyellow','timeout','post'].includes(normalized)) {
+    const text = String(detail || '').toLowerCase();
+    if (prefs.vibration && navigator.vibrate && ['goal','yellow','red','secondyellow','timeout','post'].includes(normalized)) {
       navigator.vibrate(normalized === 'goal' ? [70,40,110] : normalized === 'red' ? [120,50,120] : 70);
     }
-    const cueMap = {
-      goal:['crowd.goal','ball.net'], pass:['ball.pass1','ball.pass2','ball.pass3'], player:['ball.playerSelect'], foul:['whistle.foul','ball.tackle'],
-      corner:['ball.corner'], throwin:['ball.throwIn'], turnover:['ball.turnover'], shot:['ball.shot'], save:['ball.save'], post:['ball.post'], wide:['crowd.disappointment','ball.goalKick'],
-      indirect:['whistle.freeKick'], yellow:['cards.yellow'], secondyellow:['cards.secondYellow'], red:[String(detail).toLowerCase().includes('ihlal')?'violation.red':'cards.red'],
-      timeout:['timer.timeout'], penalty:['whistle.penalty'], freekick:['whistle.freeKick']
-    };
-    if (normalized === 'goal') Audio?.duckAmbience(.08, 4200);
-    const cues = cueMap[normalized];
-    if (cues) playAudioCue(cues, { channel: normalized === 'pass' || normalized === 'player' ? 'ball' : 'event' });
+    if (muted || !Audio) return;
+    ensureAudio();
+    if (normalized === 'goal') Audio.duckAmbience(0.05, 5200);
+    if (normalized === 'pass') { Audio.playRandom(['ball.pass1','ball.pass2','ball.pass3'], { channel: 'event', volume: 0.7 }); return; }
+    if (normalized === 'red') {
+      playEventScene([[text.includes('ihlal') ? 'violation.red' : 'cards.red', 0], ['crowd.boo', 300, 0.7]]);
+      return;
+    }
+    const scene = EVENT_SOUND_SCENES[normalized];
+    if (scene) playEventScene(scene);
   }
 
   function applyTheme(theme) {
@@ -590,21 +466,96 @@
     updateCriteriaSummary();
   }
 
-  function positionScore(slot, player) { return SquadBuilder.positionScore(slot, player); }
-
-  function assignPlayersToSlots(selectedPlayers) { return SquadBuilder.assignPlayersToSlots(selectedPlayers, SLOTS); }
-
-  function buildRandomLineup(source = PLAYERS) { return SquadBuilder.randomLineup(source, SLOTS); }
-
-  function positionGroupMatch(player, group) { return SquadBuilder.positionGroupMatch(player, group); }
-
-  function ratingRangeMatch(player, range) { return SquadBuilder.ratingRangeMatch(player, range); }
-
-  function criteriaFilteredPlayers(criteria = setup.criteria, periodsInput = setup.selectedPeriods) {
-    return SquadBuilder.filterPlayers(PLAYERS, criteria, periodsInput, PERIODS);
+  function positionScore(slot, player) {
+    if (slot === player.position) return 10;
+    const groups = {
+      GK: ['GK'],
+      LB: ['LB', 'RB', 'CB'],
+      RB: ['RB', 'LB', 'CB'],
+      CB: ['CB', 'LB', 'RB', 'DM'],
+      DM: ['DM', 'CM', 'CB'],
+      CM: ['CM', 'DM', 'AM'],
+      AM: ['AM', 'CM', 'LW', 'RW'],
+      LW: ['LW', 'RW', 'AM', 'ST'],
+      RW: ['RW', 'LW', 'AM', 'ST'],
+      ST: ['ST', 'LW', 'RW', 'AM']
+    };
+    const index = (groups[slot] || []).indexOf(player.position);
+    return index === -1 ? 0 : Math.max(1, 7 - index * 2);
   }
 
-  function buildCriteriaPool() { return SquadBuilder.criteriaPool(PLAYERS, setup.criteria, setup.selectedPeriods, PERIODS); }
+  function assignPlayersToSlots(selectedPlayers) {
+    const remaining = [...selectedPlayers];
+    const lineup = [];
+    SLOTS.forEach(slot => {
+      remaining.sort((a, b) => {
+        const scoreDiff = positionScore(slot, b) - positionScore(slot, a);
+        return scoreDiff || b.rating - a.rating;
+      });
+      let chosenIndex = remaining.findIndex(player => positionScore(slot, player) > 0);
+      if (chosenIndex < 0) chosenIndex = 0;
+      const [chosen] = remaining.splice(chosenIndex, 1);
+      if (chosen) lineup.push({ ...chosen, slot });
+    });
+    return lineup;
+  }
+
+  function buildRandomLineup(source = PLAYERS) {
+    const remaining = shuffle(uniqueById(source));
+    const lineup = [];
+    SLOTS.forEach(slot => {
+      const ranked = remaining
+        .map((player, index) => ({ player, index, score: positionScore(slot, player) }))
+        .filter(entry => entry.score > 0)
+        .sort((a, b) => b.score - a.score || Math.random() - .5);
+      const top = ranked.slice(0, Math.min(8, ranked.length));
+      const chosenEntry = randomItem(top.length ? top : remaining.map((player, index) => ({ player, index })));
+      if (!chosenEntry) return;
+      lineup.push({ ...chosenEntry.player, slot });
+      remaining.splice(chosenEntry.index, 1);
+    });
+    return lineup;
+  }
+
+  function positionGroupMatch(player, group) {
+    if (!group) return true;
+    if (group === 'GK') return player.position === 'GK';
+    if (group === 'DEF') return ['LB','RB','CB'].includes(player.position);
+    if (group === 'MID') return ['DM','CM','AM'].includes(player.position);
+    if (group === 'ATT') return ['LW','RW','ST'].includes(player.position);
+    return true;
+  }
+
+  function ratingRangeMatch(player, range) {
+    if (!range) return true;
+    const [min,max] = range.split('-').map(Number);
+    return Number(player.rating) >= min && Number(player.rating) <= max;
+  }
+
+  function criteriaFilteredPlayers(criteria = setup.criteria, periodsInput = setup.selectedPeriods) {
+    const periods = periodsInput.map(id => PERIODS.find(period => period.id === id)).filter(Boolean);
+    if (!periods.length) return [];
+    return PLAYERS.filter(player => {
+      const periodMatch = periods.some(period => player.activeStart <= period.end && player.activeEnd >= period.start);
+      const nationalityMatch = !criteria.nationality || player.nationality === criteria.nationality;
+      const leagueMatch = !criteria.league || (player.leagues || []).includes(criteria.league);
+      return periodMatch && nationalityMatch && leagueMatch && positionGroupMatch(player, criteria.position) && ratingRangeMatch(player, criteria.rating);
+    });
+  }
+
+  function buildCriteriaPool() {
+    const filtered = criteriaFilteredPlayers();
+    const sorted = [...filtered].sort((a, b) => a.rating - b.rating);
+    if (sorted.length <= 27) return sorted;
+    const starCandidates = sorted.filter(player => player.rating >= 86);
+    const guaranteed = shuffle(starCandidates.slice(-Math.min(30, starCandidates.length))).slice(0, 3);
+    const guaranteedIds = new Set(guaranteed.map(player => player.id));
+    const rest = sorted.filter(player => !guaranteedIds.has(player.id));
+    const split = Math.ceil(rest.length / 2);
+    const weak = shuffle(rest.slice(0, split)).slice(0, 12);
+    const strong = shuffle(rest.slice(split)).slice(0, 12);
+    return uniqueById([...weak, ...strong, ...guaranteed]).slice(0, 27);
+  }
 
   function updateCriteriaSummary() {
     if (!els.criteriaSummary) return;
@@ -633,27 +584,38 @@
     els.manualBuildButton.disabled = setup.manualSelected.size !== 11;
   }
 
-  function renderTeamColorPalette() {
-    if (!els.teamColorPalette) return;
-    const side = setup.side;
-    const used = new Set(setup.teams.map((team,index)=>index === side ? null : team?.color).filter(Boolean));
-    if (setup.mode === 'friend') {
-      (online.lobby?.players || []).forEach(player => {
-        if (player?.side !== online.side && player?.teamColor) used.add(player.teamColor);
-      });
+  function opponentColor(side) {
+    const other = side === 0 ? 1 : 0;
+    if (setup.mode === 'friend') return online.lobby?.players?.[other]?.teamColor || null;
+    return setup.teamColors[other] || setup.teams[other]?.color || null;
+  }
+
+  function ensureTeamColor(side) {
+    const taken = opponentColor(side);
+    if (!setup.teamColors[side] || setup.teamColors[side] === taken) {
+      const preferred = side === 0 ? '#d44735' : '#2878c8';
+      setup.teamColors[side] = preferred !== taken ? preferred : (TEAM_COLORS.find(color => color.value !== taken)?.value || preferred);
     }
-    const selected = setup.teams[side]?.color || setup.selectedColors[side] || TEAM_COLORS[side]?.value;
-    els.teamColorPalette.innerHTML = TEAM_COLORS.map(color => {
-      const disabled = used.has(color.value);
-      return `<button class="team-color-swatch${selected===color.value?' selected':''}${disabled?' unavailable':''}" type="button" data-team-color="${color.value}" style="--swatch:${color.value}" aria-label="${escapeHtml(color.label)}" aria-pressed="${selected===color.value}" ${disabled?'disabled':''}><i style="--swatch:${color.value}"></i><span>${escapeHtml(color.label)}</span></button>`;
+    return setup.teamColors[side];
+  }
+
+  function renderTeamColorPicker() {
+    if (!els.teamColorPicker) return;
+    const side = setup.side;
+    const taken = opponentColor(side);
+    const current = ensureTeamColor(side);
+    els.teamColorPicker.innerHTML = TEAM_COLORS.map(color => {
+      const isTaken = color.value === taken;
+      const isActive = color.value === current;
+      return `<button type="button" class="color-swatch${isActive ? ' active' : ''}${isTaken ? ' taken' : ''}" data-color="${color.value}" style="--swatch:${color.value}" ${isTaken ? 'disabled' : ''} aria-label="${color.label}${isTaken ? ' — rakip seçti' : ''}"><i></i><span>${color.label}</span></button>`;
     }).join('');
-    if (els.teamColorHint) els.teamColorHint.textContent = used.size ? 'Diğer takımın rengi pasif gösterilir.' : 'Renk skor tabelasında ve maç akışında görünür.';
   }
 
   function renderSetupState() {
     const side = setup.side;
     els.duelBuilderTab?.classList.remove('hidden');
-    if (setup.mode === 'coop') els.setupTeamLabel.textContent = setup.competition === 'fourCup' ? `OYUNCU ${side + 1} · KUPA KADROSU` : `TAKIM ${side + 1}`;
+    renderTeamColorPicker();
+    if (setup.mode === 'coop') els.setupTeamLabel.textContent = `TAKIM ${side + 1}`;
     else if (setup.mode === 'friend') els.setupTeamLabel.textContent = `UZAKTAN OYUNCU · ${side === 0 ? 'İÇ SAHA' : 'DEPLASMAN'}`;
     else els.setupTeamLabel.textContent = 'SENİN TAKIMIN';
 
@@ -661,7 +623,6 @@
       ? `${online.name || (side === 0 ? 'İç Saha' : 'Deplasman')} XI`
       : (side === 0 ? '90+ XI' : 'İkinci Takım');
     els.teamNameInput.value = setup.teams[side]?.name || fallbackName;
-    renderTeamColorPalette();
     const built = setup.teams[side];
     els.builtStatus.textContent = built ? `${built.lineup.length} oyuncu hazır` : 'Henüz kurulmadı';
     els.builtStatus.classList.toggle('done', Boolean(built));
@@ -669,17 +630,14 @@
     if (built) {
       els.squadPreview.innerHTML = `<h3>${escapeHtml(built.name)}</h3><ul class="lineup-list">${built.lineup.map(player => `<li><span><b>${player.slot}</b> ${escapeHtml(player.name)}</span><small>${player.rating}</small></li>`).join('')}</ul>`;
     }
-    if (setup.mode === 'coop' && setup.competition === 'fourCup' && built && setup.side < 3) {
-      els.nextSetupButton.textContent = `OYUNCU ${setup.side + 2} KADROSU →`;
-      els.nextSetupButton.classList.remove('hidden');
-    } else if (setup.mode === 'coop' && setup.side === 0 && built) {
+    if (setup.mode === 'coop' && setup.side === 0 && built) {
       els.nextSetupButton.textContent = 'TAKIM 2’Yİ KUR →';
       els.nextSetupButton.classList.remove('hidden');
     } else if (setup.mode === 'friend' && built) {
       els.nextSetupButton.textContent = 'TAKIMI ODAYA GÖNDER →';
       els.nextSetupButton.classList.remove('hidden');
-    } else if (built && (setup.mode === 'ai' || setup.side === 1 || (setup.mode === 'coop' && setup.competition === 'fourCup' && setup.side === 3))) {
-      els.nextSetupButton.textContent = ['classicUcl','worldCup','fourCup'].includes(setup.competition) ? 'TURNUVAYI BAŞLAT →' : 'AYARLARA GEÇ →';
+    } else if (built && (setup.mode === 'ai' || setup.side === 1)) {
+      els.nextSetupButton.textContent = 'AYARLARA GEÇ →';
       els.nextSetupButton.classList.remove('hidden');
     } else {
       els.nextSetupButton.classList.add('hidden');
@@ -693,20 +651,28 @@
       : (side === 0 ? '90+ XI' : 'İkinci Takım');
     setup.teams[side] = {
       name: els.teamNameInput.value.trim() || defaultName,
-      color: setup.selectedColors[side] || TEAM_COLORS[side]?.value,
+      color: ensureTeamColor(side),
       lineup: lineup.map(player => ({ ...player, yellowCards: 0, red: false, injured: false }))
     };
     if (setup.mode === 'ai' && side === 0 && !setup.teams[1]) {
+      const aiColor = TEAM_COLORS.find(color => color.value !== setup.teamColors[0])?.value || '#2878c8';
+      setup.teamColors[1] = aiColor;
       setup.teams[1] = {
         name: 'Retro Makine',
-        color: TEAM_COLORS.find(color => color.value !== setup.selectedColors[0])?.value || '#2878c8',
+        color: aiColor,
         lineup: buildRandomLineup().map(player => ({ ...player, yellowCards: 0, red: false, injured: false }))
       };
     }
     renderSetupState();
   }
 
-  function candidateSetForSlot(slot, pool, usedIds) { return SquadBuilder.candidateSet(slot, pool, usedIds); }
+  function candidateSetForSlot(slot, pool, usedIds) {
+    const remaining = pool.filter(player => !usedIds.has(player.id));
+    const compatible = shuffle(remaining.filter(player => positionScore(slot, player) > 0))
+      .sort((a, b) => positionScore(slot, b) - positionScore(slot, a) || b.rating - a.rating);
+    const fallback = shuffle(remaining).sort((a, b) => b.rating - a.rating);
+    return uniqueById([...compatible, ...fallback]).slice(0, Math.min(3, remaining.length));
+  }
 
   function startDraft(pool) {
     const strictPool = uniqueById(pool || []);
@@ -746,23 +712,28 @@
     draft.lastPredictedIndex = -1;
     els.draftProgress.textContent = `${draft.slotIndex + 1} / 11 · ${slot}`;
     els.draftCandidates.innerHTML = draft.candidates.map((player, index) => `<article class="candidate-card" data-candidate-index="${index}"><span class="candidate-index">${index + 1}</span><strong>${escapeHtml(player.name)}</strong><small>${escapeHtml(player.position)} · ${escapeHtml(player.nationality)}</small><b>${player.rating}</b></article>`).join('');
-    const groups = Array.from({ length: 10 }, (_, digit) => digit % draft.candidates.length);
-    els.draftDigitMap.innerHTML = groups.map((candidateIndex, digit) => `<span data-map-candidate="${candidateIndex}" data-map-digit="${digit}">${digit}</span>`).join('');
-    els.draftRuleText.textContent = draft.candidates.length === 3
-      ? 'Işık yaklaşık 0,65 saniyede bir ilerler. 0-3-6-9 birinci, 1-4-7 ikinci, 2-5-8 üçüncü oyuncuyu seçer.'
-      : draft.candidates.length === 2
-        ? 'Çift rakamlar birinci, tek rakamlar ikinci oyuncuyu seçer.'
-        : 'Kronometrenin son rakamı listedeki tek adayı seçer.';
+    draft.digitMap = buildDigitMap(draft.candidates.length); // her slotta karışık rakam→aday eşleşmesi
+    els.draftDigitMap.innerHTML = draft.digitMap.map((candidateIndex, digit) => `<span data-map-candidate="${candidateIndex}" data-map-digit="${digit}">${digit}<i>${candidateIndex + 1}</i></span>`).join('');
+    els.draftRuleText.textContent = draft.candidates.length > 1
+      ? 'Işık rakam haritasına göre KARIŞIK gezer; haritadaki küçük numara hangi adaya denk geldiğini gösterir. 15 saniye içinde durdurmazsan otomatik seçilir.'
+      : 'Kronometrenin son rakamı listedeki tek adayı seçer. 15 saniyede otomatik seçilir.';
     els.draftWatchDisplay.textContent = formatStopwatch(0);
     els.draftStopButton.disabled = false;
     updateDraftPrediction(0);
   }
 
+  function draftIndexForDigit(digit) {
+    const count = (draft?.candidates || []).length || 1;
+    const map = Array.isArray(draft?.digitMap) && draft.digitMap.length === 10 ? draft.digitMap : null;
+    const index = map ? map[digit] : digit % count;
+    return Math.min(count - 1, Math.max(0, Number(index) || 0));
+  }
+
   function updateDraftPrediction(digit) {
     if (!draft?.candidates?.length) return;
-    const index = digit % draft.candidates.length;
-    if (draft.lastPredictedIndex === index) return;
-    draft.lastPredictedIndex = index;
+    const index = draftIndexForDigit(digit);
+    if (draft.lastPredictedIndex === digit) return;
+    draft.lastPredictedIndex = digit;
     els.draftCandidates.querySelectorAll('.candidate-card').forEach((card, cardIndex) => card.classList.toggle('predicted', cardIndex === index));
     els.draftDigitMap.querySelectorAll('[data-map-digit]').forEach(item => item.classList.toggle('active', Number(item.dataset.mapDigit) === digit));
   }
@@ -776,7 +747,13 @@
         draft.elapsedMs += dt;
         draft.lastFrame = now;
         els.draftWatchDisplay.textContent = formatStopwatch(draft.elapsedMs);
-        updateDraftPrediction(Math.floor(draft.elapsedMs / 650) % 10);
+        const left = Math.max(0, Math.ceil((PICK_DEADLINE_MS - draft.elapsedMs) / 1000));
+        els.draftProgress.textContent = `${draft.slotIndex + 1} / 11 · ${SLOTS[draft.slotIndex]} · ${left} SN`;
+        updateDraftPrediction(Math.floor(draft.elapsedMs / DUEL_STEP_MS) % 10);
+        if (draft.elapsedMs >= PICK_DEADLINE_MS) {
+          showToast('Süre doldu — aday otomatik seçildi.');
+          stopDraft();
+        }
       } else draft.lastFrame = now;
       draftRaf = requestAnimationFrame(loop);
     };
@@ -788,8 +765,8 @@
     draft.running = false;
     els.draftStopButton.disabled = true;
     playAudioCue('timer.stop', { replace: true, channel: 'timer' });
-    const digit = Math.floor(draft.elapsedMs / 650) % 10;
-    const chosenIndex = digit % draft.candidates.length;
+    const digit = Math.floor(draft.elapsedMs / DUEL_STEP_MS) % 10;
+    const chosenIndex = draftIndexForDigit(digit);
     const chosen = draft.candidates[chosenIndex];
     const slot = SLOTS[draft.slotIndex];
     const card = $(`[data-candidate-index="${chosenIndex}"]`);
@@ -804,11 +781,12 @@
 
   function settingsFromUi() {
     return {
-      durationMinutes: Number(els.durationRange.value), cards: els.cardsToggle.checked, injury: els.injuryToggle.checked,
-      extraTime: els.extraToggle.checked, shootout: els.shootoutToggle.checked,
-      vibration: (AppSettings?.get?.().vibration) !== false,
-      eventDuration: AppSettings?.get?.().eventDuration || 'long',
-      teamColors: [...setup.selectedColors], competition: setup.competition
+      durationMinutes: Number(els.durationRange.value),
+      cards: els.cardsToggle.checked,
+      injury: els.injuryToggle.checked,
+      extraTime: els.extraToggle.checked,
+      shootout: els.shootoutToggle.checked,
+      teamColors: [setup.teamColors?.[0] || '#d44735', setup.teamColors?.[1] || '#2878c8']
     };
   }
 
@@ -816,48 +794,23 @@
     els.durationRange.value = settings.durationMinutes ?? 5; els.durationValue.textContent = `${els.durationRange.value} dk`;
     els.cardsToggle.checked = settings.cards !== false; els.injuryToggle.checked = Boolean(settings.injury);
     els.extraToggle.checked = settings.extraTime !== false; els.shootoutToggle.checked = settings.shootout !== false;
-    if (Array.isArray(settings.teamColors)) setup.selectedColors = [settings.teamColors[0] || setup.selectedColors[0], settings.teamColors[1] || setup.selectedColors[1]];
-    Audio?.configure(currentAudioSettings());
   }
 
   function saveSettings() {
     try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settingsFromUi())); } catch (_) {}
   }
 
-  function syncGlobalSettingsUi() {
-    const prefs = AppSettings?.get?.() || {};
-    if (els.globalMenuMusicToggle) els.globalMenuMusicToggle.checked = prefs.menuMusic !== false;
-    if (els.globalStadiumToggle) els.globalStadiumToggle.checked = prefs.stadiumAmbience !== false;
-    if (els.globalEventSoundsToggle) els.globalEventSoundsToggle.checked = prefs.eventSounds !== false;
-    if (els.globalVibrationToggle) els.globalVibrationToggle.checked = prefs.vibration !== false;
-    if (els.globalReducedMotionToggle) els.globalReducedMotionToggle.checked = Boolean(prefs.reducedMotion);
-    if (els.globalEventDurationSelect) els.globalEventDurationSelect.value = prefs.eventDuration || 'long';
-  }
-
-  function saveGlobalSettings() {
-    const next = AppSettings?.set?.({
-      menuMusic: els.globalMenuMusicToggle?.checked !== false, stadiumAmbience: els.globalStadiumToggle?.checked !== false,
-      eventSounds: els.globalEventSoundsToggle?.checked !== false, vibration: els.globalVibrationToggle?.checked !== false,
-      reducedMotion: Boolean(els.globalReducedMotionToggle?.checked), eventDuration: els.globalEventDurationSelect?.value || 'long'
-    }) || {};
-    document.documentElement.classList.toggle('reduced-motion', Boolean(next.reducedMotion));
-    Audio?.configure(currentAudioSettings());
-    Audio?.setAmbience(currentScreenName === 'match' ? 'ambience.stadium' : 'ambience.menu');
-    showEventOverlay('AYARLAR KAYDEDİLDİ', 'Ses sistemi sadeleştirildi: aynı anda tek olay efekti çalır.', 'green', '90+', 1600);
-  }
-
   function initializeSettings() {
     let stored = {};
     try { stored = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); } catch (_) {}
-    applySettingsToUi(stored); syncGlobalSettingsUi();
-    document.documentElement.classList.toggle('reduced-motion', Boolean(AppSettings?.get?.().reducedMotion));
+    applySettingsToUi(stored);
   }
 
   function makeRuntimeTeam(team, side = 0, settings = settingsFromUi()) {
     return {
       name: team.name,
       color: team.color || settings.teamColors?.[side] || (side === 0 ? '#d44735' : '#2878c8'),
-      lineup: team.lineup.map(player => ({ ...player, yellowCards: 0, red: false, injured: false, goals: 0, assists: 0, sentOffReason: null })),
+      lineup: team.lineup.map(player => ({ ...player, yellowCards: 0, red: false, injured: false, goals: 0, sentOffReason: null })),
       corners: 0,
       timeouts: 0
     };
@@ -889,18 +842,40 @@
 
   function renderOnlineReadyState() {
     if (setup.mode !== 'friend' || !online.lobby) return;
-    const lobby=online.lobby,required=Number(lobby.maxPlayers||2);
-    const ready=Array.isArray(lobby.startReady)?lobby.startReady.slice(0,required):Array(required).fill(false);
-    const meReady=Boolean(ready[online.side]),readyCount=ready.filter(Boolean).length,allReady=readyCount===required;
-    const deadline=Number(lobby.startDeadline)||0;
-    online.startReady=ready;online.startDeadline=deadline||null;
-    if(allReady){els.onlineReadyMessage.textContent=`${required} oyuncu da hazır. ${required===4?'Eşleşmeler':'Saha'} açılıyor…`;els.briefStartButton.disabled=true;els.briefStartButton.textContent='HERKES HAZIR ✓';}
-    else if(meReady){els.onlineReadyMessage.textContent=`Hazırlığın bildirildi. ${required-readyCount} oyuncu bekleniyor; süre dolarsa organizasyon otomatik başlar.`;els.briefStartButton.disabled=true;els.briefStartButton.textContent='HAZIRLIK BİLDİRİLDİ ✓';}
-    else if(readyCount>0){els.onlineReadyMessage.textContent=`${readyCount}/${required} oyuncu hazır. Sen de 30 saniye içinde onaylayabilirsin.`;els.briefStartButton.disabled=false;els.briefStartButton.textContent='BEN DE HAZIRIM';}
-    else{els.onlineReadyMessage.textContent=`Hazır olduğunda bildir. İlk onaydan sonra diğer oyunculara 30 saniye verilir.`;els.briefStartButton.disabled=false;els.briefStartButton.textContent='MAÇA HAZIRIM';}
+    const lobby = online.lobby;
+    const ready = Array.isArray(lobby.startReady) ? lobby.startReady : [false, false];
+    const meReady = Boolean(ready[online.side]);
+    const otherSide = online.side === 0 ? 1 : 0;
+    const otherName = lobby.players?.[otherSide]?.name || 'Diğer oyuncu';
+    const myName = lobby.players?.[online.side]?.name || 'Sen';
+    const deadline = Number(lobby.startDeadline) || 0;
+    online.startReady = ready;
+    online.startDeadline = deadline || null;
+    if (ready[0] && ready[1]) {
+      els.onlineReadyMessage.textContent = 'İki oyuncu da hazır. Başlama atışı ekranı açılıyor…';
+      els.briefStartButton.disabled = true;
+      els.briefStartButton.textContent = 'İKİNİZ DE HAZIRSINIZ';
+    } else if (meReady) {
+      els.onlineReadyMessage.textContent = `${otherName} isimli oyuncu bekleniyor. 30 saniye dolarsa maç otomatik hazırlanır.`;
+      els.briefStartButton.disabled = true;
+      els.briefStartButton.textContent = 'HAZIRLIK BİLDİRİLDİ ✓';
+    } else if (ready[otherSide]) {
+      els.onlineReadyMessage.textContent = `${otherName} hazır. Sen de 30 saniye içinde onaylayabilirsin; süre dolarsa saha otomatik açılır.`;
+      els.briefStartButton.disabled = false;
+      els.briefStartButton.textContent = 'BEN DE HAZIRIM';
+    } else {
+      els.onlineReadyMessage.textContent = `${myName}, hazır olduğunda bildir. İlk onaydan sonra diğer oyuncuya 30 saniye verilir.`;
+      els.briefStartButton.disabled = false;
+      els.briefStartButton.textContent = 'MAÇA HAZIRIM';
+    }
     clearInterval(readyTicker);
-    const tick=()=>{if(!online.startDeadline){els.readyCountdown.textContent='—';return;}els.readyCountdown.textContent=`${Math.max(0,Math.ceil((online.startDeadline-Date.now())/1000))} sn`;};
-    tick();readyTicker=setInterval(tick,250);
+    const tick = () => {
+      if (!online.startDeadline) { els.readyCountdown.textContent = '—'; return; }
+      const left = Math.max(0, Math.ceil((online.startDeadline - Date.now()) / 1000));
+      els.readyCountdown.textContent = `${left} sn`;
+    };
+    tick();
+    readyTicker = setInterval(tick, 250);
   }
 
   function startFromBrief() {
@@ -919,22 +894,22 @@
     createMatch();
   }
 
-  function createMatch() {
+  function createMatch(series = null, options = {}) {
     if (setup.mode === 'friend') return;
     const settings = settingsFromUi();
     saveSettings();
+    if (options.settingsOverride) Object.assign(settings, options.settingsOverride);
     const totalSeconds = settings.durationMinutes * 60;
-    const tournamentFixture = localTournament && setup.tournamentFixtureId ? localTournament.fixtures.find(item=>item.id===setup.tournamentFixtureId) : null;
-    const series = tournamentFixture && setup.tournamentLegReversed ? { type:'twoLeg', leg:2, aggregateBase:[tournamentFixture.aggregate?.[1]||0,tournamentFixture.aggregate?.[0]||0] } : null;
     match = {
       version: 5,
       mode: setup.mode,
+      tournament: options.tournament || null,
       teams: setup.teams.map((team, side) => makeRuntimeTeam(team, side, settings)),
       settings,
       scores: [0, 0], activeSide: 0, activePlayerId: [null, null],
       context: { type: 'coinToss', owner: 0 }, pendingFoul: null, phase: 'kickoff',
       kickoff: { winner: null, readyToStart: false, face: null },
-      firstHalfStarter: null, secondHalfStarter: null, passStreak: [0, 0], lastPasserId: [null, null],
+      firstHalfStarter: null, secondHalfStarter: null, passStreak: [0, 0],
       periodIndex: 0, periodElapsedMs: 0,
       periodDurationsMs: [totalSeconds * 500, totalSeconds * 500],
       regulationPeriodDurationsMs: [totalSeconds * 500, totalSeconds * 500], regulationSeconds: totalSeconds,
@@ -942,7 +917,8 @@
       delayWasteMs: [0, 0], stoppageMs: 0, stoppageAnnounced: false,
       lastFrame: performance.now(), running: true, paused: false, pausedBy: null, pauseStartedAt: null,
       pauseBudgetsMs: [60000, 60000], resolving: false, awaitingPeriodStart: false, awaitingPeriodSide: null,
-      periodStartKey: null, events: [], winnerSide: null, shootout: null, series
+      periodStartKey: null, events: [], winnerSide: null, shootout: null,
+      series: series ? JSON.parse(JSON.stringify(series)) : null
     };
     showScreen('match');
     els.remoteMatchBar.classList.add('hidden');
@@ -960,29 +936,14 @@
     return match?.teams?.[side]?.lineup.find(player => player.id === playerId) || null;
   }
 
+  function keeperNameOf(side) {
+    return match?.teams?.[side]?.lineup.find(player => player.slot === 'GK')?.name || null;
+  }
+
   function currentActor() {
     if (!match) return null;
     const side = match.context.owner;
     return getPlayer(side, match.activePlayerId[side]);
-  }
-
-
-  function clearAssistChain(side) {
-    if (!match) return;
-    match.lastPasserId ||= [null, null];
-    match.lastPasserId[side] = null;
-  }
-
-  function registerGoalContribution(side, actor, allowAssist = true) {
-    if (!match) return;
-    match.lastPasserId ||= [null, null];
-    if (actor) actor.goals = (Number(actor.goals) || 0) + 1;
-    const passerId = match.lastPasserId[side];
-    if (allowAssist && passerId && passerId !== actor?.id) {
-      const passer = getPlayer(side, passerId);
-      if (passer) passer.assists = (Number(passer.assists) || 0) + 1;
-    }
-    match.lastPasserId[side] = null;
   }
 
   function pickRestartPlayer(side, digit = Math.floor(Math.random() * 10)) {
@@ -1016,23 +977,6 @@
   }
 
 
-  function contextInstruction() {
-    if (!match) return '';
-    const actor = currentActor();
-    const labels = {
-      coinToss: 'Tek dokunuşla yazı tura atılır. Kazanan ilk yarıya, diğer takım ikinci yarıya başlar.',
-      kickoffReady: `${match.teams[match.firstHalfStarter]?.name || 'Takım'} ilk düdüğü vermeli.`,
-      playerSelect: 'Son rakam, topla buluşacak saha oyuncusunu belirler.',
-      main: `${actor?.name || 'Seçilen oyuncu'} için olay sonucunu belirle.`,
-      foulResult: 'Faulün frikik, penaltı veya serbest vuruş sonucunu belirle.', foulCard: 'Hakemin kart kararını belirle.',
-      shotOpenPlay: '0 korner, 9 gol; diğer rakamlar kurtarış, direk veya aut.',
-      setPieceShot: 'Çift rakam gol; tek rakam kurtarış, direk veya aut.',
-      shootoutShot: 'Çift rakam gol; tek rakam kurtarış, direk veya aut.'
-    };
-    return labels[match.context.type] || 'Kronometreyi durdur.';
-  }
-
-
   function stopButtonLabel() {
     if (!match) return 'DURDUR';
     const labels = {
@@ -1046,7 +990,7 @@
 
   function canStartWaitingPeriod() {
     if (!match?.awaitingPeriodStart) return false;
-    if (match.mode === 'friend') return online.connected && online.side === match.awaitingPeriodSide;
+    if (match.mode === 'friend') return online.connected && myMatchSide() === match.awaitingPeriodSide;
     if (match.mode === 'ai') return !isAiSide(match.awaitingPeriodSide);
     return true;
   }
@@ -1125,6 +1069,15 @@
     }
   }
 
+  function updateScoreDigit(element, value) {
+    const text = String(value);
+    if (element.textContent === text) return;
+    element.textContent = text;
+    element.classList.remove('pop');
+    void element.offsetWidth;
+    element.classList.add('pop');
+  }
+
   function updateMatchUi() {
     if (!match || !match.teams?.[0] || !match.teams?.[1]) return;
     const remoteTurn = match.mode === 'friend';
@@ -1141,55 +1094,66 @@
     els.awayTeamName.textContent = match.teams[1].name;
     els.homeTeamBox.style.setProperty('--team-color', match.teams[0].color || match.settings?.teamColors?.[0] || '#d44735');
     els.awayTeamBox.style.setProperty('--team-color', match.teams[1].color || match.settings?.teamColors?.[1] || '#2878c8');
-    els.homeScore.textContent = match.scores[0];
-    els.awayScore.textContent = match.scores[1];
+    updateScoreDigit(els.homeScore, match.scores[0]);
+    updateScoreDigit(els.awayScore, match.scores[1]);
     els.homeCorners.textContent = match.teams[0].corners;
     els.awayCorners.textContent = match.teams[1].corners;
     els.homeTimeouts.textContent = match.teams[0].timeouts;
     els.awayTimeouts.textContent = match.teams[1].timeouts;
 
-    const regulationTargetMs = Math.max(60000, Number(match.regulationSeconds || match.settings?.durationMinutes * 60 || 300) * 1000);
-    const addedMs = Number(match.stoppageMs) || 0;
-    const showAdded = match.phase === 'regulation' && match.periodIndex === 1 && (match.stoppageAnnounced || addedMs > 0);
-    let scoreboardElapsed = Number(match.totalElapsedMs || 0) + (match.phase === 'regulation' ? remoteDelta : 0);
-    let scoreboardTarget = regulationTargetMs + (match.stoppageAnnounced ? addedMs : 0);
-    if (match.phase === 'extra') {
-      const completedExtra = (match.periodDurationsMs || []).slice(0, match.periodIndex).reduce((sum,value)=>sum+Number(value||0),0);
-      scoreboardElapsed = regulationTargetMs + addedMs + completedExtra + displayPeriod;
-      scoreboardTarget = regulationTargetMs + addedMs + (match.periodDurationsMs || []).reduce((sum,value)=>sum+Number(value||0),0);
+    // Kümülatif maç saati: devreler üst üste eklenir, uzatma normal sürenin üstüne yazılır.
+    const regPeriodMs = Number(match.regulationPeriodDurationsMs?.[0]) || (Number(match.regulationSeconds) || 0) * 500;
+    const stoppage = Number(match.stoppageMs) || 0;
+    let cumulativeMs = 0;
+    if (match.phase === 'regulation') cumulativeMs = match.periodIndex * regPeriodMs + displayPeriod;
+    else if (match.phase === 'extra') cumulativeMs = regPeriodMs * 2 + stoppage + match.periodIndex * (Number(match.periodDurationsMs?.[0]) || 0) + displayPeriod;
+    else if (match.phase === 'shootout' || match.phase === 'finished') {
+      const wentToExtra = (Number(match.periodDurationsMs?.[0]) || 0) !== regPeriodMs;
+      cumulativeMs = regPeriodMs * 2 + stoppage + (wentToExtra ? (Number(match.periodDurationsMs?.[0]) || 0) * 2 : 0);
     }
+
+    const durationMin = Number(match.settings?.durationMinutes) || 5;
+    const extraTotalMin = match.phase === 'extra' || (match.periodDurationsMs?.[0] !== match.regulationPeriodDurationsMs?.[0])
+      ? Math.round(((Number(match.periodDurationsMs?.[0]) || 0) * 2) / 60000) : 0;
+
     if (kickoffPhase) {
-      els.periodLabel.textContent = 'YAZI TURA';
+      els.periodLabel.textContent = match.context?.type === 'kickoffReady' ? 'İLK DÜDÜK' : 'YAZI TURA';
       els.matchClock.textContent = '00:00';
+      els.matchMinuteLabel.textContent = "1'";
     } else if (match.phase === 'shootout') {
       els.periodLabel.textContent = 'PENALTILAR';
       els.matchClock.textContent = `${match.shootout.scores[0]} — ${match.shootout.scores[1]}`;
+      els.matchMinuteLabel.textContent = 'P';
     } else if (match.phase === 'finished') {
       els.periodLabel.textContent = 'MAÇ SONU';
-      els.matchClock.textContent = formatClock(scoreboardElapsed);
+      els.matchClock.textContent = formatClock(cumulativeMs);
+      els.matchMinuteLabel.textContent = `${eventMinute()}'`;
     } else {
       els.periodLabel.textContent = match.phase === 'extra' ? `UZATMA ${match.periodIndex + 1}` : `${match.periodIndex + 1}. DEVRE`;
-      els.matchClock.textContent = formatClock(scoreboardElapsed);
+      els.matchClock.textContent = formatClock(cumulativeMs);
+      els.matchMinuteLabel.textContent = `${eventMinute()}'`;
     }
-    els.matchDurationLabel.textContent = `/ ${formatClock(scoreboardTarget)}`;
-    els.addedTimeLabel.classList.toggle('hidden', !showAdded);
-    els.addedTimeLabel.textContent = showAdded ? `HAKEM +${formatClock(addedMs)}` : '';
-    if (match.series?.leg === 2) {
-      const base=match.series.aggregateBase||[0,0], aggregate=[(base[0]||0)+(match.scores[0]||0),(base[1]||0)+(match.scores[1]||0)];
-      els.periodLabel.textContent = `${els.periodLabel.textContent} · 2. AYAK`;
-      els.aggregateScoreLabel.classList.remove('hidden');
-      els.aggregateScoreLabel.textContent=`TOPLAM ${aggregate[0]}–${aggregate[1]}`;
-    } else els.aggregateScoreLabel.classList.add('hidden');
+    els.matchLengthLabel.textContent = match.phase === 'extra' && extraTotalMin
+      ? `${durationMin}+${extraTotalMin} DK`
+      : `${durationMin} DK MAÇ`;
 
-    els.kickoffScoreCard.classList.toggle('hidden', !kickoffPhase);
-    els.kickoffHomeDigit.textContent = Number.isInteger(match.firstHalfStarter) ? (match.firstHalfStarter === 0 ? '1. DEVRE' : '2. DEVRE') : '—';
-    els.kickoffAwayDigit.textContent = Number.isInteger(match.firstHalfStarter) ? (match.firstHalfStarter === 1 ? '1. DEVRE' : '2. DEVRE') : '—';
+    const addedMs = Number(match.stoppageMs) || 0;
+    const showAdded = match.phase === 'regulation' && match.periodIndex === 1 && (match.stoppageAnnounced || addedMs > 0);
+    if (match.series?.leg === 2) {
+      const base = match.series.aggregateBase || [0,0];
+      const aggregate = [(base[0]||0)+(match.scores[0]||0),(base[1]||0)+(match.scores[1]||0)];
+      els.periodLabel.textContent = `${els.periodLabel.textContent} · 2. AYAK`;
+      els.addedTimeLabel.classList.remove('hidden');
+      els.addedTimeLabel.textContent = `TOPLAM ${aggregate[0]}–${aggregate[1]}${showAdded ? ` · +${formatClock(addedMs)}` : ''}`;
+    } else {
+      els.addedTimeLabel.classList.toggle('hidden', !showAdded);
+      els.addedTimeLabel.textContent = showAdded ? `+${formatClock(addedMs)}` : '';
+    }
 
     els.homeTeamBox.classList.toggle('active-turn', owner === 0 && match.phase !== 'finished');
     els.awayTeamBox.classList.toggle('active-turn', owner === 1 && match.phase !== 'finished');
     els.turnTeam.textContent = match.teams[owner]?.name || '90+ XI';
     els.rollContextLabel.textContent = contextLabel();
-    els.rollInstruction.textContent = contextInstruction();
     els.matchStopEyebrow.textContent = match.context?.type === 'kickoffReady' ? 'İLK DÜDÜK' : 'KRONOMETRE';
     els.matchStopText.textContent = stopButtonLabel();
 
@@ -1212,17 +1176,17 @@
     els.turnCountdown.textContent = match.context?.type === 'kickoffReady' ? '—' : Math.max(0, (10000 - displayTurn) / 1000).toFixed(1);
 
     const aiTurn = isAiSide(owner);
-    const canRemoteStop = remoteTurn && online.connected && (Number.isInteger(online.matchSide) ? online.matchSide : online.side) === owner;
+    const canRemoteStop = remoteTurn && online.connected && myMatchSide() === owner;
     els.matchStopButton.disabled = Boolean(match.awaitingPeriodStart) || (remoteTurn
       ? (!canRemoteStop || match.paused || match.resolving || !match.running)
       : (aiTurn || match.paused || match.resolving || !match.running));
 
     if (remoteTurn) {
-      els.aiHint.textContent = (Number.isInteger(online.matchSide) ? online.matchSide : online.side) === owner ? 'Sıra sende — kronometreyi durdur.' : 'Rakibin kronometreyi kolluyor…';
+      els.aiHint.textContent = myMatchSide() === owner ? 'Sıra sende — kronometreyi durdur.' : 'Rakibin kronometreyi kolluyor…';
       els.aiHint.classList.toggle('hidden', match.paused || match.resolving || !match.running || match.awaitingPeriodStart || match.context?.type === 'kickoffReady');
       els.remoteMatchBar.classList.remove('hidden');
       els.remoteRoomCode.textContent = online.code || '------';
-      els.remoteConnectionText.textContent = online.connected ? ((Number.isInteger(online.matchSide) ? online.matchSide : online.side) === owner ? 'SIRA SENDE' : 'RAKİP OYNUYOR') : 'BAĞLANTI KESİLDİ';
+      els.remoteConnectionText.textContent = online.connected ? (myMatchSide() === owner ? 'SIRA SENDE' : 'RAKİP OYNUYOR') : 'BAĞLANTI KESİLDİ';
       els.remoteConnectionText.classList.toggle('offline', !online.connected);
     } else {
       els.remoteMatchBar.classList.add('hidden');
@@ -1230,7 +1194,7 @@
       els.aiHint.classList.toggle('hidden', !aiTurn || match.paused || match.resolving || match.awaitingPeriodStart || kickoffPhase);
     }
 
-    const pauseSide = remoteTurn ? (Number.isInteger(online.matchSide) ? online.matchSide : online.side) : owner;
+    const pauseSide = remoteTurn ? myMatchSide() : owner;
     const pauseBudget = Number.isInteger(pauseSide) ? Math.max(0, Number(match.pauseBudgetsMs?.[pauseSide]) || 0) : 0;
     els.pauseBudgetMini.textContent = `${Math.ceil(pauseBudget / 1000)} sn`;
     const ownPause = match.paused && match.pausedBy === pauseSide;
@@ -1292,9 +1256,8 @@
       const secondYellow = player.sentOffReason === 'secondYellow';
       const card = secondYellow ? '<i class="card-icon double-card" title="İkinci sarıdan kırmızı"></i>' : player.red ? '<i class="card-icon red-card" title="Kırmızı kart"></i>' : player.yellowCards ? `<i class="card-icon yellow-card" title="${player.yellowCards} sarı kart"></i>` : '';
       const goals = player.goals ? `<span class="goal-count">⚽ ${player.goals}</span>` : '';
-      const assists = player.assists ? `<span class="assist-count" title="Asist">A ${player.assists}</span>` : '';
       const injury = player.injured ? '<span class="injury-icon" title="Sakat">✚</span>' : '';
-      return `<div class="match-player-row${player.red || player.injured ? ' dismissed' : ''}"><span class="player-slot-badge">${escapeHtml(player.slot)}</span><div class="match-player-info"><strong>${escapeHtml(player.name)}</strong><small>${escapeHtml(player.nationality)} · ${player.rating} puan${secondYellow ? ' · 2. sarıdan atıldı' : player.sentOffReason === 'directRed' ? ' · direkt kırmızı' : player.sentOffReason === 'timeoutRed' ? ' · süre ihlali kırmızısı' : player.injured ? ' · sakatlandı' : ''}</small></div><div class="player-statuses">${goals}${assists}${card}${injury}</div></div>`;
+      return `<div class="match-player-row${player.red || player.injured ? ' dismissed' : ''}"><span class="player-slot-badge">${escapeHtml(player.slot)}</span><div class="match-player-info"><strong>${escapeHtml(player.name)}</strong><small>${escapeHtml(player.nationality)} · ${player.rating} puan${secondYellow ? ' · 2. sarıdan atıldı' : player.sentOffReason === 'directRed' ? ' · direkt kırmızı' : player.sentOffReason === 'timeoutRed' ? ' · süre ihlali kırmızısı' : player.injured ? ' · sakatlandı' : ''}</small></div><div class="player-statuses">${goals}${card}${injury}</div></div>`;
     }).join('');
   }
 
@@ -1316,6 +1279,7 @@
     if (!match || match.paused || match.resolving || match.awaitingPeriodStart) return;
     const side = match.context.owner;
     if (!isAiSide(side)) return;
+    if (match.context.type === 'coinToss' && match.mode !== 'friend') { clearAiTimer(); match.running = false; match.resolving = true; resolveCoinToss(); return; }
     if (match.context.type === 'kickoffReady') {
       aiTimer = setTimeout(() => stopMatchRoll('ai'), 1200);
       return;
@@ -1357,7 +1321,15 @@
           if (match.phase === 'regulation') match.totalElapsedMs += dt;
           match.possessionMs[match.context.owner] += dt;
         }
-        if (match.context.type !== 'kickoffReady' && match.turnElapsedMs >= 10000) {
+        if (match.context.type === 'coinToss' && match.turnElapsedMs >= 10000) {
+          // Süre dolarsa yazı tura kendiliğinden atılır; ihlal sayılmaz.
+          clearAiTimer();
+          match.running = false;
+          match.resolving = true;
+          resolveCoinToss();
+        } else if (match.context.type === 'kickoffReady' && match.rollElapsedMs >= 15000) {
+          beginAfterKickoff();
+        } else if (match.context.type !== 'kickoffReady' && match.turnElapsedMs >= 10000) {
           handleTurnTimeout();
         } else if ((match.phase === 'regulation' || match.phase === 'extra') && match.periodElapsedMs >= currentPeriodTargetMs()) {
           if (!maybeAnnounceStoppage()) endCurrentPeriod();
@@ -1395,11 +1367,13 @@
 
   function resolveCoinToss() {
     const winner = Math.random() < .5 ? 0 : 1;
-    match.kickoff.winner = winner; match.kickoff.face = winner === 0 ? 'YAZI' : 'TURA';
+    match.kickoff.winner = winner;
     match.firstHalfStarter = winner; match.secondHalfStarter = winner === 0 ? 1 : 0;
     match.kickoff.readyToStart = true;
     addEvent(`${match.teams[winner].name} yazı turayı kazandı`, true, { type: 'kickoff', side: winner, title: 'Yazı tura', detail: 'İlk yarı başlangıcı' });
-    transitionTo(winner, { type: 'kickoffReady' }, { title: match.kickoff.face, subtitle: `${match.teams[winner].name} ilk yarıya başlayacak. ${match.teams[match.secondHalfStarter].name} ikinci yarıya başlayacak.`, tone: 'yellow', kicker: 'BAŞLAMA HAKKI', duration: 4200, type: 'kickoff' });
+    showCoinFlip(match.teams[0], match.teams[1], winner, () => {
+      transitionTo(winner, { type: 'kickoffReady' }, { title: match.teams[winner].name, subtitle: `İlk yarıya ${match.teams[winner].name} başlıyor; ikinci yarı ${match.teams[match.secondHalfStarter].name} takımının.`, tone: 'yellow', kicker: 'YAZI TURA SONUCU', duration: 3000, type: 'kickoff' });
+    });
   }
 
   function beginAfterKickoff() {
@@ -1430,11 +1404,81 @@
     saveMatch();
   }
 
-  function showEventOverlay(title, subtitle, tone = 'red', kicker = '', duration = 3000, callback) {
+  function showToast(text, duration = 2400) {
+    if (!els.appToast) return;
+    els.appToast.textContent = text;
+    els.appToast.classList.remove('hidden');
+    clearTimeout(showToast._timer);
+    showToast._timer = setTimeout(() => els.appToast.classList.add('hidden'), duration);
+  }
+
+  // Takım yüzlü animasyonlu yazı tura: paranın ön yüzü A takımı, arka yüzü B takımı.
+  // Flip animasyonu motorun seçtiği kazanan yüzde durur (winnerSide 0/1).
+  let coinFlipTimer = null;
+  function showCoinFlip(teamA, teamB, winnerSide, onDone, kicker = 'BAŞLAMA HAKKI') {
+    const overlay = $('#coinOverlay');
+    const coin = $('#coinFlip');
+    if (!overlay || !coin) { onDone?.(); return; }
+    clearTimeout(coinFlipTimer);
+    overlay.querySelector('.coin-kicker').textContent = kicker;
+    $('#coinFrontInitial').textContent = (teamA?.name || 'A').trim().charAt(0).toLocaleUpperCase('tr');
+    $('#coinFrontName').textContent = teamA?.name || 'TAKIM 1';
+    $('#coinBackInitial').textContent = (teamB?.name || 'B').trim().charAt(0).toLocaleUpperCase('tr');
+    $('#coinBackName').textContent = teamB?.name || 'TAKIM 2';
+    coin.style.setProperty('--coin-a', teamA?.color || '#d44735');
+    coin.style.setProperty('--coin-b', teamB?.color || '#2878c8');
+    // Kazanan 0 → çift yarım tur (ön yüz), 1 → tek yarım tur (arka yüz)
+    const spins = 5 + Math.floor(Math.random() * 3);
+    const endDeg = spins * 360 + (winnerSide === 1 ? 180 : 0);
+    coin.style.setProperty('--coin-end', `${endDeg}deg`);
+    $('#coinOverlayText').textContent = 'PARA HAVADA…';
+    overlay.classList.remove('hidden');
+    coin.classList.remove('flipping');
+    void coin.offsetWidth;
+    coin.classList.add('flipping');
+    playAudioCue('timer.stop', { channel: 'ui' });
+    coinFlipTimer = setTimeout(() => {
+      const winner = winnerSide === 1 ? teamB : teamA;
+      $('#coinOverlayText').textContent = `${(winner?.name || 'TAKIM').toLocaleUpperCase('tr')} KAZANDI!`;
+      playAudioCue('crowd.bigCheer', { channel: 'crowd' });
+      coinFlipTimer = setTimeout(() => {
+        overlay.classList.add('hidden');
+        coin.classList.remove('flipping');
+        onDone?.();
+      }, 1400);
+    }, 2300);
+  }
+
+  // Başlıktan olay tipi çıkarımı — spiker cümlesi seçmek için (meta yoksa)
+  function inferEventType(title) {
+    const t = String(title || '');
+    if (/GOL/i.test(t)) return 'goal';
+    if (/KURTARDI/i.test(t)) return 'save';
+    if (/DİREK/i.test(t)) return 'post';
+    if (/SÜRE DOLDU/i.test(t)) return 'timeout';
+    if (/HÜKMEN/i.test(t)) return 'forfeit';
+    if (/^AUT/i.test(t)) return 'wide';
+    if (/^PAS/i.test(t)) return 'pass';
+    if (/TAÇ/i.test(t)) return 'throwIn';
+    if (/KORNER/i.test(t)) return 'corner';
+    if (/FAUL/i.test(t)) return 'foul';
+    if (/PENALTI/i.test(t)) return 'penalty';
+    if (/FRİKİK/i.test(t)) return 'freeKick';
+    if (/SERBEST/i.test(t)) return 'indirect';
+    if (/İKİNCİ SARI|2\. SARI/i.test(t)) return 'secondYellow';
+    if (/SARI/i.test(t)) return 'yellow';
+    if (/KIRMIZI/i.test(t)) return 'red';
+    if (/ŞUT/i.test(t)) return 'shot';
+    if (/SAKAT/i.test(t)) return 'injury';
+    if (/EK SÜRE|^\+/i.test(t)) return 'stoppage';
+    return '';
+  }
+
+  function showEventOverlay(title, subtitle, tone = 'red', kicker = '', duration = 3000, callback, meta = {}) {
     clearTimeout(overlayTimer);
     const titleText = String(title || 'OLAY');
     const important = /GOL|KIRMIZI|PENALTI|FAUL|KURTARDI|HÜKMEN|EŞİTLİK|BAŞLAMA/i.test(titleText);
-    const pref = match?.settings?.eventDuration || els.eventDurationSelect?.value || 'long';
+    const pref = prefs.eventDuration || 'long';
     const multiplier = pref === 'normal' ? .9 : pref === 'extra' ? 1.55 : 1.2;
     const readableDuration = Math.round(Math.max(important ? 3400 : 2600, Number(duration) || 3000) * multiplier);
     els.eventOverlay.className = `event-overlay ${tone}`;
@@ -1442,6 +1486,16 @@
     els.overlayTitle.textContent = titleText;
     els.overlaySubtitle.textContent = subtitle || '';
     els.overlayKicker.textContent = kicker || '';
+    // Spiker cümlesi: olay tipine göre havuzdan, tekrarsız
+    const commentaryEl = $('#overlayCommentary');
+    if (commentaryEl) {
+      const type = meta.type && meta.type !== 'kickoff' ? meta.type : inferEventType(titleText);
+      const line = window.Commentary && type ? Commentary.line(type, meta) : '';
+      commentaryEl.textContent = line ? `🎙 ${line}` : '';
+      commentaryEl.classList.toggle('hidden', !line);
+    }
+    const card = els.eventOverlay.querySelector('.ev-card');
+    if (card) { card.classList.remove('ev-in'); void card.offsetWidth; card.classList.add('ev-in'); }
     els.overlayProgressBar.style.animation = 'none';
     void els.overlayProgressBar.offsetWidth;
     els.overlayProgressBar.style.animation = `overlayDrain ${readableDuration}ms linear forwards`;
@@ -1451,14 +1505,53 @@
     }, readableDuration);
   }
 
+  // Tam ekran retro futbolcu kartı: bayrak renkleri, rating, kronometre rakamı.
+  let playerCardTimer = null;
+  function showPlayerCard(player, digit, note, callback) {
+    const overlay = $('#playerCardOverlay');
+    const card = $('#pcCard');
+    const pref = prefs.eventDuration || 'long';
+    const duration = pref === 'normal' ? 2300 : pref === 'extra' ? 3800 : 2900;
+    if (!overlay || !card || !window.Commentary) {
+      showEventOverlay(player?.name || 'OYUNCU', note || '', 'navy', 'OYUNCU SEÇİMİ', duration, callback);
+      return;
+    }
+    clearTimeout(playerCardTimer);
+    const flag = Commentary.flag(player?.nationality);
+    card.style.setProperty('--pc-a', flag.colors[0]);
+    card.style.setProperty('--pc-b', flag.colors[1] || flag.colors[0]);
+    card.style.setProperty('--pc-c', flag.colors[2] || flag.colors[1] || flag.colors[0]);
+    card.style.setProperty('--pc-ink', flag.ink || '#1a1a1a');
+    card.classList.toggle('pc-dark', Boolean(flag.dark));
+    $('#pcFlag').textContent = flag.emoji || '⚽';
+    $('#pcNation').textContent = String(player?.nationality || '—').toLocaleUpperCase('tr');
+    $('#pcRating').textContent = player?.rating ?? '—';
+    $('#pcName').textContent = player?.name || 'OYUNCU';
+    $('#pcMeta').textContent = `${player?.slot || player?.position || '—'} · ${player?.activeStart || '?'}–${player?.activeEnd || '?'}${player?.leagues?.length ? ` · ${player.leagues[0]}` : ''}`;
+    $('#pcDigit').textContent = Number.isInteger(digit) ? String(digit) : '—';
+    $('#pcNote').textContent = note || 'TOPLA BULUŞTU — OLAYI BELİRLE';
+    const bar = $('#pcProgressBar');
+    if (bar) { bar.style.animation = 'none'; void bar.offsetWidth; bar.style.animation = `overlayDrain ${duration}ms linear forwards`; }
+    overlay.classList.remove('hidden');
+    card.classList.remove('pc-in');
+    void card.offsetWidth;
+    card.classList.add('pc-in');
+    playerCardTimer = setTimeout(() => {
+      overlay.classList.add('hidden');
+      if (typeof callback === 'function') callback();
+    }, duration);
+  }
+
   function transitionTo(owner, context, overlay) {
     if (!match) return;
     clearAiTimer();
     match.running = false;
     match.resolving = true;
     const done = () => resetRoll(owner, context);
-    if (overlay) {
-      showEventOverlay(overlay.title, overlay.subtitle, overlay.tone, overlay.kicker, overlay.duration || 900, done);
+    if (overlay?.playerCard) {
+      showPlayerCard(overlay.playerCard, overlay.digit, overlay.note, done);
+    } else if (overlay) {
+      showEventOverlay(overlay.title, overlay.subtitle, overlay.tone, overlay.kicker, overlay.duration || 900, done, overlay);
     } else {
       done();
     }
@@ -1469,7 +1562,7 @@
     if (match.context.type === 'coinToss' && match.mode !== 'friend') { clearAiTimer(); match.running = false; match.resolving = true; resolveCoinToss(); return; }
     if (match.context.type === 'kickoffReady') {
       if (match.mode === 'friend') {
-        if (!online.socket || !online.connected || online.side !== match.context.owner) return;
+        if (!online.socket || !online.connected || myMatchSide() !== match.context.owner) return;
         els.matchStopButton.disabled = true;
         online.socket.emit('match:stop', { digit: 0 }, response => { if (!response?.ok) updateMatchUi(); });
       } else {
@@ -1480,7 +1573,7 @@
     }
     if (!match.running) return;
     if (match.mode === 'friend') {
-      if (!online.socket || !online.connected || online.side !== match.context.owner) return;
+      if (!online.socket || !online.connected || myMatchSide() !== match.context.owner) return;
       const elapsed = match.rollElapsedMs + clamp(performance.now() - remoteSnapshotAt, 0, 350);
       const digit = digitFromMs(elapsed);
       els.matchStopButton.disabled = true;
@@ -1518,7 +1611,7 @@
     const chosen = mapActivePlayerFromDigit(digit) || pickRestartPlayer(side, digit);
     addEvent(`${chosen?.name || 'Oyuncu'} topla buluştu`, false, { type: 'player', side, playerId: chosen?.id, title: chosen?.name || 'Oyuncu', detail: `${match.teams[side].name} · Topla buluştu` });
     playMatchEventAudio('player');
-    transitionTo(side, { type: 'main' }, { title: chosen?.name || 'OYUNCU', subtitle: `${chosen?.slot || ''} · ${chosen?.rating || ''} puan. Şimdi bu oyuncunun olayını belirle.`, tone: 'navy', kicker: `OYUNCU SEÇİMİ · RAKAM ${digit}`, duration: 3000 });
+    transitionTo(side, { type: 'main' }, { playerCard: chosen, digit, note: `${match.teams[side].name} · ŞİMDİ OLAYI BELİRLE` });
   }
 
   function resolveMainEvent(digit) {
@@ -1529,36 +1622,32 @@
     if (event.key !== 'pass') match.passStreak[side] = 0;
 
     if (event.key === 'goal') {
-      match.scores[side] += 1; registerGoalContribution(side, actor, true);
+      match.scores[side] += 1; if (actor) actor.goals = (Number(actor.goals) || 0) + 1;
       addEvent(`${actor?.name || match.teams[side].name} gol attı`, true, { type:'goal', side, playerId:actor?.id, title:actor?.name || match.teams[side].name, detail:'Gol' });
       playMatchEventAudio('goal');
-      transitionTo(other, { type:'playerSelect' }, { title:'GOL!', subtitle:`${actor?.name || match.teams[side].name} ağları buldu. Başlama rakipte.`, tone:'red', kicker:`RAKAM ${digit}`, duration:5200 }); return;
+      transitionTo(other, { type:'playerSelect' }, { title:'GOL!', subtitle:`${actor?.name || match.teams[side].name} ağları buldu. Başlama rakipte.`, tone:'red', kicker:`RAKAM ${digit}`, duration:5200, type:'goal', actor:actor?.name, team:match.teams[side].name, other:match.teams[other].name }); return;
     }
     if (event.key === 'pass') {
       match.passStreak[side] += 1;
-      match.lastPasserId ||= [null, null]; match.lastPasserId[side] = actor?.id || null;
       addEvent(`${actor?.name || 'Oyuncu'} pas yaptı`, false, { type:'pass', side, playerId:actor?.id, title:actor?.name || 'Oyuncu', detail:`${match.passStreak[side]}. pas` });
       playMatchEventAudio('pass');
       const warning = match.passStreak[side] >= 2 ? ' İki pas sınırına ulaşıldı; sonraki olay atışında pas rakamları taç ve auta dönüşecek.' : '';
-      transitionTo(side, { type:'playerSelect' }, { title:'PAS', subtitle:`${actor?.name || 'Oyuncu'} pasını verdi.${warning}`, tone:'green', kicker:`RAKAM ${digit} · ${match.passStreak[side]}/2`, duration: match.passStreak[side] >= 2 ? 4200 : 2800 }); return;
+      transitionTo(side, { type:'playerSelect' }, { title:'PAS', subtitle:`${actor?.name || 'Oyuncu'} pasını verdi.${warning}`, tone:'green', kicker:`RAKAM ${digit} · ${match.passStreak[side]}/2`, duration: match.passStreak[side] >= 2 ? 4200 : 2800, type:'pass', actor:actor?.name, team:match.teams[side].name }); return;
     }
     if (event.key === 'shot') {
       addEvent(`${actor?.name || match.teams[side].name} şut pozisyonuna girdi`, true, { type:'shot', side, playerId:actor?.id, title:'Şut', detail:actor?.name || '' });
       playAudioCue('ball.shot', { channel:'ball' });
-      transitionTo(side, { type:'shotOpenPlay' }, { title:'ŞUT!', subtitle:'Sonuç için yeniden kronometreyi durdur: 0 korner, 9 gol; diğerleri kurtarış, direk veya aut.', tone:'yellow', kicker:`RAKAM ${digit}`, duration:4200 }); return;
+      transitionTo(side, { type:'shotOpenPlay' }, { title:'ŞUT!', subtitle:'Sonuç için yeniden kronometreyi durdur: 0 korner, 9 gol; diğerleri kurtarış, direk veya aut.', tone:'yellow', kicker:`RAKAM ${digit}`, duration:4200, type:'shot', actor:actor?.name, team:match.teams[side].name }); return;
     }
     if (event.key === 'throwIn') {
-      clearAssistChain(side);
       addEvent(`${match.teams[other].name} taç kazandı`, false, { type:'throwIn', side:other, title:'Taç', detail:'Top rakibe geçti' }); playMatchEventAudio('throwIn');
       transitionTo(other, { type:'playerSelect' }, { title:'TAÇ', subtitle:`Top ${match.teams[other].name} tarafına geçti.`, tone:'navy', kicker:`RAKAM ${digit}`, duration:3000 }); return;
     }
     if (event.key === 'turnover') {
-      clearAssistChain(side);
       addEvent(`${actor?.name || match.teams[side].name} topu kaybetti`, false, { type:'turnover', side, playerId:actor?.id, title:'Aut / top kaybı', detail:actor?.name || '' }); playMatchEventAudio('turnover');
       transitionTo(other, { type:'playerSelect' }, { title:'AUT', subtitle:`Top ${match.teams[other].name} takımında.`, tone:'navy', kicker:`RAKAM ${digit}`, duration:3000 }); return;
     }
     if (event.key === 'corner') {
-      clearAssistChain(side);
       const outcome = Core.registerCorner(match.teams[side].corners); match.teams[side].corners = outcome.corners;
       if (outcome.penalty) {
         addEvent(`${match.teams[side].name}: 3. kornerden penaltı`, true, { type:'penalty', side, title:'Penaltı', detail:'3. korner' }); playMatchEventAudio('penalty');
@@ -1569,13 +1658,11 @@
       } return;
     }
     if (event.key === 'foul') {
-      clearAssistChain(side);
       match.pendingFoul = { foulerSide:side, victimSide:other, foulerId:actor?.id || null, result:null };
       addEvent(`${actor?.name || match.teams[side].name} faul yaptı`, true, { type:'foul', side, playerId:actor?.id, title:'Faul', detail:actor?.name || '' }); playMatchEventAudio('foul'); pickRestartPlayer(other);
-      transitionTo(other, { type:'foulResult' }, { title:'FAUL!', subtitle:`${match.teams[other].name} önce faul sonucunu, sonra kartı belirleyecek.`, tone:'yellow', kicker:`RAKAM ${digit}`, duration:4200 }); return;
+      transitionTo(other, { type:'foulResult' }, { title:'FAUL!', subtitle:`${match.teams[other].name} önce faul sonucunu, sonra kartı belirleyecek.`, tone:'yellow', kicker:`RAKAM ${digit}`, duration:4200, type:'foul', actor:actor?.name, other:match.teams[other].name }); return;
     }
     if (event.key === 'freeKick') {
-      clearAssistChain(side);
       addEvent(`${match.teams[side].name} frikik kazandı`, true, { type:'freeKick', side, playerId:actor?.id, title:'Frikik', detail:actor?.name || '' }); playMatchEventAudio('freeKick');
       transitionTo(side, { type:'setPieceShot', reason:'freeKick' }, { title:'FRİKİK!', subtitle:'Çift rakam gol; tek rakam kurtarış, direk veya aut.', tone:'yellow', kicker:`RAKAM ${digit}`, duration:3600 });
     }
@@ -1640,7 +1727,7 @@
     if (card === 'yellow') playMatchEventAudio(cardedPlayer?.red ? 'secondYellow' : 'yellow');
     else if (card === 'red') playMatchEventAudio('red');
     else playAudioCue('cards.none', { replace:true, channel:'card' });
-    continueAfterFoulCard({ title: cardTitle, subtitle: cardedPlayer?.name || 'Hakem devam dedi', tone, kicker: `Rakam ${digit}`, duration: 2300 }, digit);
+    continueAfterFoulCard({ title: cardTitle, subtitle: cardedPlayer?.name || 'Hakem devam dedi', tone, kicker: `Rakam ${digit}`, duration: 2300, type: card === 'yellow' ? (cardedPlayer?.red ? 'secondYellow' : 'yellow') : card === 'red' ? 'red' : '', actor: cardedPlayer?.name, team: match.teams[foul.foulerSide].name }, digit);
   }
 
   function continueAfterFoulCard(cardOverlay) {
@@ -1667,12 +1754,11 @@
     const actor = currentActor() || pickRestartPlayer(side); const result = Core.shotForDigit(digit);
     match.passStreak[side] = 0;
     if (result === 'goal') {
-      match.scores[side] += 1; registerGoalContribution(side, actor, true);
+      match.scores[side] += 1; if (actor) actor.goals = (actor.goals || 0) + 1;
       addEvent(`${actor?.name || match.teams[side].name} şuttan gol attı`, true, { type:'goal', side, playerId:actor?.id, title:actor?.name || 'Gol', detail:'Açık oyun şutu' }); playMatchEventAudio('goal');
-      transitionTo(other, { type:'playerSelect' }, { title:'GOL!', subtitle:`${actor?.name || match.teams[side].name} şutu ağlara gönderdi.`, tone:'red', kicker:`ŞUT SONUCU · ${digit}`, duration:5200 }); return;
+      transitionTo(other, { type:'playerSelect' }, { title:'GOL!', subtitle:`${actor?.name || match.teams[side].name} şutu ağlara gönderdi.`, tone:'red', kicker:`ŞUT SONUCU · ${digit}`, duration:5200, type:'goal', actor:actor?.name, team:match.teams[side].name, other:match.teams[other].name }); return;
     }
     if (result === 'corner') {
-      clearAssistChain(side);
       const outcome = Core.registerCorner(match.teams[side].corners); match.teams[side].corners = outcome.corners;
       if (outcome.penalty) {
         addEvent(`${match.teams[side].name}: şuttan gelen 3. korner penaltı`, true, { type:'penalty', side, title:'Penaltı', detail:'3. korner' }); playAudioCue('whistle.penalty');
@@ -1682,42 +1768,41 @@
         transitionTo(other, { type:'playerSelect' }, { title:'KORNER', subtitle:`Korner sayacı ${outcome.corners}/3 oldu. Şut sonucu sonrası top rakibe geçer.`, tone:'green', kicker:'ŞUT · RAKAM 0', duration:3700 });
       } return;
     }
-    clearAssistChain(side);
     const copy = shotOutcomeCopy(result, 'Şut'); addEvent(`${actor?.name || 'Oyuncu'}: ${copy.title.toLocaleLowerCase('tr')}`, true, { type:copy.type, side, playerId:actor?.id, title:copy.title, detail:actor?.name || '' }); playAudioCue(copy.audio, { stagger:100 });
-    transitionTo(other, { type:'playerSelect' }, { title:copy.title, subtitle:copy.detail, tone:copy.tone, kicker:`ŞUT · RAKAM ${digit}`, duration:4300 });
+    transitionTo(other, { type:'playerSelect' }, { title:copy.title, subtitle:copy.detail, tone:copy.tone, kicker:`ŞUT · RAKAM ${digit}`, duration:4300, type:copy.type, actor:actor?.name, keeper:keeperNameOf(other), team:match.teams[side].name });
   }
 
   function resolveSetPieceShot(digit) {
     const side = match.context.owner, other = side === 0 ? 1 : 0, reason = match.context.reason;
     const actor = currentActor() || pickRestartPlayer(side); const result = Core.setPieceOutcomeForDigit(digit);
     if (result === 'goal') {
-      match.scores[side] += 1; registerGoalContribution(side, actor, false);
+      match.scores[side] += 1; if (actor) actor.goals = (actor.goals || 0) + 1;
       addEvent(`${actor?.name || match.teams[side].name} ${reason === 'penalty' ? 'penaltıdan' : 'frikikten'} gol attı`, true, { type:'goal', side, playerId:actor?.id, title:actor?.name || 'Gol', detail:reason === 'penalty' ? 'Penaltı golü' : 'Frikik golü' });
       reason === 'penalty' ? playAudioCue('setPiece.penaltyGoal') : playMatchEventAudio('goal');
-      transitionTo(other, { type:'playerSelect' }, { title:'GOL!', subtitle:`Çift rakam gol getirdi. Başlama ${match.teams[other].name} takımında.`, tone:'red', kicker:`RAKAM ${digit} · ÇİFT`, duration:5200 }); return;
+      transitionTo(other, { type:'playerSelect' }, { title:'GOL!', subtitle:`Çift rakam gol getirdi. Başlama ${match.teams[other].name} takımında.`, tone:'red', kicker:`RAKAM ${digit} · ÇİFT`, duration:5200, type: reason === 'penalty' ? 'penaltyGoal' : 'goal', actor:actor?.name, team:match.teams[side].name, other:match.teams[other].name }); return;
     }
-    clearAssistChain(side);
     const label = reason === 'penalty' ? 'Penaltı' : 'Frikik'; const copy = shotOutcomeCopy(result, label);
     addEvent(`${label}: ${copy.title.toLocaleLowerCase('tr')}`, true, { type:copy.type, side, playerId:actor?.id, title:copy.title, detail:label });
     if (reason === 'penalty') playAudioCue(result === 'saved' ? 'setPiece.penaltySave' : 'setPiece.penaltyMiss'); else playAudioCue(copy.audio, { stagger:100 });
-    transitionTo(other, { type:'playerSelect' }, { title:copy.title, subtitle:`Tek rakam gol olmadı: ${copy.detail}`, tone:copy.tone, kicker:`RAKAM ${digit} · TEK`, duration:4400 });
+    transitionTo(other, { type:'playerSelect' }, { title:copy.title, subtitle:`Tek rakam gol olmadı: ${copy.detail}`, tone:copy.tone, kicker:`RAKAM ${digit} · TEK`, duration:4400, type: reason === 'penalty' ? (result === 'saved' ? 'penaltySave' : 'penaltyMiss') : copy.type, actor:actor?.name, keeper:keeperNameOf(other), team:match.teams[side].name });
   }
 
 
   function handleTurnTimeout() {
-    if (match?.context?.type === 'coinToss') {
+    if (!match || match.resolving) return;
+    if (match.context.type === 'coinToss' || match.context.type === 'kickoffReady') {
+      clearAiTimer();
       match.running = false;
       match.resolving = true;
-      resolveCoinToss();
+      if (match.context.type === 'coinToss') resolveCoinToss();
+      else { match.resolving = false; beginAfterKickoff(); }
       return;
     }
-    if (!match || match.resolving) return;
     clearAiTimer();
     match.running = false;
     match.resolving = true;
     const side = match.context.owner;
     const other = side === 0 ? 1 : 0;
-    clearAssistChain(side);
     match.delayWasteMs[side] = (Number(match.delayWasteMs[side]) || 0) + 9000;
     const outcome = Core.registerTimeout(match.teams[side].timeouts);
     match.teams[side].timeouts = outcome.count;
@@ -1768,6 +1853,11 @@
     saveMatch();
   }
 
+  function effectiveMatchScores() {
+    const base = Array.isArray(match?.series?.aggregateBase) ? match.series.aggregateBase : [0, 0];
+    return [(Number(base[0]) || 0) + (Number(match.scores[0]) || 0), (Number(base[1]) || 0) + (Number(match.scores[1]) || 0)];
+  }
+
   function endCurrentPeriod() {
     if (!match || match.resolving || match.phase === 'shootout' || match.awaitingPeriodStart) return;
     clearAiTimer();
@@ -1780,8 +1870,7 @@
       preparePeriodStart(starter, phase, 1);
       return;
     }
-    const base = Array.isArray(match.series?.aggregateBase) ? match.series.aggregateBase : [0,0];
-    const effective = [(base[0]||0)+(match.scores[0]||0),(base[1]||0)+(match.scores[1]||0)];
+    const effective = effectiveMatchScores();
     const tied = effective[0] === effective[1];
     if (phase === 'regulation' && tied && match.settings.extraTime) {
       const extraTotal = Core.roundExtraTimeSeconds(match.regulationSeconds) * 1000;
@@ -1898,7 +1987,7 @@
 
   function pauseMatch() {
     if (!match || match.resolving || match.awaitingPeriodStart || match.phase === 'kickoff' || match.context.type === 'kickoffReady') return;
-    const requestingSide = match.mode === 'friend' ? online.side : match.context.owner;
+    const requestingSide = match.mode === 'friend' ? myMatchSide() : match.context.owner;
     if (!Number.isInteger(requestingSide)) return;
     if (match.mode === 'friend') {
       if (!online.socket || !online.connected) return;
@@ -1996,6 +2085,53 @@
     }).join('');
   }
 
+  // Maçtan bilinçli çıkış: onay ister, onaylanırsa maç kesin olarak sona erer.
+  // Arka planda hayalet maç kalmaz (bkz. docs/oyun-akisi.md §1).
+  function requestExitMatch(target = 'home') {
+    if (!match || match.phase === 'finished') { showScreen(target); return; }
+    const online_ = match.mode === 'friend';
+    if (match.mode !== 'friend' && !match.paused && !match.resolving) pauseMatch();
+    openDialog(
+      'MAÇTAN ÇIKIŞ',
+      'MAÇI BİTİRİYOR MUSUN?',
+      online_
+        ? 'Çıkarsan maçı hükmen kaybedersin ve maç herkes için sona erer.'
+        : match.tournament
+          ? 'Çıkarsan bu turnuva maçını 0-3 hükmen kaybedersin.'
+          : 'Çıkarsan maç sona erer ve kayıt silinir.',
+      'MAÇI BİTİR',
+      () => abandonMatch(target),
+      { text: 'MAÇA DÖN', action: () => { if (match && match.mode !== 'friend' && match.paused) resumePausedMatch(false); } }
+    );
+  }
+
+  function abandonMatch(target) {
+    if (!match) { showScreen(target); return; }
+    if (match.mode === 'friend') {
+      online.socket?.emit('match:forfeit', {}, response => {
+        if (!response?.ok) { setOnlineStatus(response?.error || 'Maç sonlandırılamadı.', 'error'); }
+      });
+      return; // sunucu finished state gönderir → finishMatch sonuç ekranını açar
+    }
+    clearAiTimer();
+    cancelAnimationFrame(matchRaf);
+    try { localStorage.removeItem(SAVE_KEY); } catch (_) {}
+    els.continueButton.classList.add('hidden');
+    if (match.tournament && window.Tournament) {
+      match.scores = [0, 3];
+      match.winnerSide = 1;
+      match.shootout = null;
+      reportTournamentMatch();
+      match = null;
+      online.quadView = false;
+      Tournament.render();
+      showScreen('tournament');
+      return;
+    }
+    match = null;
+    showScreen(target);
+  }
+
   function finishMatch(winnerSide) {
     clearAiTimer();
     cancelAnimationFrame(matchRaf);
@@ -2018,53 +2154,101 @@
     if (match.series?.leg === 2) { const b=match.series.aggregateBase||[0,0], a=[b[0]+match.scores[0],b[1]+match.scores[1]]; els.finalScore.textContent=`${match.scores[0]} — ${match.scores[1]} · TOPLAM ${a[0]}—${a[1]}${shootoutSuffix}`; }
     else els.finalScore.textContent = `${match.scores[0]} — ${match.scores[1]}${shootoutSuffix}`;
     els.winnerText.textContent = winnerSide === null ? 'BERABERE' : `${match.teams[winnerSide].name} KAZANDI`;
-    const viewerSide = match.mode === 'friend' ? (Number.isInteger(online.matchSide) ? online.matchSide : online.side) : 0;
-    if (winnerSide === null) playAudioCue('matchEnd.draw', { replace: true, channel: 'match-end' });
-    else if (match.shootout && winnerSide === viewerSide) playAudioCue('matchEnd.shootoutVictory', { replace: true, channel: 'match-end' });
-    else playAudioCue(winnerSide === viewerSide ? 'matchEnd.victory' : 'matchEnd.defeat', { replace: true, channel: 'match-end' });
+    const viewerSide = match.mode === 'friend' ? myMatchSide() : 0;
+    // Maç sonu: düdük + tribün + stinger; menü müziğiyle karışmasın diye döngü kısılır.
+    Audio?.duckAmbience(0.03, 6500);
+    playEventScene([[ 'whistle.fulltime', 0 ], [winnerSide === null ? 'crowd.draw' : winnerSide === viewerSide ? 'crowd.winningGoal' : 'crowd.defeat', 350, 0.7]]);
+    const stinger = winnerSide === null ? 'matchEnd.draw' : (match.shootout && winnerSide === viewerSide) ? 'matchEnd.shootoutVictory' : winnerSide === viewerSide ? 'matchEnd.victory' : 'matchEnd.defeat';
+    setTimeout(() => playAudioCue(stinger, { channel: 'match-end' }), 900);
     const possession = Core.possessionPercent(match.possessionMs);
     els.possessionResult.textContent = `${possession[0]}% — ${possession[1]}%`;
     renderResultTimeline();
-    const canRequest = match.mode !== 'friend' || match.winnerSide === null || (Number.isInteger(online.matchSide) ? online.matchSide : online.side) !== match.winnerSide;
-    els.rematchButton.textContent = match.mode === 'friend' ? 'RÖVANŞ İSTE' : 'RÖVANŞ';
-    els.rematchButton.disabled = !canRequest;
-    if (match.mode === 'friend' && online.roomType === 'four') {
+    if (match.tournament) {
+      reportTournamentMatch();
+      pendingSecondLeg = null;
       els.rematchButton.classList.add('hidden');
-      els.newGameButton.textContent = 'TURNUVA MERKEZİ →';
-    }
-    if (localTournament && setup.tournamentFixtureId) {
-      const fixture = localTournament.fixtures.find(f => f.id === setup.tournamentFixtureId);
-      if (fixture) {
-        const reversed = Boolean(setup.tournamentLegReversed);
-        const orientedScores = reversed ? [match.scores[1], match.scores[0]] : [...match.scores];
-        const winner = winnerSide === null ? null : (reversed ? (winnerSide === 0 ? fixture.away : fixture.home) : (winnerSide === 0 ? fixture.home : fixture.away));
-        const result = { scores:orientedScores, winner };
-        match.teams.forEach(team => team.lineup.forEach(player => { if(player.goals) localTournament.stats.goals[player.name]=(localTournament.stats.goals[player.name]||0)+player.goals; if(player.assists) localTournament.stats.assists[player.name]=(localTournament.stats.assists[player.name]||0)+player.assists; if(player.yellowCards) localTournament.stats.cards[player.name]=(localTournament.stats.cards[player.name]||0)+player.yellowCards; }));
-        advanceGenericTournament(fixture, result);
-      }
-      setup.tournamentFixtureId = null; setup.tournamentLegReversed = false;
+      els.newGameButton.textContent = 'TURNUVA EKRANI →';
+    } else if (match.mode === 'friend' && isQuadRoom()) {
+      pendingSecondLeg = null;
       els.rematchButton.classList.add('hidden');
-      els.newGameButton.textContent = localTournament.stage === 'finished' ? 'KUPA SONUÇLARI →' : 'TURNUVAYA DÖN →';
-    } else {
+      els.newGameButton.textContent = 'TURNUVA DURUMU →';
+    } else if (setup.system === 'twoLeg' && match.mode !== 'friend' && !match.series) {
+      pendingSecondLeg = buildSecondLegPlan();
       els.rematchButton.classList.remove('hidden');
+      els.rematchButton.textContent = '2. AYAĞI OYNA →';
+      els.rematchButton.disabled = false;
+      els.newGameButton.textContent = 'YENİ OYUN';
+    } else {
+      pendingSecondLeg = null;
+      els.rematchButton.classList.remove('hidden');
+      const canRequest = match.mode !== 'friend' || match.winnerSide === null || myMatchSide() !== match.winnerSide;
+      els.rematchButton.textContent = match.mode === 'friend' ? 'RÖVANŞ İSTE' : 'RÖVANŞ';
+      els.rematchButton.disabled = !canRequest;
       els.newGameButton.textContent = 'YENİ OYUN';
     }
     showScreen('results');
   }
 
+  function buildSecondLegPlan() {
+    const firstScores = [...match.scores];
+    const strip = team => ({ name: team.name, color: team.color, lineup: team.lineup.map(({ yellowCards, red, injured, goals, sentOffReason, ...player }) => player) });
+    if (setup.mode === 'ai') {
+      // AI modunda kullanıcı hep alt tarafta kalır; saha değişimi skor tabelasında gösterilir.
+      return {
+        teams: [strip(match.teams[0]), strip(match.teams[1])],
+        series: { type: 'twoLeg', leg: 2, firstLegScores: firstScores, aggregateBase: [...firstScores], firstTeams: [match.teams[0].name, match.teams[1].name] }
+      };
+    }
+    return {
+      teams: [strip(match.teams[1]), strip(match.teams[0])],
+      series: { type: 'twoLeg', leg: 2, firstLegScores: firstScores, aggregateBase: [firstScores[1], firstScores[0]], firstTeams: [match.teams[0].name, match.teams[1].name] }
+    };
+  }
+
+  function reportTournamentMatch() {
+    if (!match?.tournament || !window.Tournament) return;
+    match.teams.forEach(team => team.lineup.forEach(player => {
+      const goals = Number(player.goals) || 0;
+      for (let i = 0; i < goals; i += 1) {
+        const mates = team.lineup.filter(p => p.id !== player.id && p.slot !== 'GK');
+        Tournament.recordRealGoal(team.name, player, Math.random() < .7 && mates.length ? randomItem(mates) : null);
+      }
+    }));
+    const penWinner = match.shootout ? match.winnerSide : null;
+    Tournament.recordUserMatch([match.scores[0], match.scores[1]], penWinner);
+  }
+
+  function startTournamentSetup(type) {
+    setup.system = type;
+    setup.teams = [null, null];
+    setup.side = 0;
+    renderSetupState();
+    showScreen('squad');
+  }
+
+  function playTournamentFixture() {
+    const fixture = Tournament.nextUserFixture();
+    if (!fixture) { online.quadView = false; Tournament.render(); showScreen('tournament'); return; }
+    const tState = Tournament.state;
+    const user = tState.teams.find(t => t.isUser);
+    const strip = team => ({ name: team.name, color: team.color, lineup: team.lineup.map(({ yellowCards, red, injured, goals, sentOffReason, ...player }) => player) });
+    setup.mode = 'ai';
+    setup.teams = [strip(user), strip(fixture.opponent)];
+    setup.teamColors = [user.color, fixture.opponent.color];
+    applySettingsToUi(tState.settings);
+    const drawAllowed = fixture.kind === 'group' || (fixture.kind === 'tie' && fixture.leg === 1);
+    createMatch(fixture.series, {
+      tournament: tState.type,
+      settingsOverride: drawAllowed ? { shootout: false, extraTime: false } : { shootout: true, extraTime: true }
+    });
+  }
+
   function resetSetup(full = true) {
     if (full) {
       setup.mode = null;
+      setup.system = 'single';
       setup.teams = [null, null];
-      setup.competition = 'single';
-      setup.roomType = 'single';
-      setup.selectedColors = ['#d44735', '#2878c8'];
-      setup.tournamentOptions = { legs: 1, durationMinutes: 3, squadMethod: 'random' };
-      localTournament = null;
-      duel = null;
-      localDuelPairs = null;
-      localDuelPairIndex = 0;
-      localDuelUsedIds = new Set();
+      setup.teamColors = [null, null];
     }
     setup.side = 0;
     setup.builder = 'random';
@@ -2089,18 +2273,21 @@
     setup.builder = builder;
     els.builderTabs.forEach(tab => tab.classList.toggle('active', tab.dataset.builder === builder));
     $$('.builder-panel').forEach(panel => panel.classList.toggle('active', panel.id === `builder-${builder}`));
+    document.querySelector('#screen-squad .squad-actions')?.setAttribute('data-builder', builder);
     if (builder === 'manual') renderManualList();
   }
 
   function handleBack(target) {
     if (target === 'home') showScreen('home');
-    else if (target === 'competition') showScreen('competition');
     else if (target === 'mode') {
-      if (setup.mode === 'friend' && online.code) leaveOnlineRoom();
+      // Online moddayken geri = lobiye dön; odadan ayrılmak yalnız lobideki AYRIL butonuyla olur.
+      if (setup.mode === 'friend' && online.code) showScreen('lobby');
       else showScreen('mode');
     } else if (target === 'squad') showScreen('squad');
     else if (target === 'settings') showScreen('settings');
     else if (target === 'lobby') showScreen('lobby');
+    else if (target === 'system') showScreen('system');
+    else showScreen(target);
   }
 
   function browserBackTarget() {
@@ -2110,7 +2297,12 @@
     if (els.dialogOverlay && !els.dialogOverlay.classList.contains('hidden')) { els.dialogOverlay.classList.add('hidden'); els.dialogSecondaryButton?.classList.add('hidden'); dialogAction = null; dialogSecondaryAction = null; return currentScreenName; }
     if (!els.rulesOverlay.classList.contains('hidden')) { els.rulesOverlay.classList.add('hidden'); return currentScreenName; }
     if (!els.squadsOverlay.classList.contains('hidden')) { els.squadsOverlay.classList.add('hidden'); return currentScreenName; }
-    const map = { results:'home',match:'home',brief:setup.mode==='friend'?'lobby':'settings',settings:'squad',draft:'squad',squad:setup.mode==='friend'?'lobby':'competition',duel:'squad',lobby:'online',online:'mode',competition:'mode','tournament-config':'competition',tournament:'home','tournament-results':'home','app-settings':'home',howto:'home',mode:'home' };
+    if (currentScreenName === 'match' && match && match.phase !== 'finished') {
+      // Geri tuşu maçı sessizce kaçırmasın: onay diyaloğu açılır, ekranda kalınır.
+      requestExitMatch('home');
+      return currentScreenName;
+    }
+    const map = { results: 'home', match: 'home', brief: setup.mode === 'friend' ? 'lobby' : 'settings', settings: 'squad', draft: 'squad', squad: setup.mode === 'friend' ? 'lobby' : 'system', system: 'mode', prefs: 'home', tournament: 'home', lobby: 'online', online: 'mode', howto: 'home', mode: 'home' };
     return map[currentScreenName] || 'home';
   }
 
@@ -2125,7 +2317,6 @@
         els.appToast.classList.remove('hidden');
         setTimeout(() => els.appToast.classList.add('hidden'), 1600);
       } else {
-        if (currentScreenName === 'match' && match && match.mode !== 'friend' && !match.paused && !match.resolving) pauseMatch();
         showScreen(target, { fromPop: true });
       }
       history.pushState({ screen: currentScreenName, app: true }, '', `#${currentScreenName}`);
@@ -2138,49 +2329,57 @@
     { key: 'style', label: 'KADRO PROFİLİ' }
   ];
 
-  function duelSeat(localSide) {
-    return Number.isInteger(duel?.seats?.[localSide]) ? duel.seats[localSide] : localSide;
+  function duelActorRoomSide(turn) {
+    return Array.isArray(duel?.sides) ? duel.sides[turn] : turn;
   }
 
-  function duelLocalSideForSeat(seat) {
-    const index = duel?.seats?.indexOf(seat);
-    return index >= 0 ? index : seat;
-  }
-
-  function duelTeamName(localSide) {
+  function duelTeamName(side) {
     if (setup.mode === 'friend') {
-      const seat = duelSeat(localSide);
-      return online.lobby?.players?.[seat]?.name || `OYUNCU ${seat + 1}`;
+      const roomSide = duelActorRoomSide(side);
+      return online.lobby?.players?.[roomSide]?.name || `OYUNCU ${roomSide + 1}`;
     }
-    if (setup.mode === 'ai') return localSide === 0 ? (setup.teams[0]?.name || 'SEN') : 'RETRO MAKİNE';
-    const seat = duelSeat(localSide);
-    return setup.teams?.[seat]?.name || `TAKIM ${seat + 1}`;
+    if (setup.mode === 'ai') return side === 0 ? 'SEN' : 'RETRO MAKİNE';
+    return side === 0 ? 'TAKIM 1' : 'TAKIM 2';
   }
 
-  function selectedPeriodIds(value) {
-    if (!value || value === 'all') return [];
-    return String(value).split('+').filter(id => PERIODS.some(period => period.id === id)).slice(0,2);
+  function isAiDuelTurn() {
+    return setup.mode === 'ai' && duel && duel.turn === 1;
+  }
+
+  function myDuelTurn() {
+    if (!duel) return false;
+    if (setup.mode === 'friend') return online.side === duelActorRoomSide(duel.turn);
+    if (setup.mode === 'ai') return duel.turn === 0;
+    return true;
+  }
+
+  function periodMatchesAny(player, periodValue) {
+    if (!periodValue || periodValue === 'all') return true;
+    return String(periodValue).split(',').some(id => {
+      const p = PERIODS.find(item => item.id === id.trim());
+      return p && player.activeStart <= p.end && player.activeEnd >= p.start;
+    });
   }
 
   function duelOptions(key, selections = {}) {
     let base = PLAYERS;
-    const periods = selectedPeriodIds(selections.period);
-    if (periods.length) base = base.filter(player => periods.some(id => { const p=PERIODS.find(x=>x.id===id); return p && player.activeStart<=p.end && player.activeEnd>=p.start; }));
-    if (key === 'period') {
-      const singles=PERIODS.map(p=>({value:p.id,label:p.label}));
-      const pairs=[]; for(let i=0;i<PERIODS.length;i++)for(let j=i+1;j<PERIODS.length;j++)pairs.push({value:`${PERIODS[i].id}+${PERIODS[j].id}`,label:`${PERIODS[i].label} + ${PERIODS[j].label}`});
-      return [{value:'all',label:'Tüm dönemler'},...singles,...pairs];
+    if (selections.period && selections.period !== 'all') base = base.filter(player => periodMatchesAny(player, selections.period));
+    if (key === 'period') return [{ value:'all', label:'Tüm dönemler' }, ...PERIODS.map(p => ({ value:p.id, label:p.label }))];
+    if (key === 'nationality') {
+      const counts = new Map(); base.forEach(p => counts.set(p.nationality, (counts.get(p.nationality)||0)+1));
+      return [{value:'all',label:'Tüm milliyetler'}, ...[...counts].sort((a,b)=>b[1]-a[1]).slice(0,18).map(([value,count])=>({value,label:`${value} · ${count}`}))];
     }
-    if (key === 'nationality') { const counts=new Map();base.forEach(p=>counts.set(p.nationality,(counts.get(p.nationality)||0)+1));return [{value:'all',label:'Tüm milliyetler'},...[...counts].sort((a,b)=>b[1]-a[1]).slice(0,30).map(([value,count])=>({value,label:`${value} · ${count}`}))]; }
-    if (key === 'league') { const counts=new Map();base.forEach(p=>(p.leagues||[]).forEach(x=>counts.set(x,(counts.get(x)||0)+1)));return [{value:'all',label:'Tüm ligler'},...[...counts].sort((a,b)=>b[1]-a[1]).slice(0,30).map(([value,count])=>({value,label:`${value} · ${count}`}))]; }
+    if (key === 'league') {
+      const counts = new Map(); base.forEach(p => (p.leagues||[]).forEach(x => counts.set(x,(counts.get(x)||0)+1)));
+      return [{value:'all',label:'Tüm ligler'}, ...[...counts].sort((a,b)=>b[1]-a[1]).slice(0,18).map(([value,count])=>({value,label:`${value} · ${count}`}))];
+    }
     if (key === 'rating') return [{value:'all',label:'Tüm puanlar'},{value:'60-79',label:'60–79 · Sürpriz havuz'},{value:'70-89',label:'70–89 · Dengeli'},{value:'80-99',label:'80–99 · Elit'},{value:'86-99',label:'86–99 · Efsaneler'}];
     return [{value:'balanced',label:'Dengeli kadro'},{value:'legends',label:'Efsane ağırlıklı'},{value:'modern',label:'Modern dönem ağırlıklı'},{value:'surprise',label:'Sürpriz transferler'}];
   }
 
   function filterDuelPool(selections = {}) {
-    const periods=selectedPeriodIds(selections.period);
     return PLAYERS.filter(player => {
-      if(periods.length && !periods.some(id=>{const p=PERIODS.find(x=>x.id===id);return p&&player.activeStart<=p.end&&player.activeEnd>=p.start;}))return false;
+      if (!periodMatchesAny(player, selections.period)) return false;
       if (selections.nationality && selections.nationality !== 'all' && player.nationality !== selections.nationality) return false;
       if (selections.league && selections.league !== 'all' && !(player.leagues||[]).includes(selections.league)) return false;
       if (selections.rating && selections.rating !== 'all' && !ratingRangeMatch(player, selections.rating)) return false;
@@ -2188,19 +2387,29 @@
     });
   }
 
+  // Her turda TAZE adaylar: daha önce gösterilen oyuncular havuz elverdiğince tekrar gelmez.
   function duelCandidatesFor(state) {
     const side = state.turn;
     const slot = SLOTS[state.picks[side].length];
-    const used = new Set([...state.picks.flat().map(p => p.id), ...(state.globalUsedIds || [])]);
-    const shown = new Set(state.shownIds || []);
-    let pool = filterDuelPool(state.selections).filter(p => !used.has(p.id) && !shown.has(p.id));
-    if (state.selections.style === 'legends') pool.sort((a,b)=>b.rating-a.rating);
-    else if (state.selections.style === 'modern') pool.sort((a,b)=>b.activeEnd-a.activeEnd || b.rating-a.rating);
-    else if (state.selections.style === 'surprise') pool = shuffle(pool).sort((a,b)=>a.rating-b.rating);
-    let candidates = candidateSetForSlot(slot, pool, new Set([...used,...shown])).slice(0,3);
-    if (candidates.length < 3) candidates = candidateSetForSlot(slot, filterDuelPool(state.selections).filter(p=>!used.has(p.id)), used).slice(0,3);
-    state.shownIds = [...shown, ...candidates.map(p=>p.id)];
-    return candidates;
+    const used = new Set(state.picks.flat().map(p => p.id));
+    const shown = state.shownIds instanceof Set ? state.shownIds : new Set(state.shownIds || []);
+    let pool = filterDuelPool(state.selections).filter(p => !used.has(p.id));
+    let compatible = pool.filter(p => positionScore(slot, p) > 0);
+    if (!compatible.length) compatible = pool;
+    let fresh = compatible.filter(p => !shown.has(p.id));
+    if (fresh.length < 3) { // gösterim geçmişi bu mevki için tükendiyse sıfırla
+      compatible.forEach(p => shown.delete(p.id));
+      fresh = compatible;
+    }
+    let ranked = shuffle(fresh);
+    if (state.selections.style === 'legends') ranked = ranked.sort((a,b)=>b.rating-a.rating).slice(0, 12).sort(() => Math.random() - .5);
+    else if (state.selections.style === 'modern') ranked = ranked.sort((a,b)=>b.activeEnd-a.activeEnd || b.rating-a.rating).slice(0, 12).sort(() => Math.random() - .5);
+    else if (state.selections.style === 'surprise') ranked = ranked.sort((a,b)=>a.rating-b.rating).slice(0, 12).sort(() => Math.random() - .5);
+    const picks = uniqueById(ranked).slice(0, Math.min(3, ranked.length));
+    picks.forEach(p => shown.add(p.id));
+    state.shownIds = shown;
+    state.digitMap = buildDigitMap(picks.length);
+    return picks;
   }
 
   function pitchPosition(index) {
@@ -2215,143 +2424,294 @@
 
   function normalizeRemoteDuel(raw) {
     if (!raw) return null;
-    return { ...raw, picks: (raw.picks || [[],[]]).map(list => list || []), candidates: raw.candidates || [], shownIds: raw.shownIds || [] };
+    return { ...raw, picks: (raw.picks || [[],[]]).map(list => list || []), candidates: raw.candidates || [] };
   }
 
-  function scheduleLocalDuelCoinTimeout() {
-    if (duelCoinTimer) clearTimeout(duelCoinTimer);
-    duelCoinTimer = null;
-    if (setup.mode === 'friend' || !duel || duel.phase !== 'coin') return;
-    const remaining = Math.max(100, Number(duel.coinDeadline || (Date.now() + 10000)) - Date.now());
-    duelCoinTimer = setTimeout(() => {
-      if (duel?.phase === 'coin') flipLocalDuelCoin(true);
-    }, remaining);
+  let duelRaf = null;
+  let duelAiTimer = null;
+  const duelWatch = { ms: 0, last: 0, running: false, key: null, lastIndex: -1 };
+
+  function clearDuelAi() { clearTimeout(duelAiTimer); duelAiTimer = null; }
+
+  const DUEL_STEP_MS = 520;   // ışık hızı (eski 650'den bir tık hızlı)
+  const PICK_DEADLINE_MS = 15000; // basılmazsa otomatik seçim
+
+  // 10 rakamı adaylara KARIŞIK dağıtan harita: her rakam bir adayı seçer,
+  // dağılım adil (her aday en az 3 rakam alır), sıra her slotta yeniden karılır.
+  function buildDigitMap(count) {
+    const safe = Math.max(1, count);
+    return shuffle(Array.from({ length: 10 }, (_, digit) => digit % safe));
+  }
+
+  function duelDigit() { return Math.floor(duelWatch.ms / DUEL_STEP_MS) % 10; }
+
+  function duelIndexForDigit(digit) {
+    const count = (duel?.candidates || []).length || 1;
+    const map = Array.isArray(duel?.digitMap) && duel.digitMap.length === 10 ? duel.digitMap : null;
+    const index = map ? map[digit] : digit % count;
+    return Math.min(count - 1, Math.max(0, Number(index) || 0));
+  }
+
+  function updateDuelPrediction() {
+    if (!duel?.candidates?.length) return;
+    const digit = duelDigit();
+    const index = duelIndexForDigit(digit);
+    if (duelWatch.lastIndex === digit) return;
+    duelWatch.lastIndex = digit;
+    els.duelPickCandidates.querySelectorAll('.duel-player-card').forEach((card, cardIndex) => card.classList.toggle('predicted', cardIndex === index));
+    els.duelDigitMap?.querySelectorAll('[data-map-digit]').forEach(item => item.classList.toggle('active', Number(item.dataset.mapDigit) === digit));
+  }
+
+  function startDuelWatch() {
+    const key = duel ? `${duel.turn}-${duel.picks[0].length + duel.picks[1].length}` : null;
+    if (duelWatch.key === key && duelWatch.running) return;
+    duelWatch.key = key;
+    duelWatch.ms = 0;
+    duelWatch.last = performance.now();
+    duelWatch.running = true;
+    duelWatch.lastIndex = -1;
+    duelWatch.autoFired = false;
+    cancelAnimationFrame(duelRaf);
+    const loop = now => {
+      if (!duel || (duel.phase !== 'picks') || currentScreenName !== 'duel') { duelWatch.running = false; return; }
+      if (duelWatch.running && !duel.paused) {
+        duelWatch.ms += clamp(now - duelWatch.last, 0, 100);
+        if (els.duelWatchDisplay) els.duelWatchDisplay.textContent = formatStopwatch(duelWatch.ms);
+        const left = Math.max(0, Math.ceil((PICK_DEADLINE_MS - duelWatch.ms) / 1000));
+        if (els.duelPickProgress) {
+          const picked = duel.picks[0].length + duel.picks[1].length;
+          els.duelPickProgress.textContent = `${picked} / 22 OYUNCU · ${left} SN`;
+        }
+        updateDuelPrediction();
+        // Süre dolarsa sıradaki oyuncunun istemcisi otomatik durdurur
+        if (duelWatch.ms >= PICK_DEADLINE_MS && !duelWatch.autoFired && myDuelTurn()) {
+          duelWatch.autoFired = true;
+          showToast('Süre doldu — transfer otomatik seçildi.');
+          stopDuelWatchAndPick(true);
+        }
+      }
+      duelWatch.last = now;
+      duelRaf = requestAnimationFrame(loop);
+    };
+    duelRaf = requestAnimationFrame(loop);
+  }
+
+  function stopDuelWatchAndPick(auto = false) {
+    if (!duel || duel.phase !== 'picks' || duel.paused) return;
+    if (!auto && !duelWatch.running) return;
+    if (!myDuelTurn()) return;
+    duelWatch.running = false;
+    playAudioCue('timer.stop', { channel: 'ui' });
+    const digit = duelDigit();
+    if (setup.mode === 'friend') {
+      els.duelStopButton.disabled = true;
+      online.socket?.emit('duel:pick', { digit }, response => { if (!response?.ok) { showEventOverlay('TRANSFER OLMADI', response?.error || '', 'red'); duelWatch.running = true; } });
+      return;
+    }
+    resolveLocalDuelPick(digit);
+  }
+
+  function resolveLocalDuelPick(digit) {
+    const candidates = duel.candidates || [];
+    if (!candidates.length) return;
+    const index = duelIndexForDigit(digit);
+    const player = candidates[index];
+    const side = duel.turn;
+    const slot = SLOTS[duel.picks[side].length];
+    const card = els.duelPickCandidates.querySelectorAll('.duel-player-card')[index];
+    if (card) card.classList.add('chosen');
+    showEventOverlay(player.name, `${slot} · ${player.rating} puan · Rakam ${digit}`, 'navy', `${duelTeamName(side)} TRANSFER YAPTI`, 1900, () => {
+      duel.picks[side].push({ ...player, slot });
+      if (duel.picks[0].length === 11 && duel.picks[1].length === 11) { duel.phase = 'done'; duel.candidates = []; }
+      else {
+        duel.turn = side === 0 ? 1 : 0;
+        if (duel.picks[duel.turn].length >= 11) duel.turn = side;
+        duel.candidates = duelCandidatesFor(duel);
+      }
+      renderDuel();
+    });
+  }
+
+  function scheduleDuelAi() {
+    clearDuelAi();
+    if (!isAiDuelTurn()) return;
+    if (duel.phase === 'criteria') {
+      duelAiTimer = setTimeout(() => {
+        if (!isAiDuelTurn() || duel.phase !== 'criteria') return;
+        const criterion = DUEL_CRITERIA[duel.criteriaIndex];
+        const options = duelOptions(criterion.key, duel.selections);
+        if (criterion.key === 'period') {
+          const count = Math.random() < .5 ? 1 : 2;
+          const ids = shuffle(PERIODS.map(p => p.id)).slice(0, count);
+          chooseLocalDuelCriterion(Math.random() < .3 ? 'all' : ids.join(','));
+        } else {
+          chooseLocalDuelCriterion(randomItem(options).value);
+        }
+      }, 1400 + Math.random() * 1200);
+    } else if (duel.phase === 'picks') {
+      duelAiTimer = setTimeout(() => {
+        if (!isAiDuelTurn() || duel.phase !== 'picks') return;
+        duelWatch.running = false;
+        resolveLocalDuelPick(Math.floor(Math.random() * 10));
+      }, 1600 + Math.random() * 1600);
+    }
+  }
+
+  function duelCriterionLabel(key, value) {
+    if (!value || value === 'all') return 'Hepsi';
+    if (key === 'period') return String(value).split(',').map(id => PERIODS.find(p => p.id === id)?.label || id).join(' + ');
+    return value;
+  }
+
+  let duelPauseTicker = null;
+
+  function renderDuelPausedBanner() {
+    const banner = $('#duelPausedBanner');
+    if (!banner) return;
+    clearInterval(duelPauseTicker);
+    if (!duel?.paused) { banner.classList.add('hidden'); return; }
+    banner.classList.remove('hidden');
+    $('#duelPausedText').textContent = `${duel.pausedName || 'Oyuncu'} düellodan ayrıldı. Dönmezse düello iptal edilecek.`;
+    const tick = () => {
+      const left = Math.max(0, Math.ceil(((Number(duel?.deadline) || 0) - Date.now()) / 1000));
+      const counter = $('#duelPausedCountdown');
+      if (counter) counter.textContent = String(left);
+    };
+    tick();
+    duelPauseTicker = setInterval(tick, 250);
   }
 
   function renderDuel() {
     if (!duel) return;
     els.duelTeam0Name.textContent = duelTeamName(0); els.duelTeam1Name.textContent = duelTeamName(1);
+    renderDuelPausedBanner();
+    if (els.duelCancelButton) els.duelCancelButton.textContent = setup.mode === 'friend' ? '← LOBİYE DÖN' : '← VAZGEÇ';
+    const paused = Boolean(duel.paused);
+    const spectator = setup.mode === 'friend' && Array.isArray(duel.sides) && !duel.sides.includes(online.side);
     els.coinStage.classList.toggle('hidden', duel.phase !== 'coin');
     els.duelCriteriaStage.classList.toggle('hidden', duel.phase !== 'criteria');
     els.duelPickStage.classList.toggle('hidden', duel.phase !== 'picks' && duel.phase !== 'done');
     if (duel.phase === 'coin') {
-      els.duelStatusText.textContent = 'YAZI TURA İLK KRİTERİ VE İLK TRANSFERİ BELİRLER';
-      els.flipCoinButton.disabled = setup.mode === 'friend' && !duel.seats?.includes(online.side);
-      scheduleLocalDuelCoinTimeout();
+      els.duelStatusText.textContent = spectator ? `${duelTeamName(0)} × ${duelTeamName(1)} DÜELLO YAPIYOR — İZLİYORSUN` : 'YAZI TURA İLK KRİTERİ VE İLK TRANSFERİ BELİRLER';
+      els.flipCoinButton.disabled = paused || (setup.mode === 'friend' && online.side !== duel.requestedBy);
     }
     if (duel.phase === 'criteria') {
       const criterion = DUEL_CRITERIA[duel.criteriaIndex];
+      const isPeriod = criterion.key === 'period';
+      const myTurn = myDuelTurn() && !paused;
       els.duelTurnName.textContent = duelTeamName(duel.turn); els.duelCriteriaProgress.textContent = `${duel.criteriaIndex + 1} / ${DUEL_CRITERIA.length} · ${criterion.label}`;
-      els.duelStatusText.textContent = `${duelTeamName(duel.turn)} KRİTER SEÇİYOR`;
-      const myTurn = setup.mode !== 'friend' || online.side === duelSeat(duel.turn);
-      els.duelCriteriaChoices.innerHTML = duelOptions(criterion.key, duel.selections).map(opt=>`<button class="duel-choice" data-duel-value="${escapeHtml(opt.value)}" ${myTurn?'':'disabled'}><b>${escapeHtml(opt.label)}</b></button>`).join('');
-      els.duelCriteriaSummary.innerHTML = DUEL_CRITERIA.slice(0,duel.criteriaIndex).map(item=>`<span><b>${item.label}</b> ${escapeHtml(duel.selections[item.key] || '—')}</span>`).join('');
+      els.duelStatusText.textContent = `${duelTeamName(duel.turn)} KRİTER SEÇİYOR${isPeriod ? ' · EN FAZLA 2 DÖNEM' : ''}`;
+      const draft = isPeriod ? (duel.periodDraft || []) : [];
+      els.duelCriteriaChoices.innerHTML = duelOptions(criterion.key, duel.selections).map(opt => {
+        const active = isPeriod && (draft.includes(opt.value) || (opt.value === 'all' && draft.includes('all')));
+        return `<button class="duel-choice${active ? ' active' : ''}" data-duel-value="${escapeHtml(opt.value)}" ${myTurn ? '' : 'disabled'}><b>${escapeHtml(opt.label)}</b></button>`;
+      }).join('');
+      els.duelPeriodConfirm?.classList.toggle('hidden', !isPeriod || !myTurn);
+      if (els.duelPeriodConfirm) els.duelPeriodConfirm.disabled = isPeriod && !draft.length;
+      els.duelCriteriaSummary.innerHTML = DUEL_CRITERIA.slice(0, duel.criteriaIndex).map(item => `<span><b>${item.label}</b> ${escapeHtml(duelCriterionLabel(item.key, duel.selections[item.key]))}</span>`).join('');
+      scheduleDuelAi();
+    } else {
+      els.duelPeriodConfirm?.classList.add('hidden');
     }
     if (duel.phase === 'picks' || duel.phase === 'done') {
-      els.duelPickTurnName.textContent = duel.phase === 'done' ? 'KADROLAR TAMAM' : duelTeamName(duel.turn);
+      const done = duel.phase === 'done';
+      els.duelPickTurnName.textContent = done ? 'KADROLAR TAMAM' : duelTeamName(duel.turn);
       const picked = duel.picks[0].length + duel.picks[1].length;
       els.duelPickProgress.textContent = `${picked} / 22 OYUNCU`;
-      const myTurn = setup.mode === 'friend' ? online.side === duelSeat(duel.turn) : !(setup.mode === 'ai' && duel.turn === 1);
-      els.duelPickCandidates.innerHTML = duel.phase === 'done' ? '<div class="duel-complete-card">İki kadro da hazır. Formasyonları kontrol et ve devam et.</div>' : (duel.candidates || []).map((player,index)=>`<article class="duel-player-card" data-duel-index="${index}"><span>${escapeHtml(SLOTS[duel.picks[duel.turn].length])}</span><strong>${escapeHtml(player.name)}</strong><small>${escapeHtml(player.nationality)} · ${escapeHtml(player.position)}</small><b>${player.rating}</b></article>`).join('');
-      if(els.duelStopButton){els.duelStopButton.disabled=!myTurn||duel.phase==='done';els.duelStopButton.classList.toggle('hidden',duel.phase==='done');}
-      if(duel.phase==='picks'&&myTurn) startDuelWatch(); else stopDuelWatchLoop();
+      const myTurn = myDuelTurn() && !paused;
+      const slotLabel = done ? '' : SLOTS[duel.picks[duel.turn].length];
+      els.duelPickCandidates.innerHTML = done
+        ? '<div class="duel-complete-card">İki kadro da hazır. Formasyonları kontrol et ve devam et.</div>'
+        : (duel.candidates || []).map((player, index) => `<article class="duel-player-card" data-duel-index="${index}"><span class="candidate-index">${index + 1}</span><span>${escapeHtml(slotLabel)}</span><strong>${escapeHtml(player.name)}</strong><small>${escapeHtml(player.nationality)} · ${escapeHtml(player.position)}</small><b>${player.rating}</b></article>`).join('');
+      els.duelWatchBlock?.classList.toggle('hidden', done);
+      if (!done) {
+        const count = (duel.candidates || []).length || 1;
+        if (els.duelDigitMap) els.duelDigitMap.innerHTML = Array.from({ length: 10 }, (_, digit) => `<span data-map-digit="${digit}" data-map-candidate="${duelIndexForDigit(digit)}">${digit}<i>${duelIndexForDigit(digit) + 1}</i></span>`).join('');
+        if (els.duelStopButton) els.duelStopButton.disabled = !myTurn;
+        els.duelStatusText.textContent = paused ? 'DÜELLO DURAKLATILDI — OYUNCU BEKLENİYOR'
+          : spectator ? `${duelTeamName(0)} × ${duelTeamName(1)} DÜELLO YAPIYOR — İZLİYORSUN`
+          : myTurn ? 'KRONOMETREYİ DURDUR — RAKAM HARİTASI TRANSFERİ SEÇER' : `${duelTeamName(duel.turn)} KRONOMETREYİ KOLLUYOR…`;
+        startDuelWatch();
+        scheduleDuelAi();
+      }
       renderDuelPitch(els.duelPitch0, duel.picks[0]); renderDuelPitch(els.duelPitch1, duel.picks[1]);
-      els.duelFinishButton.classList.toggle('hidden', duel.phase !== 'done');
+      els.duelFinishButton.classList.toggle('hidden', !done);
     } else els.duelFinishButton.classList.add('hidden');
-    scheduleLocalDuelAi();
-  }
-
-  function stopDuelWatchLoop(){ if(duelWatchRaf) cancelAnimationFrame(duelWatchRaf); duelWatchRaf=null; }
-  function startDuelWatch(){
-    stopDuelWatchLoop(); if(!duel||duel.phase!=='picks'||!(duel.candidates||[]).length)return;
-    const started=performance.now();
-    const loop=now=>{ if(!duel||duel.phase!=='picks')return; const elapsed=now-started; const index=Math.floor(elapsed/720)%duel.candidates.length; duel.liveCandidateIndex=index; if(els.duelWatchDisplay)els.duelWatchDisplay.textContent=formatStopwatch(elapsed); $$('.duel-player-card').forEach((card,i)=>card.classList.toggle('candidate-live',i===index)); duelWatchRaf=requestAnimationFrame(loop); };
-    duelWatchRaf=requestAnimationFrame(loop);
-  }
-  function stopDuelCandidate(){
-    if(!duel||duel.phase!=='picks')return; stopDuelWatchLoop(); const index=Number.isInteger(duel.liveCandidateIndex)?duel.liveCandidateIndex:0; const player=duel.candidates[index]; if(!player)return;
-    playAudioCue('timer.stop',{channel:'timer'});
-    if(setup.mode==='friend') online.socket?.emit('duel:pick',{playerId:player.id},response=>{if(!response?.ok)showEventOverlay('TRANSFER OLMADI',response?.error||'','red');}); else chooseLocalDuelPlayer(player.id);
-  }
-  function scheduleLocalDuelAi(){
-    if(setup.mode!=='ai'||!duel||duel.turn!==1)return;
-    clearTimeout(duel.aiTimer);
-    duel.aiTimer=setTimeout(()=>{
-      if(!duel||duel.turn!==1)return;
-      if(duel.phase==='criteria'){ const criterion=DUEL_CRITERIA[duel.criteriaIndex]; const options=duelOptions(criterion.key,duel.selections); chooseLocalDuelCriterion(randomItem(options).value); }
-      else if(duel.phase==='picks'&&duel.candidates.length) chooseLocalDuelPlayer(randomItem(duel.candidates).id);
-    },900+Math.random()*900);
   }
 
   function startLocalDuel() {
-    if (setup.competition === 'fourCup' && setup.mode === 'coop') {
-      if (!localDuelPairs) {
-        localDuelPairs = [[0,1],[2,3]];
-        localDuelPairIndex = 0;
-        localDuelUsedIds = new Set();
-      }
-    } else {
-      localDuelPairs = null;
-      localDuelPairIndex = 0;
-      localDuelUsedIds = new Set();
-    }
-    const seats = localDuelPairs?.[localDuelPairIndex] || [0,1];
-    duel = { phase:'coin', requestedBy:seats[0], winner:null, turn:0, seats, criteriaIndex:0, selections:{}, picks:[[],[]], candidates:[], shownIds:[], globalUsedIds:[...localDuelUsedIds], coinDeadline:Date.now()+10000 };
+    duel = { phase:'coin', requestedBy:0, winner:null, turn:0, criteriaIndex:0, selections:{}, periodDraft:[], picks:[[],[]], candidates:[], shownIds:new Set() };
     showScreen('duel'); renderDuel();
   }
 
-  function flipLocalDuelCoin(auto = false) {
+  function duelCoinTeam(side) {
+    const fallback = side === 0 ? '#d44735' : '#2878c8';
+    let color = fallback;
+    if (setup.mode === 'friend') color = online.lobby?.players?.[duelActorRoomSide(side)]?.teamColor || fallback;
+    else color = setup.teamColors[side] || fallback;
+    return { name: duelTeamName(side), color };
+  }
+
+  function flipLocalDuelCoin() {
     if (!duel || duel.phase !== 'coin') return;
-    if (duelCoinTimer) clearTimeout(duelCoinTimer); duelCoinTimer = null;
-    els.duelCoin.classList.add('flipping'); els.flipCoinButton.disabled = true;
-    setTimeout(()=>{
-      duel.winner = Math.random() < .5 ? 0 : 1; duel.turn = duel.winner; duel.phase = 'criteria';
-      els.duelCoin.classList.remove('flipping');
-      showEventOverlay(auto ? 'OTOMATİK YAZI TURA' : 'YAZI TURA', `${duelTeamName(duel.winner)} ilk kriteri ve ilk oyuncuyu seçecek.`, 'yellow', 'TRANSFER DÜELLOSU', 3600, renderDuel);
-    }, 1300);
+    els.flipCoinButton.disabled = true;
+    const winner = Math.random() < .5 ? 0 : 1;
+    showCoinFlip(duelCoinTeam(0), duelCoinTeam(1), winner, () => {
+      if (!duel || duel.phase !== 'coin') return;
+      duel.winner = winner; duel.turn = winner; duel.phase = 'criteria';
+      showEventOverlay('İLK SEÇİM HAKKI', `${duelTeamName(winner)} ilk kriteri ve ilk oyuncuyu seçecek.`, 'yellow', 'TRANSFER DÜELLOSU', 2600, renderDuel);
+    }, 'TRANSFER DÜELLOSU KURASI');
   }
 
   function chooseLocalDuelCriterion(value) {
     const key = DUEL_CRITERIA[duel.criteriaIndex].key; duel.selections[key] = value; duel.criteriaIndex += 1;
+    duel.periodDraft = [];
     if (duel.criteriaIndex >= DUEL_CRITERIA.length) {
       const pool = filterDuelPool(duel.selections);
       if (pool.length < 22 || !pool.some(p=>p.position==='GK')) { showEventOverlay('HAVUZ DAR', 'Bu kriterlerle iki kadro kurulamıyor. Düello dengeli havuzla devam edecek.', 'navy', `${pool.length} OYUNCU`, 4200); duel.selections = { period:'all', nationality:'all', league:'all', rating:'all', style:duel.selections.style || 'balanced' }; }
-      duel.phase = 'picks'; duel.turn = duel.winner; duel.shownIds=[]; duel.candidates = duelCandidatesFor(duel);
+      duel.phase = 'picks'; duel.turn = duel.winner; duel.candidates = duelCandidatesFor(duel);
     } else duel.turn = duel.turn === 0 ? 1 : 0;
     renderDuel();
   }
 
-  function chooseLocalDuelPlayer(playerId) {
-    const player = (duel.candidates || []).find(p=>p.id===playerId); if (!player) return;
-    const side = duel.turn, slot = SLOTS[duel.picks[side].length]; duel.picks[side].push({ ...player, slot });
-    if (duel.picks[0].length === 11 && duel.picks[1].length === 11) { duel.phase='done'; duel.candidates=[]; }
-    else { duel.turn = side === 0 ? 1 : 0; if (duel.picks[duel.turn].length >= 11) duel.turn = side; duel.candidates = duelCandidatesFor(duel); }
+  function toggleLocalPeriodDraft(value) {
+    duel.periodDraft = duel.periodDraft || [];
+    if (value === 'all') {
+      duel.periodDraft = duel.periodDraft.includes('all') ? [] : ['all'];
+    } else {
+      duel.periodDraft = duel.periodDraft.filter(item => item !== 'all');
+      if (duel.periodDraft.includes(value)) duel.periodDraft = duel.periodDraft.filter(item => item !== value);
+      else if (duel.periodDraft.length < 2) duel.periodDraft.push(value);
+      else showEventOverlay('EN FAZLA 2 DÖNEM', 'Önce bir dönemi kaldır.', 'navy', '', 900);
+    }
     renderDuel();
+  }
+
+  function confirmPeriodDraft() {
+    const draft = duel.periodDraft || [];
+    if (!draft.length) return;
+    const value = draft.includes('all') ? 'all' : draft.join(',');
+    if (setup.mode === 'friend') {
+      online.socket?.emit('duel:criterion', { value }, response => { if (!response?.ok) showEventOverlay('KRİTER SEÇİLEMEDİ', response?.error || '', 'red'); });
+    } else {
+      chooseLocalDuelCriterion(value);
+    }
   }
 
   function finishDuel() {
     if (!duel || duel.phase !== 'done') return;
-    if (setup.mode === 'friend') {
-      duel = null;
-      renderOnlineLobby();
-      showScreen('lobby');
-      return;
-    }
-    const seats = duel.seats || [0,1];
-    seats.forEach((seat,localSide) => {
-      setup.teams[seat] = { name:`${duelTeamName(localSide)} XI`, color:setup.selectedColors[seat]||TEAM_COLORS[seat%TEAM_COLORS.length].value, lineup:duel.picks[localSide].map((p,i)=>({ ...p, slot:p.slot || SLOTS[i] })) };
-      duel.picks[localSide].forEach(player=>localDuelUsedIds.add(player.id));
-    });
-    if (localDuelPairs && localDuelPairIndex + 1 < localDuelPairs.length) {
-      localDuelPairIndex += 1;
-      const nextSeats = localDuelPairs[localDuelPairIndex];
-      duel = { phase:'coin', requestedBy:nextSeats[0], winner:null, turn:0, seats:nextSeats, criteriaIndex:0, selections:{}, picks:[[],[]], candidates:[], shownIds:[], globalUsedIds:[...localDuelUsedIds], coinDeadline:Date.now()+10000 };
-      showEventOverlay('İKİNCİ DÜELLO', `${nextSeats[0]+1}. ve ${nextSeats[1]+1}. oyuncular transfer masasına geliyor.`, 'navy', '4 KİŞİLİK KUPA', 3600, renderDuel);
-      return;
-    }
-    localDuelPairs = null;
-    localDuelPairIndex = 0;
-    if (setup.competition === 'fourCup') initializeLocalTournament();
+    clearDuelAi();
+    cancelAnimationFrame(duelRaf);
+    const names = setup.mode === 'ai'
+      ? [els.teamNameInput?.value.trim() || '90+ XI', 'Retro Makine']
+      : [`${duelTeamName(0)} XI`, `${duelTeamName(1)} XI`];
+    setup.teams = [0,1].map(side => ({
+      name: names[side],
+      color: setup.mode === 'friend' ? undefined : (setup.teamColors[side] || ensureTeamColor(side)),
+      lineup: duel.picks[side].map((p,i)=>({ ...p, slot:p.slot || SLOTS[i] }))
+    }));
+    setup.side = setup.mode === 'friend' ? online.side : 1;
+    if (setup.mode === 'friend') { renderSetupState(); showScreen(online.side === 0 ? 'settings' : 'lobby'); }
     else showScreen('settings');
   }
 
@@ -2418,12 +2778,13 @@
         socket.emit('room:join', { code: online.code, name: online.name, token: online.token }, response => {
           if (!response?.ok) return;
           online.side = response.side;
-          online.matchSide = Number.isInteger(response.localSide) ? response.localSide : response.side;
-          online.fixtureId = response.fixtureId || null;
-          online.tournament = response.tournament || null;
           online.lobby = response.lobby;
           renderOnlineLobby();
-          if (response.match) { online.matchSide=Number.isInteger(response.localSide)?response.localSide:response.side; online.fixtureId=response.fixtureId||null; online.tournament=response.tournament||online.tournament; receiveRemoteMatch(response.match, Date.now()); }
+          if (response.match) {
+            online.matchId = Number.isInteger(response.matchId) ? response.matchId : null;
+            online.matchSide = Number.isInteger(response.yourSide) ? response.yourSide : null;
+            receiveRemoteMatch(response.match, Date.now());
+          }
         });
       }
     });
@@ -2445,18 +2806,36 @@
       }
     });
 
+    socket.on('room:notice', payload => {
+      if (payload?.text) showToast(payload.text, 3200);
+      if (currentScreenName === 'duel' && !duel) showScreen('lobby');
+    });
+
     socket.on('room:duel', payload => {
+      const previousPhase = duel?.phase;
       duel = normalizeRemoteDuel(payload);
+      // Uzak yazı tura: coin → criteria geçişini animasyonla göster
+      if (duel && previousPhase === 'coin' && duel.phase === 'criteria' && Number.isInteger(duel.winner)) {
+        const winner = duel.winner;
+        showScreen('duel');
+        showCoinFlip(duelCoinTeam(0), duelCoinTeam(1), winner, () => {
+          showEventOverlay('İLK SEÇİM HAKKI', `${duelTeamName(winner)} ilk kriteri ve ilk oyuncuyu seçecek.`, 'yellow', 'TRANSFER DÜELLOSU', 2400, renderDuel);
+        }, 'TRANSFER DÜELLOSU KURASI');
+        return;
+      }
       if (!duel) {
         els.duelResponseButtons?.classList.add('hidden');
+        if (isQuadRoom()) {
+          if (currentScreenName === 'duel') showScreen('lobby');
+          return;
+        }
         els.duelRequestText.textContent = 'Düello isteği reddedildi veya iptal edildi. Diğer kadro yöntemlerinden birini seçebilirsiniz.';
         if (currentScreenName === 'duel') showScreen('squad');
         return;
       }
       if (duel.status === 'pending') {
         const incoming = online.side !== duel.requestedBy;
-        const requesterLocal = duelLocalSideForSeat(duel.requestedBy);
-        els.duelRequestText.textContent = incoming ? `${duelTeamName(requesterLocal)} Transfer Düellosu önerdi.` : 'Rakibin cevabı bekleniyor.';
+        els.duelRequestText.textContent = incoming ? `${duelTeamName(duel.requestedBy)} Transfer Düellosu önerdi.` : `${duelTeamName(online.side === 0 ? 1 : 0)} oyuncusunun cevabı bekleniyor.`;
         els.duelResponseButtons.classList.toggle('hidden', !incoming);
         els.duelStartButton.classList.toggle('hidden', incoming || duel.status === 'pending');
         showScreen('squad'); switchBuilder('duel');
@@ -2485,14 +2864,6 @@
       if (Number.isInteger(payload?.side)) { online.side = payload.side; setup.side = payload.side; renderOnlineLobby(); }
     });
 
-    socket.on('room:legComplete', payload => {
-      const scores = Array.isArray(payload?.firstLegScores) ? payload.firstLegScores : [0, 0];
-      const teams = Array.isArray(payload?.firstTeams) ? payload.firstTeams : ['İç saha', 'Deplasman'];
-      showEventOverlay('İLK AYAK TAMAMLANDI', `${teams[0]} ${scores[0]}–${scores[1]} ${teams[1]}. Sahalar değişiyor; ikinci ayak birazdan başlayacak.`, 'navy', 'TOPLAM SKOR KORUNACAK', 6800);
-      els.rematchButton?.classList.add('hidden');
-      if (els.newGameButton) { els.newGameButton.textContent = '2. AYAK HAZIRLANIYOR…'; els.newGameButton.disabled = true; }
-    });
-
     socket.on('room:rematchRequest', request => {
       if (!request) return;
       if (request.from === online.side) {
@@ -2510,30 +2881,91 @@
       match=null; remoteFinishedRendered=false; renderBrief(); showScreen('brief');
     });
 
-    socket.on('tournament:update', payload => {
-      online.tournament = payload?.tournament || null;
-      renderOnlineTournament();
-    });
-
-    socket.on('tournament:complete', payload => {
-      online.tournament = payload?.tournament || online.tournament;
-      renderOnlineTournamentResults(payload?.players || online.lobby?.players || []);
-    });
-
     socket.on('match:start', payload => {
-      online.matchSide = Number.isInteger(payload?.localSide) ? payload.localSide : online.side;
-      online.fixtureId = payload?.fixtureId || null;
-      online.tournament = payload?.tournament || online.tournament;
       remoteFinishedRendered = false;
-      if (els.newGameButton) els.newGameButton.disabled = false;
       lastRemoteOverlayId = null;
+      online.matchId = Number.isInteger(payload.matchId) ? payload.matchId : null;
+      online.matchSide = Number.isInteger(payload.yourSide) ? payload.yourSide : null;
       receiveRemoteMatch(payload.match, payload.serverNow);
       showScreen('match');
       if (!remoteLoopRunning) startMatchLoop();
     });
 
-    socket.on('match:state', payload => { if(Number.isInteger(payload?.localSide)) online.matchSide=payload.localSide; if(payload?.fixtureId) online.fixtureId=payload.fixtureId; if(payload?.tournament) online.tournament=payload.tournament; receiveRemoteMatch(payload.match, payload.serverNow); });
+    socket.on('match:state', payload => {
+      if (Number.isInteger(payload.matchId)) {
+        if (Number.isInteger(online.matchId) && payload.matchId !== online.matchId) return;
+        online.matchId = payload.matchId;
+        if (Number.isInteger(payload.yourSide)) online.matchSide = payload.yourSide;
+      }
+      receiveRemoteMatch(payload.match, payload.serverNow);
+    });
+
+    socket.on('quad:draw', payload => {
+      const names = payload?.names || [];
+      const pairs = payload?.pairs || [];
+      if (pairs.length < 2) return;
+      const pairText = pair => `${names[pair[0]] || '—'} × ${names[pair[1]] || '—'}`;
+      playAudioCue('ui.confirm', { channel: 'ui' });
+      showEventOverlay('KURA ÇEKİLİYOR…', 'İlk düello çifti belirleniyor. İlk seçenler havuzun en tazesinden transfer yapacak!', 'yellow', 'TRANSFER DÜELLOSU KURASI', 3400, () => {
+        showEventOverlay(pairText(pairs[0]), `İlk düello: ${pairText(pairs[0])}. Ardından ${pairText(pairs[1])} kalan havuzla masaya oturacak.`, 'red', 'ŞANSLI İLK ÇİFT', 3600);
+      });
+    });
+
+    socket.on('quad:stage', payload => {
+      if (payload?.lobby) online.lobby = payload.lobby;
+      renderOnlineLobby();
+      renderQuadTournament(payload?.quad || online.lobby?.quad);
+      showScreen('tournament');
+    });
+
+    socket.on('quad:podium', payload => {
+      if (payload?.lobby) online.lobby = payload.lobby;
+      renderQuadTournament(payload?.quad || online.lobby?.quad);
+      playAudioCue('matchEnd.victory', { channel: 'match-end' });
+      showScreen('tournament');
+    });
     return socket;
+  }
+
+  function renderQuadTournament(quad) {
+    online.quadView = true;
+    const title = $('#tournamentTitle');
+    const body = $('#tournamentBody');
+    const statsBox = $('#tournamentStats');
+    const podium = $('#tournamentPodium');
+    if (title) title.textContent = "4'LÜ TURNUVA";
+    const stageLabels = { semis: 'YARI FİNALLER OYNANIYOR', semis2: 'RÖVANŞ MAÇLARI OYNANIYOR', break: 'YARI FİNALLER TAMAM — FİNALLER BİRAZDAN BAŞLIYOR', finals: 'FİNAL VE ÜÇÜNCÜLÜK MAÇI OYNANIYOR', done: 'TURNUVA TAMAMLANDI' };
+    const entries = [...(quad?.bracket?.history || []), ...(quad?.bracket?.current || [])]
+      .filter((entry, index, all) => all.findIndex(x => x.id === entry.id && x.leg === entry.leg) === index);
+    const stageName = stage => stage === 'semi' ? 'YARI FİNAL' : stage === 'final' ? 'FİNAL' : 'ÜÇÜNCÜLÜK MAÇI';
+    if (body) {
+      body.innerHTML = `<p class="tt-stage">${stageLabels[quad?.stage] || ''}</p><div class="tt-bracket">` + entries.map(entry => `
+        <article class="tt-tie${entry.finished ? ' done' : ''}${entry.sides?.includes(online.side) ? ' mine' : ''}">
+          <header>${stageName(entry.stage)}${entry.leg === 2 ? ' · RÖVANŞ' : ''}</header>
+          <div class="tt-tie-row"><span class="tt-chip${entry.winner === entry.sides?.[0] ? ' winner' : ''}">${escapeHtml(entry.names?.[0] || '—')}</span><b>${entry.scores ? `${entry.scores[0]}–${entry.scores[1]}` : '—'}${entry.shootout ? ` (P ${entry.shootout[0]}–${entry.shootout[1]})` : ''}</b><span class="tt-chip${entry.winner === entry.sides?.[1] ? ' winner' : ''}">${escapeHtml(entry.names?.[1] || '—')}</span></div>
+          ${entry.aggregate ? `<footer>Toplam skor ${entry.aggregate[0]}–${entry.aggregate[1]}</footer>` : ''}
+        </article>`).join('') + '</div>';
+    }
+    if (podium) {
+      podium.innerHTML = quad?.podium ? `<div class="tt-podium">
+        <div class="tt-podium-slot second"><em>2</em><span class="tt-chip">${escapeHtml(quad.podium.runnerUp?.name || '—')}</span></div>
+        <div class="tt-podium-slot first"><em>🏆</em><span class="tt-chip">${escapeHtml(quad.podium.champion?.name || '—')}</span><small>ŞAMPİYON</small></div>
+        <div class="tt-podium-slot third"><em>3</em><span class="tt-chip">${escapeHtml(quad.podium.third?.name || '—')}</span></div>
+      </div>` : '';
+    }
+    if (statsBox) {
+      const stats = quad?.stats;
+      statsBox.innerHTML = stats ? `
+        <div class="tt-stat-block"><h4>GOL KRALI</h4>${(stats.scorers || []).map((row, index) => `<div class="tt-stat-row"><span>${index + 1}. ${escapeHtml(row.name)}</span><small>${escapeHtml(row.team)}</small><b>${row.goals}</b></div>`).join('') || '<p class="tt-empty">Gol atılmadı.</p>'}</div>
+        <div class="tt-stat-block"><h4>TURNUVA ÖZETİ</h4>
+          <div class="tt-stat-row"><span>Toplam gol</span><small></small><b>${stats.totalGoals}</b></div>
+          <div class="tt-stat-row"><span>Sarı kart</span><small></small><b>${stats.cards?.yellow || 0}</b></div>
+          <div class="tt-stat-row"><span>Kırmızı kart</span><small></small><b>${stats.cards?.red || 0}</b></div>
+          <div class="tt-stat-row"><span>Oynanan maç</span><small></small><b>${stats.matches}</b></div>
+        </div>` : '';
+    }
+    els.tournamentPlayButton?.classList.add('hidden');
+    if (els.tournamentQuitButton) els.tournamentQuitButton.textContent = quad?.stage === 'done' ? '← ODADAN AYRIL' : '← LOBİYE DÖN';
   }
 
   function receiveRemoteMatch(nextMatch, serverNow = Date.now()) {
@@ -2544,11 +2976,25 @@
     const overlay = match.overlay;
     if (overlay && overlay.id !== lastRemoteOverlayId) {
       lastRemoteOverlayId = overlay.id;
+      if (String(overlay.id).startsWith('coin-')) {
+        // Sunucunun attığı yazı turayı animasyonla göster
+        showCoinFlip(match.teams[0], match.teams[1], match.firstHalfStarter ?? 0, null);
+        if (!remoteLoopRunning) startMatchLoop();
+        updateMatchUi();
+        return;
+      }
       const duration = Math.max(180, Number(overlay.until) - Number(serverNow));
       const title = overlay.title || '';
       const audioType = overlay.type || (/GOL/i.test(title) ? 'goal' : /İKİNCİ SARI/i.test(title) ? 'secondYellow' : /KIRMIZI/i.test(title) ? 'red' : /SARI/i.test(title) ? 'yellow' : /KURTARDI/i.test(title) ? 'save' : /DİREK/i.test(title) ? 'post' : /AUT/i.test(title) ? 'wide' : /ŞUT/i.test(title) ? 'shot' : /FAUL/i.test(title) ? 'foul' : /PENALTI/i.test(title) ? 'penalty' : /FRİKİK|SERBEST/i.test(title) ? 'freeKick' : '');
       if (audioType) playMatchEventAudio(audioType, overlay.subtitle || title);
-      showEventOverlay(title, overlay.subtitle, overlay.tone, overlay.kicker, duration);
+      if (overlay.type === 'player' && overlay.playerId) {
+        // Online oyuncu seçimi de retro futbolcu kartıyla gösterilir
+        const chosen = match.teams.flatMap(team => team.lineup).find(player => player.id === overlay.playerId);
+        if (chosen) { showPlayerCard(chosen, null, overlay.subtitle || 'TOPLA BULUŞTU'); }
+        else showEventOverlay(title, overlay.subtitle, overlay.tone, overlay.kicker, duration, null, overlay);
+      } else {
+        showEventOverlay(title, overlay.subtitle, overlay.tone, overlay.kicker, duration, null, overlay);
+      }
     }
 
     if (match.phase === 'finished') {
@@ -2566,6 +3012,7 @@
 
   function renderLobbyPlayer(element, player, role) {
     if (!element || !player) return;
+    element.style.setProperty('--lobby-color', player.teamColor || 'transparent');
     element.classList.toggle('connected', Boolean(player.connected));
     element.classList.toggle('ready', Boolean(player.ready));
     const connection = player.present ? (player.connected ? 'Bağlı' : 'Bağlantı koptu') : 'Bekleniyor…';
@@ -2573,16 +3020,52 @@
     element.innerHTML = `<span>${role} · ${connection}</span><strong>${escapeHtml(player.name || 'Bekleniyor…')}</strong><small>${escapeHtml(team)}</small>`;
   }
 
+  function renderQuadLobby(lobby) {
+    const players = lobby.players || [];
+    els.quadPlayers.innerHTML = players.map((player, index) => `<article class="lobby-player-card quad-card${player.present ? '' : ' empty'}" style="--lobby-color:${player.teamColor || 'transparent'}"><span>${index === 0 ? 'YÖNETİCİ' : `OYUNCU ${index + 1}`} · ${player.present ? (player.connected ? 'Bağlı' : 'Bağlantı koptu') : 'Bekleniyor…'}</span><strong>${escapeHtml(player.name || '—')}</strong><small>${player.ready ? `${escapeHtml(player.teamName || 'Kadro')} · Hazır` : 'Kadro bekleniyor'}</small></article>`).join('');
+    const isAdmin = online.side === 0;
+    const allPresent = players.every(player => player.present && player.connected);
+    const allReady = players.every(player => player.ready);
+    els.quadAdminControls.classList.toggle('hidden', !isAdmin || lobby.phase !== 'lobby');
+    if (isAdmin) {
+      if (document.activeElement !== els.quadEliminationSelect) els.quadEliminationSelect.value = lobby.quad?.elimination || 'single';
+      els.quadRandomButton.disabled = !allPresent;
+      els.quadDuelButton.disabled = !allPresent;
+      els.quadStartButton.disabled = !allReady || lobby.phase !== 'lobby';
+    }
+    els.quadStatus.textContent = lobby.phase !== 'lobby' ? 'Turnuva sürüyor. Maç ekranına yönlendirileceksin.'
+      : !allPresent ? 'Dört oyuncunun katılması bekleniyor — kodu paylaş.'
+      : !lobby.quad?.squadMethod ? (isAdmin ? 'Kadro yöntemini seç: rastgele veya transfer düellosu.' : 'Oda yöneticisi kadro yöntemini seçiyor…')
+      : !allReady ? 'Kadrolar hazırlanıyor…'
+      : (isAdmin ? 'Her şey hazır. Turnuvayı başlatabilirsin!' : 'Oda yöneticisinin turnuvayı başlatması bekleniyor.');
+  }
+
   function renderOnlineLobby() {
     const lobby = online.lobby;
     if (!lobby) return;
+    const quadMode = lobby.mode === 'quad';
     els.lobbyCode.textContent = lobby.code;
-    const maxPlayers = Number(lobby.maxPlayers || (lobby.roomType === 'four' ? 4 : 2));
-    [els.lobbyPlayer0,els.lobbyPlayer1,els.lobbyPlayer2,els.lobbyPlayer3].forEach((element,index)=>{ if(!element)return; element.classList.toggle('hidden',index>=maxPlayers); if(index<maxPlayers)renderLobbyPlayer(element,lobby.players[index],`${index+1}. KOLTUK`); });
-    els.lobbyPlayersGrid?.classList.toggle('four-player-lobby',maxPlayers===4);
+    els.lobbyVersus?.classList.toggle('hidden', quadMode);
+    els.quadPanel?.classList.toggle('hidden', !quadMode);
+    if (quadMode) {
+      renderQuadLobby(lobby);
+      els.lobbySquadButton?.classList.add('hidden');
+      els.editOnlineSettingsButton?.classList.add('hidden');
+      els.startOnlineMatchButton?.classList.add('hidden');
+      els.networkBadge.classList.toggle('hidden', !online.code);
+      const settings = lobby.settings || {};
+      els.lobbySettingsSummary.innerHTML = [
+        `${settings.durationMinutes || 5} DK MAÇLAR`,
+        lobby.quad?.elimination === 'twoLeg' ? 'ÇİFT MAÇLI ELEME' : 'TEK MAÇ ELEME',
+        lobby.quad?.squadMethod === 'duel' ? 'DÜELLO KADROLARI' : lobby.quad?.squadMethod === 'random' ? 'RASTGELE KADROLAR' : 'KADRO YÖNTEMİ SEÇİLMEDİ'
+      ].map(item => `<span>${item}</span>`).join('');
+      els.lobbyMessage.textContent = '';
+      return;
+    }
+    renderLobbyPlayer(els.lobbyPlayer0, lobby.players[0], 'İÇ SAHA');
+    renderLobbyPlayer(els.lobbyPlayer1, lobby.players[1], 'DEPLASMAN');
     const settings = lobby.settings || {};
     els.lobbySettingsSummary.innerHTML = [
-      lobby.roomType === 'four' ? '4 KİŞİLİK KUPA' : lobby.roomType === 'twoLeg' ? 'ÇİFT AYAK' : 'TEK MAÇ',
       `${settings.durationMinutes || 5} DK`,
       settings.cards ? 'KART AÇIK' : 'KART KAPALI',
       settings.extraTime ? 'UZATMA AÇIK' : 'UZATMA KAPALI',
@@ -2590,27 +3073,27 @@
     ].map(item => `<span>${item}</span>`).join('');
 
     const bothReady = Boolean(lobby.canStart);
-    const required = Number(lobby.maxPlayers || 2);
-    const presentCount = (lobby.players||[]).filter(player=>player?.present).length;
-    const guestPresent = presentCount >= Math.min(2,required);
+    const guestPresent = Boolean(lobby.players?.[1]?.present);
+    const meReady = Boolean(lobby.players?.[online.side]?.ready);
     if (lobby.phase === 'brief') {
       els.lobbyMessage.textContent = 'Kural ekranı açık. Hazır olan oyuncu onay verdikten sonra diğer tarafa 30 saniye tanınır.';
     } else if (!guestPresent) {
-      els.lobbyMessage.textContent = required===4 ? `Katılımcılar bekleniyor: ${presentCount}/4 bağlı.` : 'Arkadaşının kodla odaya katılması bekleniyor.';
+      els.lobbyMessage.textContent = 'Kodu arkadaşına gönder. Beklerken kadronu kurabilirsin.';
+    } else if (!meReady) {
+      els.lobbyMessage.textContent = 'Arkadaşın odada. Şimdi kadronu kur.';
     } else if (!bothReady) {
-      els.lobbyMessage.textContent = required===4 ? 'Oda yöneticisi turnuva formatını ve kadro yöntemini belirlemeli.' : 'İki oyuncunun da kadrosu hazır olmalı.';
+      els.lobbyMessage.textContent = 'Kadron hazır. Diğer oyuncunun kadrosu bekleniyor.';
     } else {
       els.lobbyMessage.textContent = online.side === 0 ? 'Her şey hazır. Kural brifingini iki oyuncu için açabilirsin.' : 'Her şey hazır. İç saha oyuncusunun kural brifingini açması bekleniyor.';
     }
-    if(els.lobbyBuildSquadButton){
-      const four=lobby.roomType==='four';
-      const canConfigureFour=four&&online.side===0&&presentCount===4&&lobby.phase==='lobby';
-      els.lobbyBuildSquadButton.classList.toggle('hidden', four ? !canConfigureFour : lobby.phase!=='lobby');
-      els.lobbyBuildSquadButton.textContent = four ? (lobby.tournamentOptions ? 'TURNUVA KADROLARINI YENİLE' : 'TURNUVAYI VE KADROLARI KUR') : (online.side !== null && lobby.players?.[online.side]?.ready ? 'KADROYU DÜZENLE' : 'KADROYA GEÇ');
+    if (els.lobbySquadButton) {
+      const duelLive = duel && duel.status !== 'pending' && duel.phase !== 'done';
+      els.lobbySquadButton.classList.toggle('hidden', lobby.phase !== 'lobby');
+      els.lobbySquadButton.textContent = duelLive ? 'DÜELLOYA DÖN →' : meReady ? 'KADROYU DÜZENLE' : 'KADRONU KUR →';
     }
-    els.startOnlineMatchButton.textContent = lobby.roomType === 'four' ? 'KUPA BRİFİNGİNİ AÇ →' : 'KURALLARA GEÇ →';
+    els.startOnlineMatchButton.textContent = 'KURALLARA GEÇ →';
     els.startOnlineMatchButton.classList.toggle('hidden', online.side !== 0 || lobby.phase === 'brief');
-    els.editOnlineSettingsButton.classList.toggle('hidden', online.side !== 0 || lobby.phase !== 'lobby' || lobby.roomType==='four');
+    els.editOnlineSettingsButton.classList.toggle('hidden', online.side !== 0 || lobby.phase !== 'lobby');
     els.startOnlineMatchButton.disabled = !bothReady || lobby.phase !== 'lobby';
     els.networkBadge.classList.toggle('hidden', !online.code);
     if (lobby.phase === 'brief') renderOnlineReadyState();
@@ -2619,12 +3102,12 @@
   function resetOnlineState() {
     online.code = null;
     online.side = null;
-    online.matchSide = null;
-    online.fixtureId = null;
-    online.tournament = null;
     online.name = '';
     online.lobby = null;
     online.joining = false;
+    online.matchId = null;
+    online.matchSide = null;
+    online.quadView = false;
     els.networkBadge.classList.add('hidden');
     els.remoteMatchBar.classList.add('hidden');
     remoteLoopRunning = false;
@@ -2640,25 +3123,22 @@
     try {
       const socket = await connectOnline();
       const name = els.hostNameInput.value.trim() || 'Ev Sahibi';
-      socket.emit('room:create', { name, token: online.token, roomType: setup.roomType }, response => {
+      socket.emit('room:create', { name, token: online.token, mode: online.roomType }, response => {
         online.joining = false;
         els.createRoomButton.disabled = false;
         if (!response?.ok) return setOnlineStatus(response?.error || 'Oda oluşturulamadı.', 'error');
         online.code = response.code;
         online.side = response.side;
-        online.matchSide = Number.isInteger(response.localSide) ? response.localSide : response.side;
-        online.fixtureId = response.fixtureId || null;
-        online.tournament = response.tournament || null;
         online.name = name;
         online.lobby = response.lobby;
-        online.roomType = response.lobby?.roomType || setup.roomType;
-        setup.competition = online.roomType === 'twoLeg' ? 'twoLeg' : online.roomType === 'four' ? 'fourCup' : 'single';
         setup.mode = 'friend';
         setup.side = response.side;
-        setup.teams = online.roomType === 'four' ? [null,null,null,null] : [null,null];
+        setup.teams = [null, null];
         setup.manualSelected.clear();
-        renderOnlineLobby(); renderSetupState(); playAudioCue('online.roomCreated');
-        setOnlineStatus(`Oda ${response.code} oluşturuldu. Kodu paylaş, sonra kadroya geç.`, 'success');
+        renderOnlineLobby();
+        renderSetupState();
+        playAudioCue('online.roomCreated');
+        setOnlineStatus(`Oda ${response.code} oluşturuldu.`, 'success');
         showScreen('lobby');
       });
     } catch (error) {
@@ -2684,20 +3164,17 @@
         if (!response?.ok) return setOnlineStatus(response?.error || 'Odaya katılamadın.', 'error');
         online.code = response.code;
         online.side = response.side;
-        online.matchSide = Number.isInteger(response.localSide) ? response.localSide : response.side;
-        online.fixtureId = response.fixtureId || null;
-        online.tournament = response.tournament || null;
         online.name = name;
         online.lobby = response.lobby;
-        online.roomType = response.lobby?.roomType || 'single';
-        setup.competition = online.roomType === 'twoLeg' ? 'twoLeg' : online.roomType === 'four' ? 'fourCup' : 'single';
         setup.mode = 'friend';
         setup.side = response.side;
-        setup.teams = online.roomType === 'four' ? [null,null,null,null] : [null,null];
+        setup.teams = [null, null];
         setup.manualSelected.clear();
         renderOnlineLobby();
         playAudioCue('online.roomJoined');
         if (response.match) {
+          online.matchId = Number.isInteger(response.matchId) ? response.matchId : null;
+          online.matchSide = Number.isInteger(response.yourSide) ? response.yourSide : null;
           receiveRemoteMatch(response.match, Date.now());
           showScreen(response.match.phase === 'finished' ? 'results' : 'match');
         } else if (response.lobby?.phase === 'brief') {
@@ -2705,8 +3182,8 @@
           setOnlineStatus(`Oda ${response.code} bağlantısı yeniden kuruldu.`, 'success');
           showScreen('brief');
         } else {
-          renderOnlineLobby(); renderSetupState();
-          setOnlineStatus(`Oda ${response.code} bağlantısı kuruldu. Önce odadaki oyuncuları gör, sonra kadroya geç.`, 'success');
+          renderSetupState();
+          setOnlineStatus(`Oda ${response.code} bağlantısı kuruldu.`, 'success');
           showScreen('lobby');
         }
       });
@@ -2729,26 +3206,7 @@
       }
       online.lobby = response.lobby;
       renderOnlineLobby();
-      if (online.side === 0) showScreen('settings');
-      else showScreen('lobby');
-    });
-  }
-
-  function configureOnlineTournament() {
-    if (!online.socket || online.side !== 0 || online.lobby?.roomType !== 'four') return;
-    const payload = {
-      durationMinutes: setup.tournamentOptions.durationMinutes,
-      legs: setup.tournamentOptions.legs,
-      squadMethod: setup.tournamentOptions.squadMethod,
-      settings: { ...settingsFromUi(), durationMinutes: setup.tournamentOptions.durationMinutes, competition: 'fourCup' }
-    };
-    els.confirmTournamentButton.disabled = true;
-    online.socket.emit('room:configureTournament', payload, response => {
-      els.confirmTournamentButton.disabled = false;
-      if (!response?.ok) return showEventOverlay('TURNUVA KURULAMADI', response?.error || 'Tekrar dene.', 'red', '', 3600);
-      online.lobby = response.lobby;
-      if (response.duel) { duel = normalizeRemoteDuel(response.duel); showScreen('duel'); renderDuel(); }
-      else { renderOnlineLobby(); showScreen('lobby'); showEventOverlay('KADROLAR HAZIR', 'Dört takım için benzersiz rastgele kadrolar kuruldu.', 'navy', '4 KİŞİLİK KUPA', 3600); }
+      showScreen('lobby');
     });
   }
 
@@ -2802,13 +3260,13 @@
   function bindEvents() {
     els.startButton.addEventListener('click', () => { ensureAudio(); showScreen('mode'); });
     els.howToButton.addEventListener('click', () => showScreen('howto'));
-    els.settingsButton?.addEventListener('click', () => { syncGlobalSettingsUi(); showScreen('app-settings'); });
-    els.openAppSettingsButton?.addEventListener('click', () => { syncGlobalSettingsUi(); showScreen('app-settings'); });
-    els.saveGlobalSettingsButton?.addEventListener('click', saveGlobalSettings);
     els.themeButton.addEventListener('click', () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'));
     els.continueButton.addEventListener('click', restoreMatch);
     els.homeButton.addEventListener('click', () => {
-      if (match && match.mode !== 'friend' && !match.paused && !match.resolving) pauseMatch();
+      if (currentScreenName === 'match' && match && match.phase !== 'finished') {
+        requestExitMatch('home');
+        return;
+      }
       showScreen('home');
     });
     document.addEventListener('pointerdown', ensureAudio, { once: true });
@@ -2822,13 +3280,47 @@
     $$('[data-back]').forEach(button => button.addEventListener('click', () => handleBack(button.dataset.back)));
 
     els.modeButtons.forEach(button => button.addEventListener('click', () => {
-      const mode = button.dataset.mode; setup.mode = mode; setup.side=0; setup.manualSelected.clear(); els.shootoutToggle.checked=true;
-      if (mode === 'friend') { setOnlineStatus('Önce oda türünü seç; kod oda kurulur kurulmaz görünür.'); showScreen('online'); return; }
-      setup.teams=[null,null]; updateCompetitionScreen(); showScreen('competition');
+      const mode = button.dataset.mode;
+      if (mode === 'friend') {
+        setup.mode = 'friend';
+        setOnlineStatus('Oda oluşturabilir veya arkadaşının koduyla katılabilirsin.');
+        showScreen('online');
+        return;
+      }
+      setup.mode = mode;
+      setup.system = 'single';
+      setup.teams = [null, null];
+      setup.teamColors = [null, null];
+      setup.side = 0;
+      setup.manualSelected.clear();
+      els.shootoutToggle.checked = true;
+      $$('#systemGrid [data-solo-only]').forEach(card => card.classList.toggle('hidden', mode !== 'ai'));
+      showScreen('system');
     }));
-    els.competitionCards.forEach(card=>card.addEventListener('click',()=>selectCompetition(card.dataset.competition)));
-    els.roomTypeOptions.forEach(option=>option.addEventListener('click',()=>{ setup.roomType=option.dataset.roomType; online.roomType=setup.roomType; els.roomTypeOptions.forEach(x=>x.classList.toggle('active',x===option)); }));
 
+    $('#systemGrid')?.addEventListener('click', event => {
+      const card = event.target.closest('[data-system]');
+      if (!card) return;
+      setup.system = card.dataset.system;
+      beep('click');
+      if (setup.system === 'cup' || setup.system === 'worldcup') {
+        startTournamentSetup(setup.system);
+        return;
+      }
+      renderSetupState();
+      showScreen('squad');
+    });
+
+    els.roomTypeButtons.forEach(button => button.addEventListener('click', () => {
+      online.roomType = button.dataset.roomType === 'quad' ? 'quad' : 'duo';
+      els.roomTypeButtons.forEach(item => item.classList.toggle('active', item === button));
+    }));
+    els.quadEliminationSelect?.addEventListener('change', () => online.socket?.emit('quad:configure', { elimination: els.quadEliminationSelect.value }));
+    els.quadDurationRange?.addEventListener('input', () => { els.quadDurationValue.textContent = `${els.quadDurationRange.value} dk`; });
+    els.quadDurationRange?.addEventListener('change', () => online.socket?.emit('quad:configure', { settings: { durationMinutes: Number(els.quadDurationRange.value) } }));
+    els.quadRandomButton?.addEventListener('click', () => online.socket?.emit('quad:squadMethod', { method: 'random' }, response => { if (!response?.ok) showEventOverlay('OLMADI', response?.error || '', 'red'); }));
+    els.quadDuelButton?.addEventListener('click', () => online.socket?.emit('quad:squadMethod', { method: 'duel' }, response => { if (!response?.ok) showEventOverlay('OLMADI', response?.error || '', 'red'); }));
+    els.quadStartButton?.addEventListener('click', () => online.socket?.emit('quad:start', {}, response => { if (!response?.ok) showEventOverlay('BAŞLATILAMADI', response?.error || '', 'red'); }));
     els.createRoomButton.addEventListener('click', createOnlineRoom);
     els.joinRoomButton.addEventListener('click', joinOnlineRoom);
     els.joinCodeInput.addEventListener('input', () => {
@@ -2839,15 +3331,31 @@
     });
     els.copyCodeButton.addEventListener('click', copyRoomCode);
     els.leaveRoomButton.addEventListener('click', leaveOnlineRoom);
-    els.lobbyBuildSquadButton?.addEventListener('click',()=>{ if(online.lobby?.roomType==='four'){ if(online.side!==0)return; setup.competition='fourCup'; els.fourSquadMethod.classList.remove('hidden'); els.tournamentKindSummary.innerHTML='<b>4 KİŞİLİK ÇEVRİMİÇİ KUPA</b><small>Dört oyuncu · iki eşzamanlı maç · final ve üçüncülük.</small>'; showScreen('tournament-config'); return;} setup.side=online.side||0; renderSetupState(); showScreen('squad'); });
     els.editOnlineSettingsButton.addEventListener('click', () => showScreen('settings'));
+    els.lobbySquadButton?.addEventListener('click', () => {
+      if (duel && duel.status !== 'pending' && duel.phase !== 'done') { showScreen('duel'); renderDuel(); return; }
+      renderSetupState();
+      showScreen('squad');
+    });
     els.startOnlineMatchButton.addEventListener('click', startOnlineMatch);
 
     els.builderTabs.forEach(tab => tab.addEventListener('click', () => switchBuilder(tab.dataset.builder)));
+    els.teamColorPicker?.addEventListener('click', event => {
+      const swatch = event.target.closest('[data-color]');
+      if (!swatch || swatch.disabled) return;
+      setup.teamColors[setup.side] = swatch.dataset.color;
+      if (setup.teams[setup.side]) setup.teams[setup.side].color = swatch.dataset.color;
+      beep('click');
+      renderTeamColorPicker();
+    });
     els.duelStartButton?.addEventListener('click', () => {
-      if (setup.mode === 'ai') { startLocalDuel(); return; }
+      if (setup.mode === 'ai') {
+        showEventOverlay('DÜELLO KABUL EDİLDİ', 'Retro Makine transfer masasına oturdu. Yazı tura ile başlanacak.', 'yellow', 'TRANSFER DÜELLOSU', 2600, startLocalDuel);
+        return;
+      }
       if (setup.mode === 'coop') {
-        openDialog('ORTAK KADRO ÖNERİSİ', 'TRANSFER DÜELLOSU', 'Telefonu diğer oyuncuya ver. Kriterleri ve futbolcuları sırayla kronometreyle seçerek benzersiz kadrolar kurmayı kabul ediyor musunuz?', 'KABUL ET', startLocalDuel, { text:'REDDET', action:() => { switchBuilder('random'); showEventOverlay('DÜELLO REDDEDİLDİ', 'Klasik kadro seçeneklerine dönüldü.', 'navy', '', 2600); } }); return;
+        openDialog('ORTAK KADRO ÖNERİSİ', 'TRANSFER DÜELLOSU', 'Telefonu ikinci oyuncuya ver. Kriterleri ve futbolcuları sırayla seçerek iki benzersiz kadro kurmayı kabul ediyor musun?', 'KABUL ET', startLocalDuel, { text:'REDDET', action:() => { switchBuilder('random'); showEventOverlay('DÜELLO REDDEDİLDİ', 'İki taraf klasik kadro kurma seçeneklerine döndü.', 'navy', 'KARIŞIK · KRİTER · MANUEL', 3300); } });
+        return;
       }
       if (!online.socket) return;
       online.socket.emit('room:duelRequest', {}, response => { if (!response?.ok) showEventOverlay('DÜELLO AÇILMADI', response?.error || 'Tekrar dene', 'red', '', 3200); });
@@ -2859,12 +3367,19 @@
       else flipLocalDuelCoin();
     });
     els.duelCriteriaChoices?.addEventListener('click', event => {
-      const button=event.target.closest('[data-duel-value]'); if(!button||!duel)return;
-      if(setup.mode==='friend') online.socket?.emit('duel:criterion',{value:button.dataset.duelValue},response=>{if(!response?.ok)showEventOverlay('KRİTER SEÇİLEMEDİ',response?.error||'','red');});
+      const button = event.target.closest('[data-duel-value]');
+      if (!button || !duel || !myDuelTurn()) return;
+      const criterion = DUEL_CRITERIA[duel.criteriaIndex];
+      if (criterion.key === 'period') { toggleLocalPeriodDraft(button.dataset.duelValue); return; }
+      if (setup.mode === 'friend') online.socket?.emit('duel:criterion', { value: button.dataset.duelValue }, response => { if (!response?.ok) showEventOverlay('KRİTER SEÇİLEMEDİ', response?.error || '', 'red'); });
       else chooseLocalDuelCriterion(button.dataset.duelValue);
     });
-    els.duelStopButton?.addEventListener('click', stopDuelCandidate);
-    els.duelCancelButton?.addEventListener('click', () => { duel=null; showScreen('squad'); switchBuilder('random'); });
+    els.duelPeriodConfirm?.addEventListener('click', confirmPeriodDraft);
+    els.duelStopButton?.addEventListener('click', stopDuelWatchAndPick);
+    els.duelCancelButton?.addEventListener('click', () => {
+      if (setup.mode === 'friend') { showScreen('lobby'); return; } // grace sistemi showScreen'de tetiklenir
+      clearDuelAi(); cancelAnimationFrame(duelRaf); duel = null; showScreen('squad'); switchBuilder('random');
+    });
     els.duelFinishButton?.addEventListener('click', finishDuel);
     els.periodChips.addEventListener('click', event => {
       const button = event.target.closest('[data-period]');
@@ -2885,8 +3400,6 @@
     els.leagueSelect.addEventListener('change', () => { setup.criteria.league = els.leagueSelect.value; updateCriteriaSummary(); });
     els.positionSelect?.addEventListener('change', () => { setup.criteria.position = els.positionSelect.value; updateCriteriaSummary(); });
     els.ratingSelect?.addEventListener('change', () => { setup.criteria.rating = els.ratingSelect.value; updateCriteriaSummary(); });
-
-    els.teamColorPalette?.addEventListener('click',event=>{const button=event.target.closest('[data-team-color]');if(!button||button.disabled)return;setup.selectedColors[setup.side]=button.dataset.teamColor;if(setup.teams[setup.side])setup.teams[setup.side].color=button.dataset.teamColor;renderSetupState();});
 
     els.randomBuildButton.addEventListener('click', () => {
       completeTeam(buildRandomLineup());
@@ -2925,32 +3438,65 @@
     });
 
     els.nextSetupButton.addEventListener('click', () => {
-      if (setup.mode === 'coop' && setup.competition === 'fourCup' && setup.side < 3) {
-        setup.side += 1; setup.manualSelected.clear(); els.manualSearch.value=''; renderManualList(); renderSetupState();
-      } else if (setup.mode === 'coop' && setup.side === 0) {
-        setup.side = 1; setup.manualSelected.clear(); els.manualSearch.value = ''; renderManualList(); renderSetupState();
+      if (setup.mode === 'coop' && setup.side === 0) {
+        setup.side = 1;
+        setup.manualSelected.clear();
+        els.manualSearch.value = '';
+        renderManualList();
+        renderSetupState();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       } else if (setup.mode === 'friend') {
         submitOnlineTeam();
-      } else if (['classicUcl','worldCup','fourCup'].includes(setup.competition)) {
-        initializeLocalTournament();
       } else {
         showScreen('settings');
       }
     });
 
     els.durationRange.addEventListener('input', () => { els.durationValue.textContent = `${els.durationRange.value} dk`; });
-    els.tournamentDurationRange?.addEventListener('input',()=>{setup.tournamentOptions.durationMinutes=Number(els.tournamentDurationRange.value);els.tournamentDurationValue.textContent=`${els.tournamentDurationRange.value} dk`;});
-    els.tournamentLegOptions.forEach(btn=>btn.addEventListener('click',()=>{setup.tournamentOptions.legs=Number(btn.dataset.legs);els.tournamentLegOptions.forEach(x=>x.classList.toggle('active',x===btn));}));
-    els.tournamentSquadOptions.forEach(btn=>btn.addEventListener('click',()=>{setup.tournamentOptions.squadMethod=btn.dataset.squadMethod;els.tournamentSquadOptions.forEach(x=>x.classList.toggle('active',x===btn));}));
-    els.confirmTournamentButton?.addEventListener('click',()=>{ if(setup.mode==='friend'&&online.lobby?.roomType==='four'){ configureOnlineTournament(); return; } if(setup.competition==='fourCup'){setup.teams=[null,null,null,null];setup.selectedColors=TEAM_COLORS.slice(0,4).map(x=>x.value);}else setup.teams=[null,null];setup.side=0;renderSetupState();showScreen('squad');});
-    els.tournamentNextButton?.addEventListener('click',openNextTournamentMatch);
-    els.tournamentHomeButton?.addEventListener('click',()=>{localTournament=null;resetSetup(true);showScreen('home');});
-    els.finishTournamentButton?.addEventListener('click',()=>{localTournament=null;resetSetup(true);showScreen('home');});
-
+    els.prefsButton?.addEventListener('click', () => showScreen('prefs'));
+    els.prefMusicToggle?.addEventListener('change', () => { prefs.music = els.prefMusicToggle.checked; savePrefs(); });
+    els.prefAmbienceToggle?.addEventListener('change', () => { prefs.ambience = els.prefAmbienceToggle.checked; savePrefs(); });
+    els.prefSfxToggle?.addEventListener('change', () => { prefs.sfx = els.prefSfxToggle.checked; savePrefs(); if (prefs.sfx) beep('click'); });
+    els.prefVibrationToggle?.addEventListener('change', () => { prefs.vibration = els.prefVibrationToggle.checked; savePrefs(); });
+    els.prefEventDurationSelect?.addEventListener('change', () => { prefs.eventDuration = els.prefEventDurationSelect.value; savePrefs(); });
     els.kickoffButton.addEventListener('click', () => {
       ensureAudio();
-      if (setup.mode === 'friend') submitOnlineSettings();
-      else showBrief();
+      if (setup.mode === 'friend') { submitOnlineSettings(); return; }
+      if ((setup.system === 'cup' || setup.system === 'worldcup') && setup.mode === 'ai') {
+        if (!setup.teams[0]) { showEventOverlay('KADRO YOK', 'Önce takımını kur.', 'red', '', 1600); return; }
+        Tournament.start(setup.system, setup.teams[0], settingsFromUi());
+        saveSettings();
+        els.tournamentContinueButton?.classList.remove('hidden');
+        online.quadView = false;
+        Tournament.render();
+        showScreen('tournament');
+        return;
+      }
+      showBrief();
+    });
+    els.tournamentPlayButton?.addEventListener('click', () => {
+      if (els.tournamentPlayButton.dataset.action === 'close') {
+        Tournament.clear();
+        els.tournamentContinueButton?.classList.add('hidden');
+        resetSetup(true);
+        showScreen('mode');
+        return;
+      }
+      playTournamentFixture();
+    });
+    els.tournamentQuitButton?.addEventListener('click', () => {
+      if (online.quadView) {
+        if (online.lobby?.quad?.stage === 'done') leaveOnlineRoom();
+        else showScreen('lobby');
+        return;
+      }
+      openDialog('TURNUVA', 'ARAYA MI GİRİYORSUN?', 'Turnuva kaydedildi. Ana menüdeki "Turnuvaya Dön" ile devam edebilirsin.', 'ANA MENÜ', () => showScreen('home'), { text: 'TURNUVAYI SİL', action: () => { Tournament.clear(); els.tournamentContinueButton?.classList.add('hidden'); showScreen('mode'); } });
+    });
+    els.tournamentContinueButton?.addEventListener('click', () => {
+      if (!Tournament.hasActive() && !Tournament.state) { els.tournamentContinueButton.classList.add('hidden'); return; }
+      online.quadView = false;
+      Tournament.render();
+      showScreen('tournament');
     });
     els.briefBackButton.addEventListener('click', () => showScreen(setup.mode === 'friend' ? 'lobby' : 'settings'));
     els.briefStartButton.addEventListener('click', startFromBrief);
@@ -2975,6 +3521,13 @@
     els.dialogSecondaryButton?.addEventListener('click', closeDialogSecondary);
     els.rematchButton.addEventListener('click', () => {
       if (!match) return;
+      if (pendingSecondLeg) {
+        const plan = pendingSecondLeg;
+        pendingSecondLeg = null;
+        setup.teams = plan.teams;
+        createMatch(plan.series);
+        return;
+      }
       if (match.mode === 'friend') { els.rematchOverlay.classList.remove('hidden'); return; }
       setup.mode = match.mode;
       setup.teams = match.teams.map(team => ({ name:team.name, color:team.color, lineup:team.lineup.map(({yellowCards,red,injured,goals,sentOffReason,...player})=>player) }));
@@ -2988,38 +3541,45 @@
     els.twoLegRematchButton?.addEventListener('click',()=>requestRematch('secondLeg'));
     els.closeRematchButton?.addEventListener('click',()=>els.rematchOverlay.classList.add('hidden'));
     els.newGameButton.addEventListener('click', () => {
-      if(localTournament){ match=null; if(localTournament.stage==='finished')renderTournamentResults();else{renderTournamentBracket();showScreen('tournament');} return; }
-      if (match?.mode === 'friend') {
-        if (online.roomType === 'four' && online.tournament) { renderOnlineTournament(); showScreen(online.tournament.stage === 'finished' ? 'tournament-results' : 'tournament'); return; }
-        leaveOnlineRoom(); return;
+      if (match?.mode === 'friend' && isQuadRoom()) {
+        renderQuadTournament(online.lobby?.quad);
+        showScreen('tournament');
+        return;
       }
-      match = null; resetSetup(true); showScreen('mode');
+      if (match?.mode === 'friend') {
+        leaveOnlineRoom();
+        return;
+      }
+      if (match?.tournament) {
+        match = null;
+        online.quadView = false;
+        Tournament.render();
+        showScreen('tournament');
+        return;
+      }
+      match = null;
+      resetSetup(true);
+      showScreen('mode');
     });
   }
 
-  async function init() {
-    UIShell?.install?.();
+  function init() {
     initializeTheme();
+    loadPrefs();
     initializeNavigationGuard();
     initializeOnlineToken();
+    initializeFilters();
     initializeSettings();
-    syncGlobalSettingsUi();
-    Audio?.configure?.(currentAudioSettings());
     Audio?.setAmbience('ambience.menu');
     Audio?.tryAutoplay?.().catch(() => false);
+    renderManualList();
+    renderSetupState();
+    bindEvents();
+    window.Tournament?.init({ buildRandomLineup, teamColors: TEAM_COLORS, escapeHtml });
+    if (window.Tournament?.hasActive()) els.tournamentContinueButton?.classList.remove('hidden');
     try {
-      PLAYERS = await window.PlayerStore.load();
-      initializeFilters();
-      renderManualList();
-      renderSetupState();
-      bindEvents();
       if (localStorage.getItem(SAVE_KEY)) els.continueButton.classList.remove('hidden');
-    } catch (error) {
-      console.error(error);
-      els.appToast.textContent = 'Oyuncu verisi yüklenemedi. Sayfayı yenile.';
-      els.appToast.classList.remove('hidden');
-      return;
-    }
+    } catch (_) {}
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
       navigator.serviceWorker.register('./sw.js').catch(() => {});
     }

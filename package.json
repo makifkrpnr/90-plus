@@ -1,8 +1,8 @@
 {
   "name": "90-plus-football-game",
-  "version": "6.0.1",
+  "version": "7.0.0",
   "private": true,
-  "description": "90+ v6 Premium Turnuva — lazy oyuncu verisi, sade ses, premium mobil arayüz ve turnuva modları",
+  "description": "90+ v6 Mobil Arena — 2.532 futbolcu, tüm modlarda Transfer Düellosu, premium skorboard, turnuva modları ve 4 kişilik online turnuva",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

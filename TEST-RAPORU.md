@@ -1,85 +1,25 @@
-# 90+ v6 — Test Raporu
+# 90+ v7 — Test Raporu
 
-## Otomatik testler
+## Otomatik testler — `npm test`: **27/27 geçti**
 
-Komut:
+- 24 motor birim testi (olay tablosu, şut, kartlar, ihlaller, ek süre, mola, iki ayak…)
+- 3 **soket simülasyonu** (gerçek sunucu + gerçek istemciler):
+  - 4'lü turnuva tam akışı: oda → 4 katılım → rastgele benzersiz kadrolar → eşzamanlı
+    yarı finaller (**maç izolasyonu doğrulandı: diğer maçın verisi sızmıyor**) →
+    hükmen → bracket → finaller → podyum + istatistik.
+  - Düello grace: ayrılan dönmezse 10 sn'de iptal + bildirim; duraklatılmışken hamle reddi.
+  - Düello grace: geri dönen kaldığı yerden sürdürür.
 
-```bash
-npm test
-```
+## Tarayıcı duman testi (mobil 375×812, açık + koyu tema)
 
-Sonuç: **37 test geçti, 0 test başarısız.**
+- AI akışı dock butonlarıyla uçtan uca: mod → sistem → kadro → ayarlar → brifing → maç.
+- Yeni yazı tura: sonuçlar maçtan maça değişiyor (rastgelelik düzeldi).
+- Skorboard v7 iki temada da okunaklı; aktif takım etiketi ve dakika/uzunluk çipleri çalışıyor.
+- Spikerli olay kartları canlı doğrulandı (PAS ve TAÇ kartları, 🎙 cümleleriyle).
+- Retro oyuncu kartı bayrak renkleri + okunabilirlik scrim'leriyle doğrulandı (Türkiye örneği).
+- 3.184 oyuncu yüklendi; konsolda hata yok.
 
-Doğrulanan başlıklar:
+## Bilinen notlar
 
-- Ana olay cetveli ve `7 = Şut`
-- Şut alt atışı
-- İki pas sınırı
-- Üçüncü kornerden penaltı
-- Faul ve kart alt tabloları
-- İkinci sarıdan kırmızı
-- 10 saniye ihlal kademeleri
-- Maç süresine göre ek süre sınırı
-- İki ayaklı toplam skor
-- Gol ve asist zinciri
-- Duran top golünde hatalı asist yazılmaması
-- Yazı tura / otomatik başlama zaman aşımı
-- İki ayrı 60 saniyelik mola bütçesi
-- İkinci devre başlangıç yetkisi
-- 2.264 benzersiz oyuncu
-- Açık dışlama listesinin uygulanması
-- Katı dönem, milliyet, lig, mevki ve puan filtreleri
-- Kullanılmış oyuncunun adaylara yeniden girmemesi
-- Otomatik mevki yerleşimi
-- Klasik kupa, Dünya Kupası ve 4 kişilik kupa fikstürleri
-
-## Sözdizimi ve statik kontroller
-
-Aşağıdaki dosyalar `node --check` ile doğrulandı:
-
-- `server.js`
-- `server/online-engine.js`
-- `js/app.js`
-- `js/audio.js`
-- `js/core.js`
-- `js/player-store.js`
-- `js/modules/*.js`
-- `sw.js`
-
-Oyuncu verisi kontrolü:
-
-```text
-version: 6
-oyuncu: 2264
-benzersiz ID: 2264
-Hakan Şükür eşleşmesi: 0
-```
-
-Eski `js/players.js`, tek dosyalı HTML ve `.DS_Store` bulunmadığı doğrulandı.
-
-## Socket.IO entegrasyon testi
-
-Yerel gerçek sunucu ve altı Socket.IO istemcisiyle doğrulandı:
-
-- Oda kodu anında oluşturuldu.
-- İkinci oyuncu kodla katıldı.
-- Aynı takım rengi sunucu tarafından reddedildi.
-- Farklı renkli iki kadro kabul edildi.
-- Dört kişilik oda dört bağlantıyı kabul etti.
-- Oda yöneticisinin rastgele kadro ayarı dört benzersiz kadroyu hazırladı.
-
-## Sağlık kontrolü
-
-Yerel `/health` cevabı başarıyla alındı:
-
-```json
-{"ok":true,"rooms":0}
-```
-
-## Ses kontrolü
-
-`npm run audio:check` 67 isteğe bağlı yolu tarar. Test paketinde ses dosyası yoksa `0/67` göstermesi hata değildir; mevcut dosyalar isimleri doğruysa otomatik kullanılır.
-
-## Görsel test notu
-
-Bu çalışma ortamındaki Chromium yerel siteyi ekran görüntüsüyle açarken kurum politikası nedeniyle takıldı. Bu nedenle son piksel ve gerçek cihaz görsel kontrolü kullanıcı cihazında yapılmalıdır. Kod tarafında responsive CSS, sabit mobil header/footer ve ekran kimlikleri statik olarak kontrol edildi; otomatik motor ve ağ testleri bundan bağımsız olarak geçti.
+- Havuzu ~4.000'e çıkarmak için açık veri seti aktarımı önerilir (tüm isimler gerçek tutuldu).
+- Ses dosyaları hâlâ isteğe bağlıdır: dosya yoksa oyun sessiz devam eder.

@@ -15,7 +15,6 @@ function makeRuntimeTeam(team, color) {
       red: false,
       injured: false,
       goals: 0,
-      assists: 0,
       sentOffReason: null
     })),
     corners: 0,
@@ -33,23 +32,6 @@ function getPlayer(match, side, playerId) {
 
 function currentActor(match) {
   return getPlayer(match, match.context.owner, match.activePlayerId[match.context.owner]);
-}
-
-
-function clearAssistChain(match, side) {
-  match.lastPasserId ||= [null, null];
-  match.lastPasserId[side] = null;
-}
-
-function registerGoalContribution(match, side, actor, allowAssist = true) {
-  match.lastPasserId ||= [null, null];
-  if (actor) actor.goals = (Number(actor.goals) || 0) + 1;
-  const passerId = match.lastPasserId[side];
-  if (allowAssist && passerId && passerId !== actor?.id) {
-    const passer = getPlayer(match, side, passerId);
-    if (passer) passer.assists = (Number(passer.assists) || 0) + 1;
-  }
-  match.lastPasserId[side] = null;
 }
 
 function pickRestartPlayer(match, side, digit = Math.floor(Math.random() * 10)) {
@@ -119,7 +101,10 @@ function transitionTo(match, owner, context, overlay, now) {
     subtitle: overlay.subtitle || '',
     tone: overlay.tone || 'red',
     kicker: overlay.kicker || '',
-    type: inferredType,
+    type: overlay.type || inferredType,
+    actor: overlay.actor || null,
+    keeper: overlay.keeper || null,
+    playerId: overlay.playerId || null,
     until: now + duration
   } : { id: `${now}`, title: '', subtitle: '', tone: 'navy', kicker: '', until: now };
   match.lastTickAt = now;
@@ -138,8 +123,7 @@ function finishMatch(match, winnerSide) {
 function createMatch(teams, settings, now = Date.now(), series = null) {
   const totalSeconds = settings.durationMinutes * 60;
   const coinWinner = Math.random() < 0.5 ? 0 : 1;
-  const runtimeTeams = teams.map((team,side) => makeRuntimeTeam(team, settings.teamColors?.[side]));
-  if (Array.isArray(settings.teamColors)) runtimeTeams.forEach((team, side) => { team.color = settings.teamColors[side] || (side === 0 ? '#c83c34' : '#18365f'); });
+  const runtimeTeams = teams.map((team, side) => makeRuntimeTeam(team, settings.teamColors?.[side] || (side === 0 ? '#d44735' : '#2878c8')));
   return {
     version: 5,
     mode: 'friend',
@@ -155,7 +139,6 @@ function createMatch(teams, settings, now = Date.now(), series = null) {
     firstHalfStarter: coinWinner,
     secondHalfStarter: coinWinner === 0 ? 1 : 0,
     passStreak: [0, 0],
-    lastPasserId: [null, null],
     periodIndex: 0,
     periodElapsedMs: 0,
     periodDurationsMs: [totalSeconds * 500, totalSeconds * 500],
@@ -214,7 +197,7 @@ function resolvePlayerSelection(match, digit, now) {
   const side = match.context.owner;
   const chosen = mapActivePlayerFromDigit(match, digit) || pickRestartPlayer(match, side, digit);
   addEvent(match, `${match.teams[side].name}: ${chosen?.name || 'Oyuncu'} topla buluştu`, false, { type: 'player', side, playerId: chosen?.id, title: chosen?.name || 'Oyuncu', detail: 'Topla buluştu' });
-  transitionTo(match, side, { type: 'main' }, { title: chosen?.name || 'OYUNCU', subtitle: 'Şimdi olay sonucunu belirle', tone: 'navy', kicker: `Rakam ${digit} · ${chosen?.slot || ''}`, duration: 1700 }, now);
+  transitionTo(match, side, { type: 'main' }, { title: chosen?.name || 'OYUNCU', subtitle: `${match.teams[side].name} · ŞİMDİ OLAYI BELİRLE`, tone: 'navy', kicker: `Rakam ${digit} · ${chosen?.slot || ''}`, duration: 2600, type: 'player', playerId: chosen?.id || null }, now);
 }
 
 function resolveMainEvent(match, digit, now) {
@@ -226,32 +209,28 @@ function resolveMainEvent(match, digit, now) {
   if (event.key !== 'pass') match.passStreak = [0, 0];
   if (event.key === 'goal') {
     match.scores[side] += 1;
-    registerGoalContribution(match, side, actor, true);
+    if (actor) actor.goals = (Number(actor.goals) || 0) + 1;
     addEvent(match, `${actor?.name || match.teams[side].name} gol attı`, true, { type: 'goal', side, playerId: actor?.id, title: actor?.name || match.teams[side].name, detail: 'Gol' });
-    transitionTo(match, other, { type: 'playerSelect' }, { title: 'GOL!', subtitle: `${actor?.name || match.teams[side].name} ağları buldu`, tone: 'red', kicker: `Rakam ${digit}`, duration: 2600 }, now);
+    transitionTo(match, other, { type: 'playerSelect' }, { title: 'GOL!', subtitle: `${actor?.name || match.teams[side].name} ağları buldu`, tone: 'red', kicker: `Rakam ${digit}`, duration: 2600, type: 'goal', actor: actor?.name || null }, now);
     return;
   }
   if (event.key === 'pass') {
     match.passStreak[side] = Math.min(2, (Number(match.passStreak[side]) || 0) + 1);
-    match.lastPasserId ||= [null, null]; match.lastPasserId[side] = actor?.id || null;
     addEvent(match, `${actor?.name || 'Oyuncu'} pas yaptı`, false, { type: 'pass', side, playerId: actor?.id, title: actor?.name || 'Oyuncu', detail: 'Pas' });
     transitionTo(match, side, { type: 'playerSelect' }, { title: 'PAS', subtitle: match.passStreak[side] >= 2 ? 'İkinci pas. Sonraki olayda paslar kilitlenecek.' : 'Yeni pasın hedefini seç', tone: 'green', kicker: `${actor?.name || 'Oyuncu'} · Rakam ${digit}`, duration: 1700 }, now);
     return;
   }
   if (event.key === 'throwIn') {
-    clearAssistChain(match, side);
     addEvent(match, `${match.teams[other].name} taç kazandı`, false, { type: 'throwIn', side: other, title: 'Taç', detail: match.teams[other].name });
     transitionTo(match, other, { type: 'playerSelect' }, { title: 'TAÇ', subtitle: `Top ${match.teams[other].name} tarafında`, tone: 'navy', kicker: `Rakam ${digit}`, duration: 1800 }, now);
     return;
   }
   if (event.key === 'turnover') {
-    clearAssistChain(match, side);
     addEvent(match, `${actor?.name || match.teams[side].name} topu kaybetti`, false, { type: 'turnover', side, playerId: actor?.id, title: actor?.name || match.teams[side].name, detail: 'Top kaybı' });
     transitionTo(match, other, { type: 'playerSelect' }, { title: 'AUT', subtitle: `Sıra ${match.teams[other].name} takımında`, tone: 'navy', kicker: `Rakam ${digit}`, duration: 1800 }, now);
     return;
   }
   if (event.key === 'corner') {
-    clearAssistChain(match, side);
     const outcome = Core.registerCorner(match.teams[side].corners);
     match.teams[side].corners = outcome.corners;
     if (outcome.penalty) {
@@ -269,7 +248,6 @@ function resolveMainEvent(match, digit, now) {
     return;
   }
   if (event.key === 'foul') {
-    clearAssistChain(match, side);
     match.pendingFoul = { foulerSide: side, victimSide: other, foulerId: actor?.id || null, result: null };
     addEvent(match, `${actor?.name || match.teams[side].name} faul yaptı`, true, { type: 'foul', side, playerId: actor?.id, title: actor?.name || match.teams[side].name, detail: 'Faul' });
     pickRestartPlayer(match, other);
@@ -277,7 +255,6 @@ function resolveMainEvent(match, digit, now) {
     return;
   }
   if (event.key === 'freeKick') {
-    clearAssistChain(match, side);
     addEvent(match, `${match.teams[side].name} frikik kazandı`, true, { type: 'freeKick', side, playerId: actor?.id, title: actor?.name || match.teams[side].name, detail: 'Frikik' });
     transitionTo(match, side, { type: 'setPieceShot', reason: 'freeKick' }, { title: 'FRİKİK!', subtitle: 'Tek rakam kurtarış, çift rakam gol', tone: 'yellow', kicker: `Rakam ${digit}`, duration: 2100 }, now);
   }
@@ -352,10 +329,10 @@ function resolveFoulCard(match, digit, now) {
   continueAfterFoulCard(match, { title: cardTitle, subtitle: cardedPlayer?.name || 'Hakem devam dedi', tone, kicker: `Rakam ${digit}`, duration: 2300 }, now);
 }
 
-function outcomeOverlay(outcome, actor, digit, prefix = '') {
-  if (outcome === 'saved') return { title: 'KALECİ KURTARDI!', subtitle: `${prefix}${actor?.name || 'Oyuncu'} vuruşunda kaleci gole izin vermedi.`, tone: 'navy', type: 'save' };
-  if (outcome === 'post') return { title: 'DİREKTE PATLADI!', subtitle: `${prefix}${actor?.name || 'Oyuncu'} direğe takıldı.`, tone: 'yellow', type: 'post' };
-  return { title: 'AUT!', subtitle: `${prefix}${actor?.name || 'Oyuncu'} çerçeveyi bulamadı.`, tone: 'navy', type: 'turnover' };
+function outcomeOverlay(outcome, actor, digit, prefix = '', keeper = null) {
+  if (outcome === 'saved') return { title: 'KALECİ KURTARDI!', subtitle: `${prefix}${actor?.name || 'Oyuncu'} vuruşunda kaleci gole izin vermedi.`, tone: 'navy', type: 'save', actor: actor?.name || null, keeper };
+  if (outcome === 'post') return { title: 'DİREKTE PATLADI!', subtitle: `${prefix}${actor?.name || 'Oyuncu'} direğe takıldı.`, tone: 'yellow', type: 'post', actor: actor?.name || null };
+  return { title: 'AUT!', subtitle: `${prefix}${actor?.name || 'Oyuncu'} çerçeveyi bulamadı.`, tone: 'navy', type: 'wide', actor: actor?.name || null };
 }
 
 function resolveOpenPlayShot(match, digit, now) {
@@ -366,13 +343,12 @@ function resolveOpenPlayShot(match, digit, now) {
   match.passStreak = [0, 0];
   if (result === 'goal') {
     match.scores[side] += 1;
-    registerGoalContribution(match, side, actor, true);
+    if (actor) actor.goals = (Number(actor.goals) || 0) + 1;
     addEvent(match, `${actor?.name || match.teams[side].name} şutunu gole çevirdi`, true, { type: 'goal', side, playerId: actor?.id, title: actor?.name || match.teams[side].name, detail: 'Şut golü' });
-    transitionTo(match, other, { type: 'playerSelect' }, { title: 'GOL!', subtitle: `${actor?.name || match.teams[side].name} ağları buldu`, tone: 'red', kicker: `ŞUT · Rakam ${digit}`, duration: 4200, type: 'goal' }, now);
+    transitionTo(match, other, { type: 'playerSelect' }, { title: 'GOL!', subtitle: `${actor?.name || match.teams[side].name} ağları buldu`, tone: 'red', kicker: `ŞUT · Rakam ${digit}`, duration: 4200, type: 'goal', actor: actor?.name || null }, now);
     return;
   }
   if (result === 'corner') {
-    clearAssistChain(match, side);
     const outcome = Core.registerCorner(match.teams[side].corners);
     match.teams[side].corners = outcome.corners;
     if (outcome.penalty) {
@@ -384,8 +360,7 @@ function resolveOpenPlayShot(match, digit, now) {
     }
     return;
   }
-  clearAssistChain(match, side);
-  const overlay = outcomeOverlay(result, actor, digit);
+  const overlay = outcomeOverlay(result, actor, digit, '', match.teams[other].lineup.find(p => p.slot === 'GK')?.name || null);
   addEvent(match, overlay.subtitle, true, { type: overlay.type, side, playerId: actor?.id, title: overlay.title.replace('!',''), detail: result === 'post' ? 'Direk' : result === 'saved' ? 'Kaleci kurtardı' : 'Aut' });
   transitionTo(match, other, { type: 'playerSelect' }, { ...overlay, kicker: `ŞUT · Rakam ${digit}`, duration: 3800 }, now);
 }
@@ -400,13 +375,12 @@ function resolveSetPieceShot(match, digit, now) {
   const label = reason === 'penalty' ? 'Penaltı' : 'Frikik';
   if (result === 'goal') {
     match.scores[side] += 1;
-    registerGoalContribution(match, side, actor, false);
+    if (actor) actor.goals = (Number(actor.goals) || 0) + 1;
     addEvent(match, `${actor?.name || match.teams[side].name} ${label.toLocaleLowerCase('tr')} vuruşunu gole çevirdi`, true, { type: 'goal', side, playerId: actor?.id, title: actor?.name || match.teams[side].name, detail: `${label} golü` });
-    transitionTo(match, other, { type: 'playerSelect' }, { title: 'GOL!', subtitle: `${actor?.name || match.teams[side].name} çift rakamı buldu.`, tone: 'red', kicker: `${label.toUpperCase()} · Rakam ${digit} · ÇİFT`, duration: 4200, type: 'goal' }, now);
+    transitionTo(match, other, { type: 'playerSelect' }, { title: 'GOL!', subtitle: `${actor?.name || match.teams[side].name} çift rakamı buldu.`, tone: 'red', kicker: `${label.toUpperCase()} · Rakam ${digit} · ÇİFT`, duration: 4200, type: reason === 'penalty' ? 'penaltyGoal' : 'goal', actor: actor?.name || null }, now);
     return;
   }
-  clearAssistChain(match, side);
-  const overlay = outcomeOverlay(result, actor, digit, `${label}: `);
+  const overlay = outcomeOverlay(result, actor, digit, `${label}: `, match.teams[other].lineup.find(p => p.slot === 'GK')?.name || null);
   addEvent(match, overlay.subtitle, true, { type: overlay.type, side, playerId: actor?.id, title: overlay.title.replace('!',''), detail: label });
   transitionTo(match, other, { type: 'playerSelect' }, { ...overlay, kicker: `${label.toUpperCase()} · Rakam ${digit} · TEK`, duration: 3900 }, now);
 }
@@ -469,7 +443,6 @@ function handleTurnTimeout(match, now) {
   match.resolving = true;
   const side = match.context.owner;
   const other = side === 0 ? 1 : 0;
-  clearAssistChain(match, side);
   match.delayWasteMs[side] = (Number(match.delayWasteMs[side]) || 0) + 9000;
   const outcome = Core.registerTimeout(match.teams[side].timeouts);
   match.teams[side].timeouts = outcome.count;
@@ -610,10 +583,6 @@ function tickMatch(match, now = Date.now()) {
   if (!match.running || match.awaitingPeriodStart) return false;
 
   match.rollElapsedMs += dt;
-  if (match.context.type === 'kickoffReady' && match.rollElapsedMs >= 10000) {
-    beginAfterKickoff(match, now);
-    return true;
-  }
   if (match.context.type !== 'kickoffReady') match.turnElapsedMs += dt;
   if (match.phase === 'regulation' || match.phase === 'extra') {
     match.periodElapsedMs += dt;
@@ -621,6 +590,11 @@ function tickMatch(match, now = Date.now()) {
     match.possessionMs[match.context.owner] += dt;
   }
 
+  if (match.context.type === 'kickoffReady' && match.rollElapsedMs >= 15000) {
+    // İlk düdük süresinde basılmazsa maç kendiliğinden başlar.
+    beginAfterKickoff(match, now);
+    return true;
+  }
   if (match.context.type !== 'kickoffReady' && match.turnElapsedMs >= 10000) {
     handleTurnTimeout(match, now);
     return true;
@@ -653,12 +627,23 @@ function togglePause(match, side, now = Date.now()) {
   return { ok: true, paused: true };
 }
 
+// Bilinçli maç terki: terk eden hükmen kaybeder, maç anında biter.
+function forfeitMatch(match, losingSide, reason = 'Maç terki') {
+  if (!match || match.phase === 'finished') return { ok: false, error: 'Maç zaten bitti.' };
+  const other = losingSide === 0 ? 1 : 0;
+  match.scores = Core.forfeitScore(match.scores, losingSide);
+  addEvent(match, `${match.teams[losingSide].name} maçı terk etti — hükmen mağlup`, true, { type: 'red', side: losingSide, title: 'Hükmen', detail: reason });
+  finishMatch(match, other);
+  return { ok: true, winner: other };
+}
+
 module.exports = {
   createMatch,
   tickMatch,
   stopRoll,
   togglePause,
   startWaitingPeriod,
+  forfeitMatch,
   availableOutfield,
   pickRestartPlayer
 };
